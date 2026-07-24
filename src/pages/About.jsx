@@ -61,7 +61,7 @@ export default function About() {
             <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02]">
               <img
                 data-aiwp-slot="5"
-                src="https://placehold.co/900x1100/0a0a0a/f97316?text=Chris+Allen"
+                src="/chris-allen.png"
                 alt="Chris Allen, founder of Allen Code Co."
                 className="aspect-[4/5] w-full object-cover"
               />
