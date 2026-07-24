@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 625" width="1000" height="625">
+  <rect x="0" y="0" width="1000" height="625" fill="#0a0a0a"/>
+  
+    
+    <rect x="0" y="0" width="1000" height="44" fill="#141414"/>
+    <rect x="0" y="43" width="1000" height="1" fill="rgba(255,255,255,0.10)"/>
+    <circle cx="24" cy="22" r="5" fill="#ef4444"/>
+    <circle cx="44" cy="22" r="5" fill="#eab308"/>
+    <circle cx="64" cy="22" r="5" fill="#22c55e"/>
+    <rect x="360" y="12" width="280" height="20" rx="10" fill="rgba(255,255,255,0.05)"/>
+    <text x="500" y="26" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="rgba(255,255,255,0.35)" letter-spacing="0.5">studio.studio</text>
+  
+    
+      <rect x="60" y="90" width="420" height="200" rx="10" fill="#141414" stroke="rgba(255,255,255,0.10)"/>
+      <line x1="60" y1="90" x2="480" y2="290" stroke="rgba(249,115,22,0.35)" stroke-width="1"/>
+      <line x1="480" y1="90" x2="60" y2="290" stroke="rgba(249,115,22,0.35)" stroke-width="1"/>
+      <text x="74" y="116" font-family="Consolas, 'Courier New', monospace" font-size="12" fill="rgba(255,255,255,0.35)" letter-spacing="0.5">01</text>
+    
+      <rect x="500" y="90" width="440" height="200" rx="10" fill="#141414" stroke="rgba(255,255,255,0.10)"/>
+      <line x1="500" y1="90" x2="940" y2="290" stroke="rgba(249,115,22,0.35)" stroke-width="1"/>
+      <line x1="940" y1="90" x2="500" y2="290" stroke="rgba(249,115,22,0.35)" stroke-width="1"/>
+      <text x="514" y="116" font-family="Consolas, 'Courier New', monospace" font-size="12" fill="rgba(255,255,255,0.35)" letter-spacing="0.5">02</text>
+    
+      <rect x="60" y="310" width="280" height="200" rx="10" fill="#141414" stroke="rgba(255,255,255,0.10)"/>
+      <line x1="60" y1="310" x2="340" y2="510" stroke="rgba(249,115,22,0.35)" stroke-width="1"/>
+      <line x1="340" y1="310" x2="60" y2="510" stroke="rgba(249,115,22,0.35)" stroke-width="1"/>
+      <text x="74" y="336" font-family="Consolas, 'Courier New', monospace" font-size="12" fill="rgba(255,255,255,0.35)" letter-spacing="0.5">03</text>
+    
+      <rect x="360" y="310" width="280" height="200" rx="10" fill="#141414" stroke="rgba(255,255,255,0.10)"/>
+      <line x1="360" y1="310" x2="640" y2="510" stroke="rgba(249,115,22,0.35)" stroke-width="1"/>
+      <line x1="640" y1="310" x2="360" y2="510" stroke="rgba(249,115,22,0.35)" stroke-width="1"/>
+      <text x="374" y="336" font-family="Consolas, 'Courier New', monospace" font-size="12" fill="rgba(255,255,255,0.35)" letter-spacing="0.5">04</text>
+    
+      <rect x="660" y="310" width="280" height="200" rx="10" fill="#141414" stroke="rgba(255,255,255,0.10)"/>
+      <line x1="660" y1="310" x2="940" y2="510" stroke="rgba(249,115,22,0.35)" stroke-width="1"/>
+      <line x1="940" y1="310" x2="660" y2="510" stroke="rgba(249,115,22,0.35)" stroke-width="1"/>
+      <text x="674" y="336" font-family="Consolas, 'Courier New', monospace" font-size="12" fill="rgba(255,255,255,0.35)" letter-spacing="0.5">05</text>
+    
+    <text x="60" y="590" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="600" fill="rgba(255,255,255,0.35)" letter-spacing="-0.5">Studio</text>
+  
+  <rect x="0.5" y="0.5" width="999" height="624" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="1"/>
+</svg>

@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" width="1200" height="900">
+  <rect x="0" y="0" width="1200" height="900" fill="#0a0a0a"/>
+  
+    
+    <rect x="0" y="0" width="1200" height="44" fill="#141414"/>
+    <rect x="0" y="43" width="1200" height="1" fill="rgba(255,255,255,0.10)"/>
+    <circle cx="24" cy="22" r="5" fill="#ef4444"/>
+    <circle cx="44" cy="22" r="5" fill="#eab308"/>
+    <circle cx="64" cy="22" r="5" fill="#22c55e"/>
+    <rect x="460" y="12" width="280" height="20" rx="10" fill="rgba(255,255,255,0.05)"/>
+    <text x="600" y="26" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="rgba(255,255,255,0.35)" letter-spacing="0.5">myteacherstoolbox.com/dashboard</text>
+  
+    <rect x="0" y="44" width="230" height="856" fill="#141414"/>
+    <rect x="229" y="44" width="1" height="856" fill="rgba(255,255,255,0.10)"/>
+    
+      <rect x="20" y="90" width="190" height="34" rx="8" fill="rgba(249,115,22,0.35)"/>
+      <circle cx="38" cy="107" r="4" fill="#f97316"/>
+      <text x="54" y="112" font-family="Consolas, 'Courier New', monospace" font-size="13" fill="#ffffff" letter-spacing="0.5">Week Planner</text>
+    
+      <rect x="20" y="136" width="190" height="34" rx="8" fill="transparent"/>
+      <circle cx="38" cy="153" r="4" fill="rgba(255,255,255,0.35)"/>
+      <text x="54" y="158" font-family="Consolas, 'Courier New', monospace" font-size="13" fill="rgba(255,255,255,0.55)" letter-spacing="0.5">Emergency Kit</text>
+    
+      <rect x="20" y="182" width="190" height="34" rx="8" fill="transparent"/>
+      <circle cx="38" cy="199" r="4" fill="rgba(255,255,255,0.35)"/>
+      <text x="54" y="204" font-family="Consolas, 'Courier New', monospace" font-size="13" fill="rgba(255,255,255,0.55)" letter-spacing="0.5">Parent Emails</text>
+    
+      <rect x="20" y="228" width="190" height="34" rx="8" fill="transparent"/>
+      <circle cx="38" cy="245" r="4" fill="rgba(255,255,255,0.35)"/>
+      <text x="54" y="250" font-family="Consolas, 'Courier New', monospace" font-size="13" fill="rgba(255,255,255,0.55)" letter-spacing="0.5">Rubrics</text>
+    
+      <rect x="20" y="274" width="190" height="34" rx="8" fill="transparent"/>
+      <circle cx="38" cy="291" r="4" fill="rgba(255,255,255,0.35)"/>
+      <text x="54" y="296" font-family="Consolas, 'Courier New', monospace" font-size="13" fill="rgba(255,255,255,0.55)" letter-spacing="0.5">Standards</text>
+    
+      <rect x="20" y="320" width="190" height="34" rx="8" fill="transparent"/>
+      <circle cx="38" cy="337" r="4" fill="rgba(255,255,255,0.35)"/>
+      <text x="54" y="342" font-family="Consolas, 'Courier New', monospace" font-size="13" fill="rgba(255,255,255,0.55)" letter-spacing="0.5">Grade Teams</text>
+    
+    <text x="280" y="90" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="700" fill="#ffffff" letter-spacing="-0.5">This week</text>
+    <text x="280" y="112" font-family="Consolas, 'Courier New', monospace" font-size="13" fill="rgba(255,255,255,0.35)" letter-spacing="0.5">Monday, Grade 3 · 46 countries live</text>
+    
+      <rect x="90" y="120" width="1020" height="46" rx="10" fill="#141414" stroke="rgba(255,255,255,0.10)"/>
+      <rect x="112" y="135" width="16" height="16" rx="4" fill="none" stroke="#f97316" stroke-width="2"/>
+      
+      <text x="146" y="149" font-family="Consolas, 'Courier New', monospace" font-size="15" fill="#e5e5e5" letter-spacing="0.5">Week Planner — Grade 3</text>
+      <rect x="980" y="133" width="90" height="20" rx="10" fill="rgba(249,115,22,0.35)"/>
+      <text x="1000" y="147" font-family="Consolas, 'Courier New', monospace" font-size="10" fill="#f97316" letter-spacing="0.5">K-5</text>
+    
+      <rect x="90" y="182" width="1020" height="46" rx="10" fill="#141414" stroke="rgba(255,255,255,0.10)"/>
+      <rect x="112" y="197" width="16" height="16" rx="4" fill="none" stroke="#f97316" stroke-width="2"/>
+      <path d="M116 205 l4 4 l8 -9" stroke="#f97316" stroke-width="2" fill="none"/>
+      <text x="146" y="211" font-family="Consolas, 'Courier New', monospace" font-size="15" fill="rgba(255,255,255,0.55)" letter-spacing="0.5">Sub Plan: Friday</text>
+      <rect x="980" y="195" width="90" height="20" rx="10" fill="rgba(249,115,22,0.35)"/>
+      <text x="1000" y="209" font-family="Consolas, 'Courier New', monospace" font-size="10" fill="#f97316" letter-spacing="0.5">K-5</text>
+    
+      <rect x="90" y="244" width="1020" height="46" rx="10" fill="#141414" stroke="rgba(255,255,255,0.10)"/>
+      <rect x="112" y="259" width="16" height="16" rx="4" fill="none" stroke="#f97316" stroke-width="2"/>
+      
+      <text x="146" y="273" font-family="Consolas, 'Courier New', monospace" font-size="15" fill="#e5e5e5" letter-spacing="0.5">Parent email — Rowan H.</text>
+      <rect x="980" y="257" width="90" height="20" rx="10" fill="rgba(249,115,22,0.35)"/>
+      <text x="1000" y="271" font-family="Consolas, 'Courier New', monospace" font-size="10" fill="#f97316" letter-spacing="0.5">K-5</text>
+    
+      <rect x="90" y="306" width="1020" height="46" rx="10" fill="#141414" stroke="rgba(255,255,255,0.10)"/>
+      <rect x="112" y="321" width="16" height="16" rx="4" fill="none" stroke="#f97316" stroke-width="2"/>
+      
+      <text x="146" y="335" font-family="Consolas, 'Courier New', monospace" font-size="15" fill="#e5e5e5" letter-spacing="0.5">Rubric: Science Fair</text>
+      <rect x="980" y="319" width="90" height="20" rx="10" fill="rgba(249,115,22,0.35)"/>
+      <text x="1000" y="333" font-family="Consolas, 'Courier New', monospace" font-size="10" fill="#f97316" letter-spacing="0.5">K-5</text>
+    
+      <rect x="90" y="368" width="1020" height="46" rx="10" fill="#141414" stroke="rgba(255,255,255,0.10)"/>
+      <rect x="112" y="383" width="16" height="16" rx="4" fill="none" stroke="#f97316" stroke-width="2"/>
+      
+      <text x="146" y="397" font-family="Consolas, 'Courier New', monospace" font-size="15" fill="#e5e5e5" letter-spacing="0.5">Standards: CCSS.ELA.3.4</text>
+      <rect x="980" y="381" width="90" height="20" rx="10" fill="rgba(249,115,22,0.35)"/>
+      <text x="1000" y="395" font-family="Consolas, 'Courier New', monospace" font-size="10" fill="#f97316" letter-spacing="0.5">K-5</text>
+    
+  
+  <rect x="0.5" y="0.5" width="1199" height="899" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="1"/>
+</svg>

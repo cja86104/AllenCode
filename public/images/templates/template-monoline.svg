@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 625" width="1000" height="625">
+  <rect x="0" y="0" width="1000" height="625" fill="#0a0a0a"/>
+  
+    
+    <rect x="0" y="0" width="1000" height="44" fill="#141414"/>
+    <rect x="0" y="43" width="1000" height="1" fill="rgba(255,255,255,0.10)"/>
+    <circle cx="24" cy="22" r="5" fill="#ef4444"/>
+    <circle cx="44" cy="22" r="5" fill="#eab308"/>
+    <circle cx="64" cy="22" r="5" fill="#22c55e"/>
+    <rect x="360" y="12" width="280" height="20" rx="10" fill="rgba(255,255,255,0.05)"/>
+    <text x="500" y="26" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="rgba(255,255,255,0.35)" letter-spacing="0.5">monoline.dev</text>
+  
+    <rect x="60" y="80" width="880" height="440" rx="14" fill="#141414" stroke="rgba(255,255,255,0.10)"/>
+    <rect x="60" y="80" width="880" height="34" rx="14" fill="rgba(255,255,255,0.04)"/>
+    <circle cx="86" cy="97" r="5" fill="#ef4444"/><circle cx="104" cy="97" r="5" fill="#eab308"/><circle cx="122" cy="97" r="5" fill="#22c55e"/>
+    <text x="90" y="150" font-family="Consolas, 'Courier New', monospace" font-size="15" fill="#f97316" letter-spacing="0.5">const dev = {</text><text x="90" y="180" font-family="Consolas, 'Courier New', monospace" font-size="15" fill="#e5e5e5" letter-spacing="0.5">  name: "you",</text><text x="90" y="210" font-family="Consolas, 'Courier New', monospace" font-size="15" fill="#f97316" letter-spacing="0.5">  stack: ["Next.js", "Tailwind"],</text><text x="90" y="240" font-family="Consolas, 'Courier New', monospace" font-size="15" fill="#e5e5e5" letter-spacing="0.5">  ships: true,</text><text x="90" y="270" font-family="Consolas, 'Courier New', monospace" font-size="15" fill="#f97316" letter-spacing="0.5">};</text><text x="90" y="300" font-family="Consolas, 'Courier New', monospace" font-size="15" fill="#e5e5e5" letter-spacing="0.5"></text><text x="90" y="330" font-family="Consolas, 'Courier New', monospace" font-size="15" fill="#f97316" letter-spacing="0.5">export default dev;</text>
+    <rect x="253.4" y="318" width="9" height="16" fill="#f97316"/>
+    <text x="90" y="500" font-family="Consolas, 'Courier New', monospace" font-size="12" fill="rgba(255,255,255,0.35)" letter-spacing="0.5">portfolio / terminal-style</text>
+    <text x="60" y="590" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="600" fill="rgba(255,255,255,0.35)" letter-spacing="-0.5">Monoline</text>
+  
+  <rect x="0.5" y="0.5" width="999" height="624" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="1"/>
+</svg>

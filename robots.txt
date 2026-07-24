@@ -1,0 +1,30 @@
+# Allen Code Co — robots.txt
+#
+# This file lives at https://www.allencodeco.com/robots.txt and is the
+# first thing every search engine and crawler requests when discovering
+# the site. Two rule blocks below:
+#
+#   1. Wildcard (*) — applies to every crawler that does not have its
+#      own block. The site is fully crawlable; no Disallow rules. This
+#      is correct because Allen Code Co is a public marketing site with
+#      zero authenticated surface, no per-user pages, and no API routes.
+#
+#   2. Bingbot — explicit duplicate of the wildcard rules. Bing's
+#      diagnostic tools have historically flagged sites that lack a
+#      Bingbot-specific block as ambiguously configured. This block
+#      removes that ambiguity and is the explicit fix for Bing's
+#      "blocked from web" warning.
+#
+# Sitemap reference at the bottom points crawlers at the canonical
+# sitemap, which lists every public page on the site. Bing in particular
+# uses this to seed initial crawls; without it, Bing has to discover
+# pages via internal link following alone.
+
+User-agent: *
+Allow: /
+
+User-agent: bingbot
+Allow: /
+
+Sitemap: https://www.allencodeco.com/sitemap.xml
+Host: https://www.allencodeco.com

@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" width="1200" height="900">
+  <rect x="0" y="0" width="1200" height="900" fill="#0a0a0a"/>
+  <!-- Browser chrome -->
+  <rect x="0" y="0" width="1200" height="44" fill="#141414"/>
+  <rect x="0" y="43" width="1200" height="1" fill="rgba(255,255,255,0.10)"/>
+  <circle cx="24" cy="22" r="5" fill="#ef4444"/>
+  <circle cx="44" cy="22" r="5" fill="#eab308"/>
+  <circle cx="64" cy="22" r="5" fill="#22c55e"/>
+  <rect x="460" y="12" width="280" height="20" rx="10" fill="rgba(255,255,255,0.05)"/>
+  <text x="600" y="26" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="rgba(255,255,255,0.35)" letter-spacing="0.5">crewadvisors.com/board</text>
+  <!-- Heading -->
+  <text x="90" y="88" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="700" fill="#ffffff" letter-spacing="-0.5">Your Advisory Board</text>
+  <text x="90" y="110" font-family="Consolas, 'Courier New', monospace" font-size="12" fill="rgba(255,255,255,0.35)" letter-spacing="0.5">7 advisors active · memory enabled</text>
+  <!-- Advisor cards row 1 -->
+  <!-- Marcus Webb -->
+  <rect x="90" y="130" width="320" height="160" rx="14" fill="#141414" stroke="rgba(255,255,255,0.10)"/>
+  <rect x="90" y="130" width="320" height="4" rx="2" fill="#f97316"/>
+  <text x="116" y="172" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" fill="#ffffff">Marcus Webb</text>
+  <text x="116" y="192" font-family="Consolas, 'Courier New', monospace" font-size="11" fill="#f97316" letter-spacing="0.5">SaaS Sales Strategist</text>
+  <text x="116" y="216" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="rgba(255,255,255,0.50)">"Challenge every deal in your pipeline."</text>
+  <rect x="116" y="252" width="60" height="22" rx="11" fill="rgba(249,115,22,0.15)" stroke="rgba(249,115,22,0.3)"/>
+  <text x="146" y="267" text-anchor="middle" font-family="Consolas, 'Courier New', monospace" font-size="10" fill="#f97316">ACTIVE</text>
+  <!-- Jordan Reeves -->
+  <rect x="440" y="130" width="320" height="160" rx="14" fill="#141414" stroke="rgba(255,255,255,0.10)"/>
+  <rect x="440" y="130" width="320" height="4" rx="2" fill="#f97316"/>
+  <text x="466" y="172" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" fill="#ffffff">Jordan Reeves</text>
+  <text x="466" y="192" font-family="Consolas, 'Courier New', monospace" font-size="11" fill="#f97316" letter-spacing="0.5">GTM Marketing Strategist</text>
+  <text x="466" y="216" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="rgba(255,255,255,0.50)">"Shuts down vanity metrics on sight."</text>
+  <rect x="466" y="252" width="60" height="22" rx="11" fill="rgba(249,115,22,0.15)" stroke="rgba(249,115,22,0.3)"/>
+  <text x="496" y="267" text-anchor="middle" font-family="Consolas, 'Courier New', monospace" font-size="10" fill="#f97316">ACTIVE</text>
+  <!-- Ray Callahan -->
+  <rect x="790" y="130" width="320" height="160" rx="14" fill="#141414" stroke="rgba(255,255,255,0.10)"/>
+  <rect x="790" y="130" width="320" height="4" rx="2" fill="#f97316"/>
+  <text x="816" y="172" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" fill="#ffffff">Ray Callahan</text>
+  <text x="816" y="192" font-family="Consolas, 'Courier New', monospace" font-size="11" fill="#f97316" letter-spacing="0.5">M&amp;A Advisor · 28 Acquisitions</text>
+  <text x="816" y="216" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="rgba(255,255,255,0.50)">"Knows what buyers actually care about."</text>
+  <rect x="816" y="252" width="60" height="22" rx="11" fill="rgba(249,115,22,0.15)" stroke="rgba(249,115,22,0.3)"/>
+  <text x="846" y="267" text-anchor="middle" font-family="Consolas, 'Courier New', monospace" font-size="10" fill="#f97316">ACTIVE</text>
+  <!-- Advisor cards row 2 -->
+  <!-- Sam Okafor -->
+  <rect x="90" y="316" width="320" height="160" rx="14" fill="#141414" stroke="rgba(255,255,255,0.10)"/>
+  <rect x="90" y="316" width="320" height="4" rx="2" fill="#f97316"/>
+  <text x="116" y="358" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" fill="#ffffff">Sam Okafor</text>
+  <text x="116" y="378" font-family="Consolas, 'Courier New', monospace" font-size="11" fill="#f97316" letter-spacing="0.5">Financial Analyst</text>
+  <text x="116" y="402" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="rgba(255,255,255,0.50)">"Unit economics that get you funded."</text>
+  <rect x="116" y="438" width="60" height="22" rx="11" fill="rgba(249,115,22,0.15)" stroke="rgba(249,115,22,0.3)"/>
+  <text x="146" y="453" text-anchor="middle" font-family="Consolas, 'Courier New', monospace" font-size="10" fill="#f97316">ACTIVE</text>
+  <!-- Alex Torres -->
+  <rect x="440" y="316" width="320" height="160" rx="14" fill="#141414" stroke="rgba(255,255,255,0.10)"/>
+  <rect x="440" y="316" width="320" height="4" rx="2" fill="#f97316"/>
+  <text x="466" y="358" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" fill="#ffffff">Alex Torres</text>
+  <text x="466" y="378" font-family="Consolas, 'Courier New', monospace" font-size="11" fill="#f97316" letter-spacing="0.5">Operations Manager</text>
+  <text x="466" y="402" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="rgba(255,255,255,0.50)">"Chaos into documented systems."</text>
+  <rect x="466" y="438" width="60" height="22" rx="11" fill="rgba(249,115,22,0.15)" stroke="rgba(249,115,22,0.3)"/>
+  <text x="496" y="453" text-anchor="middle" font-family="Consolas, 'Courier New', monospace" font-size="10" fill="#f97316">ACTIVE</text>
+  <!-- Dana Kline -->
+  <rect x="790" y="316" width="320" height="160" rx="14" fill="#141414" stroke="rgba(255,255,255,0.10)"/>
+  <rect x="790" y="316" width="320" height="4" rx="2" fill="#f97316"/>
+  <text x="816" y="358" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" fill="#ffffff">Dana Kline</text>
+  <text x="816" y="378" font-family="Consolas, 'Courier New', monospace" font-size="11" fill="#f97316" letter-spacing="0.5">Conversion Copywriter</text>
+  <text x="816" y="402" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="rgba(255,255,255,0.50)">"$40M in attributed revenue."</text>
+  <rect x="816" y="438" width="60" height="22" rx="11" fill="rgba(249,115,22,0.15)" stroke="rgba(249,115,22,0.3)"/>
+  <text x="846" y="453" text-anchor="middle" font-family="Consolas, 'Courier New', monospace" font-size="10" fill="#f97316">ACTIVE</text>
+  <!-- Chat panel -->
+  <rect x="90" y="506" width="710" height="300" rx="14" fill="#141414" stroke="rgba(255,255,255,0.10)"/>
+  <text x="116" y="540" font-family="Consolas, 'Courier New', monospace" font-size="11" fill="rgba(255,255,255,0.35)" letter-spacing="0.5">CONVERSATION · Marcus Webb · remembers 47 sessions</text>
+  <rect x="116" y="555" width="1" height="230" fill="rgba(255,255,255,0.08)"/>
+  <text x="130" y="584" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="rgba(255,255,255,0.80)">"We talked last week about the Founders Helm pipeline stall —</text>
+  <text x="130" y="602" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="rgba(255,255,255,0.80)">have you followed up with that enterprise lead yet?"</text>
+  <rect x="130" y="622" width="500" height="1" fill="rgba(255,255,255,0.06)"/>
+  <text x="130" y="648" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="rgba(255,255,255,0.40)">Not yet — I've been heads down on the new product launch.</text>
+  <text x="130" y="674" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="rgba(255,255,255,0.80)">"That's the third time you've let that one slip. Here's how</text>
+  <text x="130" y="692" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="rgba(255,255,255,0.80)">we close it this week — no more delays."</text>
+  <!-- Custom Builder panel -->
+  <rect x="830" y="506" width="280" height="300" rx="14" fill="#141414" stroke="rgba(249,115,22,0.25)"/>
+  <rect x="830" y="506" width="280" height="4" rx="2" fill="#f97316"/>
+  <text x="855" y="542" font-family="Consolas, 'Courier New', monospace" font-size="11" fill="#f97316" letter-spacing="0.5">BUILD YOUR ADVISOR</text>
+  <text x="855" y="568" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="rgba(255,255,255,0.70)">Name your advisor</text>
+  <rect x="855" y="578" width="228" height="28" rx="6" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.10)"/>
+  <text x="870" y="597" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="rgba(255,255,255,0.30)">e.g. "Restaurant Ops Consultant"</text>
+  <text x="855" y="630" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="rgba(255,255,255,0.70)">Domain expertise</text>
+  <rect x="855" y="640" width="228" height="60" rx="6" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.10)"/>
+  <text x="870" y="660" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="rgba(255,255,255,0.30)">Describe their background,</text>
+  <text x="870" y="676" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="rgba(255,255,255,0.30)">specialty, and point of view...</text>
+  <rect x="855" y="722" width="228" height="36" rx="8" fill="#f97316"/>
+  <text x="969" y="745" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#000000">Add to Board →</text>
+  <!-- Border -->
+  <rect x="0.5" y="0.5" width="1199" height="899" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="1"/>
+</svg>
