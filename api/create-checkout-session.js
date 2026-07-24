@@ -62,6 +62,7 @@ export default async function handler(req, res) {
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       customer_email: customerEmail,
+      managed_payments: { enabled: false },
       line_items: [
         {
           price_data: {
@@ -70,7 +71,6 @@ export default async function handler(req, res) {
             product_data: {
               name: title,
               description: (description || '').slice(0, 500),
-              tax_code: 'txcd_20030000', // Professional services — required by Stripe Managed Payments
             },
           },
           quantity: 1,
