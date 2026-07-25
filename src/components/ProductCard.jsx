@@ -18,14 +18,14 @@ export default function ProductCard({ product, index, slot }) {
               muted
               loop
               playsInline
-              className="h-full w-full object-cover opacity-80 transition-transform duration-700 group-hover:scale-105 group-hover:opacity-100"
+              className="absolute inset-0 h-full w-full object-cover opacity-80 transition-transform duration-700 group-hover:scale-105 group-hover:opacity-100"
             />
           ) : (
             <img
               data-aiwp-slot={slot}
               src={product.image}
               alt={`${product.name} product preview`}
-              className="h-full w-full object-cover opacity-80 transition-transform duration-700 group-hover:scale-105 group-hover:opacity-100"
+              className="absolute inset-0 h-full w-full object-cover opacity-80 transition-transform duration-700 group-hover:scale-105 group-hover:opacity-100"
             />
           )}
           {isPrivate && (
