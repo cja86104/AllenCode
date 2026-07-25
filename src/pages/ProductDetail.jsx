@@ -63,7 +63,7 @@ export default function ProductDetail() {
           <div className="mt-10 overflow-hidden rounded-2xl border border-white/10 bg-black">
             <img
               data-aiwp-slot={18 + productIndex}
-              src={product.image}
+              src={product.showcaseImage || product.image}
               alt={`${product.name} product preview`}
               className="aspect-[16/10] w-full object-cover"
             />

@@ -191,6 +191,8 @@ export const products = [
       { label: 'Time to first session', value: '<90 sec' },
     ],
     image: '/images/products/product-underfire-ai.svg',
+    video: '/UnderFireAI.mp4',
+    showcaseImage: '/meet-underfire.png',
 
     stats: [
       { number: '239', label: 'Source Files' },

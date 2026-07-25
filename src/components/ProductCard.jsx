@@ -11,12 +11,23 @@ export default function ProductCard({ product, index, slot }) {
       <div className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02] transition-colors hover:border-orange-500/50">
         {/* Image — clicking goes to the detail/showcase page */}
         <Link to={`/products/${product.slug}`} className="relative block aspect-[4/3] overflow-hidden border-b border-white/10 bg-black">
-          <img
-            data-aiwp-slot={slot}
-            src={product.image}
-            alt={`${product.name} product preview`}
-            className="h-full w-full object-cover opacity-80 transition-transform duration-700 group-hover:scale-105 group-hover:opacity-100"
-          />
+          {product.video ? (
+            <video
+              src={product.video}
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="h-full w-full object-cover opacity-80 transition-transform duration-700 group-hover:scale-105 group-hover:opacity-100"
+            />
+          ) : (
+            <img
+              data-aiwp-slot={slot}
+              src={product.image}
+              alt={`${product.name} product preview`}
+              className="h-full w-full object-cover opacity-80 transition-transform duration-700 group-hover:scale-105 group-hover:opacity-100"
+            />
+          )}
           {isPrivate && (
             <span className="absolute right-4 top-4 mono inline-flex items-center gap-1 rounded-full border border-orange-500/60 bg-black/70 px-3 py-1 text-[10px] uppercase tracking-widest text-orange-500">
               <Lock size={11} /> Private
