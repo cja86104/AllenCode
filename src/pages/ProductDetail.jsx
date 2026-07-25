@@ -60,12 +60,12 @@ export default function ProductDetail() {
 
         {/* ── Hero image ────────────────────────────────────────────────────── */}
         <Reveal delay={0.1}>
-          <div className="relative mt-10 aspect-[16/10] overflow-hidden rounded-2xl border border-white/10 bg-black">
+          <div className="mt-10 overflow-hidden rounded-2xl border border-white/10 bg-black">
             <img
               data-aiwp-slot={18 + productIndex}
               src={product.showcaseImage || product.image}
               alt={`${product.name} product preview`}
-              className="absolute inset-0 h-full w-full object-cover"
+              className="block w-full aspect-[16/10] object-cover"
             />
           </div>
         </Reveal>
