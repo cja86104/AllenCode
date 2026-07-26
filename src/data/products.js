@@ -23,7 +23,7 @@ export const products = [
       { label: 'Uptime', value: '99.98%' },
       { label: 'Grade levels covered', value: 'K–5' },
     ],
-    image: '/images/products/product-my-teachers-toolbox.svg',
+    image: '/images/products/product-my-teachers-toolbox.jpg',
 
     // ── Expanded showcase content ──────────────────────────────────────────────
     stats: [
@@ -190,9 +190,7 @@ export const products = [
       { label: 'Interview types', value: '6' },
       { label: 'Time to first session', value: '<90 sec' },
     ],
-    image: '/images/products/product-underfire-ai.svg',
-    video: '/UnderFireAI.mp4',
-    showcaseImage: '/meet-underfire.png',
+    image: '/images/products/product-underfire-ai.jpg',
 
     stats: [
       { number: '239', label: 'Source Files' },
@@ -396,7 +394,7 @@ export const products = [
       { label: 'Weekly admin time saved', value: '4+ hrs' },
       { label: 'TypeScript errors', value: '0' },
     ],
-    image: '/images/products/product-founders-helm.svg',
+    image: '/images/products/product-founders-helm.jpg',
 
     stats: [
       { number: '10', label: 'Integrated Tools' },
@@ -515,7 +513,7 @@ export const products = [
       { label: 'Memory', value: 'Cross-session' },
       { label: 'Status', value: 'Launching soon' },
     ],
-    image: '/images/products/product-crew-advisors.svg',
+    image: '/images/products/product-crew-advisors.jpg',
 
     overview: [
       'Crew Advisors is not another generic AI chatbot. It\'s a full advisory board of expert personas who remember your business, your decisions, and your goals across every single conversation — so you never have to re-explain context.',
