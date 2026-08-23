@@ -2,112 +2,50 @@
 <!--
   Allen Code Co — sitemap.xml
 
-  This file lives at https://www.allencodeco.com/sitemap.xml and is
-  referenced from /robots.txt. Lists every public page on the site with
-  priority hints so search engines understand the relative importance of
-  each URL.
+  Lives at https://www.allencodeco.com/sitemap.xml and is referenced from
+  /robots.txt.
 
-  PRIORITY MODEL
-    1.0 — Homepage. The acquisition front door.
-    0.9 — Founder portfolio (chris-allen-portfolio). Personal brand
-          page that reinforces the studio's authority signal.
-    0.9 — Products index. The "what we ship" overview.
-    0.8 — Individual product showcases. Each product has acquisition
-          and partnership value; high but below the index.
-    0.3 — /thanks (form-submission confirmation). Listed for crawl
-          completeness but low ranking weight; users only land there
-          after submitting the contact form, never from search.
+  WHY THIS FILE LISTS ONE URL
+    src/App.jsx mounts the app inside a <HashRouter>. Every route on this
+    site is therefore a fragment — /#/products, /#/products/underfire-ai,
+    /#/services and so on — and a fragment is not a separate URL as far as
+    a crawler is concerned: everything after the '#' is dropped before the
+    request is ever made, and Google retired the AJAX-crawling scheme that
+    used to work around that. The apex is the only address a search engine
+    can actually fetch, so it is the only honest entry here.
 
-  CHANGE FREQUENCY
-    Most pages are 'monthly'. The homepage is 'weekly' (closest to
-    where new product additions or status updates land first).
+    An earlier version of this file listed static .html pages left over
+    from the pre-React site — products.html, chris-allen-portfolio.html,
+    my-teachers-toolbox-showcase.html, underfireai-showcase.html,
+    founders-helm-showcase.html, kirra-companion-showcase.html,
+    colabmotion-showcase.html, vision-home-ai-showcase.html, and /thanks.
+    None of those exist in this build. Every one of them returned a 404 to
+    crawlers, which is worse than not listing them at all. Removed.
+
+  IF PER-PAGE INDEXING IS WANTED LATER
+    Switch HashRouter to BrowserRouter in src/App.jsx, add an SPA rewrite
+    so every path serves index.html, then list the real routes here:
+    /products, /products/<slug> (four), /services, /templates, /about,
+    /contact. Until that change ships, adding them back here only
+    re-creates the 404s.
+
+  NAMESPACE
+    The previous file declared xmlns="http://www.sitemap.org/..." —
+    singular, and not a real schema. The correct sitemaps.org namespace is
+    below; the old value would fail validation in Search Console.
 
   LAST MODIFIED
-    Set to the date of this sitemap deploy. Crawlers use this as a
-    "has anything changed?" hint. Update this file whenever a page is
-    materially edited so re-crawling is prioritized.
-
-  ROUTE NOTE
-    The Vercel rewrite at /  →  /allen-code-co-animated.html means the
-    canonical homepage URL is the bare apex (https://www.allencodeco.com/),
-    NOT the underlying .html filename. Listing the bare URL here ensures
-    crawlers index the user-facing canonical, not the internal alias.
+    Update <lastmod> whenever the homepage is materially edited so
+    re-crawling is prioritized.
 -->
-<urlset xmlns="http://www.sitemap.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
-  <!-- Homepage -->
+  <!-- Homepage — the only crawlable URL while the app uses HashRouter -->
   <url>
     <loc>https://www.allencodeco.com/</loc>
-    <lastmod>2026-04-25</lastmod>
+    <lastmod>2026-08-23</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
-  </url>
-
-  <!-- Founder portfolio -->
-  <url>
-    <loc>https://www.allencodeco.com/chris-allen-portfolio.html</loc>
-    <lastmod>2026-04-25</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <!-- Products index -->
-  <url>
-    <loc>https://www.allencodeco.com/products.html</loc>
-    <lastmod>2026-04-25</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <!-- Product showcases -->
-  <url>
-    <loc>https://www.allencodeco.com/underfireai-showcase.html</loc>
-    <lastmod>2026-04-25</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <url>
-    <loc>https://www.allencodeco.com/my-teachers-toolbox-showcase.html</loc>
-    <lastmod>2026-04-25</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <url>
-    <loc>https://www.allencodeco.com/founders-helm-showcase.html</loc>
-    <lastmod>2026-04-25</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <url>
-    <loc>https://www.allencodeco.com/kirra-companion-showcase.html</loc>
-    <lastmod>2026-04-25</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <url>
-    <loc>https://www.allencodeco.com/colabmotion-showcase.html</loc>
-    <lastmod>2026-04-25</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <url>
-    <loc>https://www.allencodeco.com/vision-home-ai-showcase.html</loc>
-    <lastmod>2026-04-25</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <!-- Form-submission confirmation page (low priority, listed for completeness) -->
-  <url>
-    <loc>https://www.allencodeco.com/thanks</loc>
-    <lastmod>2026-04-25</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.3</priority>
   </url>
 
 </urlset>

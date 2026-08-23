@@ -65,7 +65,9 @@ export default function ProductDetail() {
               data-aiwp-slot={18 + productIndex}
               src={product.showcaseImage || product.image}
               alt={`${product.name} product preview`}
-              className="block w-full aspect-[16/10] object-cover"
+              className={`block w-full object-cover ${
+                product.heroAspect === '4/3' ? 'aspect-[4/3]' : 'aspect-[16/10]'
+              }`}
             />
           </div>
         </Reveal>

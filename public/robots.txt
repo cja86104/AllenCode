@@ -16,9 +16,10 @@
 #      "blocked from web" warning.
 #
 # Sitemap reference at the bottom points crawlers at the canonical
-# sitemap, which lists every public page on the site. Bing in particular
-# uses this to seed initial crawls; without it, Bing has to discover
-# pages via internal link following alone.
+# sitemap. That file lists the homepage only: the app runs on HashRouter,
+# so every other route is a URL fragment and no crawler can fetch it as a
+# separate address. See the comment block in sitemap.xml for the fix if
+# per-page indexing is ever wanted.
 
 User-agent: *
 Allow: /
