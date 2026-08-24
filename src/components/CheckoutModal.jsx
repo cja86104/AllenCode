@@ -46,7 +46,7 @@ export default function CheckoutModal({ item, onClose }) {
         throw new Error(data.error || 'Could not start checkout.');
       }
       // Hand off to Stripe's hosted Checkout page. Stripe redirects back to
-      // /#/checkout-success (or /#/templates on cancel) once payment finishes.
+      // /checkout-success (or /services on cancel) once payment finishes.
       window.location.href = data.url;
     } catch (err) {
       setError(err.message || 'Something went wrong starting checkout. Please try again.');

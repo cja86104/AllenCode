@@ -5,47 +5,112 @@
   Lives at https://www.allencodeco.com/sitemap.xml and is referenced from
   /robots.txt.
 
-  WHY THIS FILE LISTS ONE URL
-    src/App.jsx mounts the app inside a <HashRouter>. Every route on this
-    site is therefore a fragment — /#/products, /#/products/underfire-ai,
-    /#/services and so on — and a fragment is not a separate URL as far as
-    a crawler is concerned: everything after the '#' is dropped before the
-    request is ever made, and Google retired the AJAX-crawling scheme that
-    used to work around that. The apex is the only address a search engine
-    can actually fetch, so it is the only honest entry here.
+  ROUTES LISTED (as of 2026-08-24)
+    src/App.jsx used to mount the app inside a <HashRouter>, which made
+    every route below the homepage a URL fragment (/#/products, and so
+    on) — invisible to crawlers, since everything after '#' is dropped
+    before the request is ever made and Google retired the AJAX-crawling
+    scheme that used to work around that.
 
-    An earlier version of this file listed static .html pages left over
-    from the pre-React site — products.html, chris-allen-portfolio.html,
-    my-teachers-toolbox-showcase.html, underfireai-showcase.html,
-    founders-helm-showcase.html, kirra-companion-showcase.html,
-    colabmotion-showcase.html, vision-home-ai-showcase.html, and /thanks.
-    None of those exist in this build. Every one of them returned a 404 to
-    crawlers, which is worse than not listing them at all. Removed.
+    That's fixed: App.jsx now uses <BrowserRouter>, and vercel.json adds
+    the rewrite so a direct hit on any of these paths serves index.html
+    instead of 404ing (excluding /api/*, which stays routed to the
+    serverless functions). Every real route is now a genuine, separately
+    fetchable URL, so all of them are listed here.
 
-  IF PER-PAGE INDEXING IS WANTED LATER
-    Switch HashRouter to BrowserRouter in src/App.jsx, add an SPA rewrite
-    so every path serves index.html, then list the real routes here:
-    /products, /products/<slug> (four), /services, /templates, /about,
-    /contact. Until that change ships, adding them back here only
-    re-creates the 404s.
+    Deliberately NOT listed: /checkout-success (post-purchase
+    transactional page, not something search should surface) and the
+    catch-all 404 route.
+
+  KNOWN LIMITATION — SOCIAL PREVIEW CRAWLERS
+    This is still a client-rendered SPA with no server-side rendering.
+    Google indexes it fine because Googlebot executes the JS and renders
+    each route before indexing. Facebook/LinkedIn/Twitter/Slack link-
+    preview bots do NOT execute JavaScript — they only read the raw HTML
+    Vercel returns for a given path, which is the same static index.html
+    for every route. Until per-route static HTML or prerendering exists,
+    sharing a deep link (e.g. /products/underfire-ai) on social platforms
+    will show the homepage's Open Graph tags, not that page's own. Search
+    indexing is unaffected by this; only social link previews are.
 
   NAMESPACE
-    The previous file declared xmlns="http://www.sitemap.org/..." —
-    singular, and not a real schema. The correct sitemaps.org namespace is
-    below; the old value would fail validation in Search Console.
+    Correct sitemaps.org namespace (singular "sitemap" in the old xmlns
+    value would fail Search Console validation).
 
   LAST MODIFIED
-    Update <lastmod> whenever the homepage is materially edited so
-    re-crawling is prioritized.
+    Update <lastmod> on a given <url> whenever that page's content is
+    materially edited, so re-crawling is prioritized correctly.
 -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
-  <!-- Homepage — the only crawlable URL while the app uses HashRouter -->
   <url>
     <loc>https://www.allencodeco.com/</loc>
-    <lastmod>2026-08-23</lastmod>
+    <lastmod>2026-08-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
+  </url>
+
+  <url>
+    <loc>https://www.allencodeco.com/products</loc>
+    <lastmod>2026-08-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://www.allencodeco.com/products/my-teachers-toolbox</loc>
+    <lastmod>2026-08-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://www.allencodeco.com/products/underfire-ai</loc>
+    <lastmod>2026-08-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://www.allencodeco.com/products/founders-helm</loc>
+    <lastmod>2026-08-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://www.allencodeco.com/products/crew-advisors</loc>
+    <lastmod>2026-08-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://www.allencodeco.com/services</loc>
+    <lastmod>2026-08-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://www.allencodeco.com/templates</loc>
+    <lastmod>2026-08-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://www.allencodeco.com/about</loc>
+    <lastmod>2026-08-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <url>
+    <loc>https://www.allencodeco.com/contact</loc>
+    <lastmod>2026-08-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
 
 </urlset>

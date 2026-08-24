@@ -80,8 +80,8 @@ export default async function handler(req, res) {
         mode,
         customerName,
       },
-      success_url: `${origin}/#/checkout-success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/#/services`,
+      success_url: `${origin}/checkout-success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/services`,
     });
 
     return res.status(200).json({ url: session.url });

@@ -1,4 +1,4 @@
-import { HashRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Analytics } from '@vercel/analytics/react';
 import Nav from './components/Nav';
 import Footer from './components/Footer';
@@ -17,7 +17,7 @@ import NotFound from './pages/NotFound';
 
 export default function App() {
   return (
-    <HashRouter>
+    <BrowserRouter>
       <ScrollToTop />
       <Noise />
       <CustomCursor />
@@ -39,6 +39,6 @@ export default function App() {
         <Footer />
       </div>
       <Analytics />
-    </HashRouter>
+    </BrowserRouter>
   );
 }

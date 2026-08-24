@@ -16,10 +16,10 @@
 #      "blocked from web" warning.
 #
 # Sitemap reference at the bottom points crawlers at the canonical
-# sitemap. That file lists the homepage only: the app runs on HashRouter,
-# so every other route is a URL fragment and no crawler can fetch it as a
-# separate address. See the comment block in sitemap.xml for the fix if
-# per-page indexing is ever wanted.
+# sitemap. As of 2026-08-24 the app uses BrowserRouter (not HashRouter)
+# with a Vercel rewrite for client-side routes, so every real page is a
+# genuine, separately fetchable URL and the sitemap lists all of them —
+# see the comment block in sitemap.xml for what's listed and why.
 
 User-agent: *
 Allow: /
