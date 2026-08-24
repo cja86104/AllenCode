@@ -1,14 +1,52 @@
 import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 
+const SITE_URL = 'https://www.allencodeco.com';
+
+function upsertMeta(attr, key, content) {
+  let el = document.querySelector(`meta[${attr}="${key}"]`);
+  if (!el) {
+    el = document.createElement('meta');
+    el.setAttribute(attr, key);
+    document.head.appendChild(el);
+  }
+  el.setAttribute('content', content);
+}
+
+function upsertCanonical(href) {
+  let el = document.querySelector('link[rel="canonical"]');
+  if (!el) {
+    el = document.createElement('link');
+    el.setAttribute('rel', 'canonical');
+    document.head.appendChild(el);
+  }
+  el.setAttribute('href', href);
+}
+
+// Sets document.title + meta description per route (as before), and now
+// also keeps the canonical link and Open Graph/Twitter title+description in
+// sync with the current route.
+//
+// This only helps crawlers that execute JavaScript (Google does). Facebook,
+// LinkedIn, and Slack's link-preview bots read raw HTML only and never run
+// this code, so a shared deep link (e.g. /products/underfire-ai) still
+// falls back to the static tags in index.html — see the comment block in
+// public/sitemap.xml for the full explanation of that limitation.
 export default function usePageMeta(title, description) {
+  const location = useLocation();
+
   useEffect(() => {
+    const url = `${SITE_URL}${location.pathname}`;
+
     document.title = title;
-    let meta = document.querySelector('meta[name="description"]');
-    if (!meta) {
-      meta = document.createElement('meta');
-      meta.name = 'description';
-      document.head.appendChild(meta);
-    }
-    meta.content = description;
-  }, [title, description]);
+    upsertMeta('name', 'description', description);
+    upsertCanonical(url);
+
+    upsertMeta('property', 'og:title', title);
+    upsertMeta('property', 'og:description', description);
+    upsertMeta('property', 'og:url', url);
+
+    upsertMeta('name', 'twitter:title', title);
+    upsertMeta('name', 'twitter:description', description);
+  }, [title, description, location.pathname]);
 }

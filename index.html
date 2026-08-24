@@ -3,9 +3,66 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Allen Code Co. — I build software people want to buy</title>
-    <meta name="description" content="Allen Code Co. is a solo build-to-sell software studio run by Chris Allen — live products, custom SaaS builds, and premium website templates." />
+    <title>Allen Code Co. — Custom Software, Web Design & AI for Real Businesses</title>
+    <meta name="description" content="Custom development, web design, UI/UX, and AI integration — built around your business. Tailored work for small business owners and founders." />
     <meta name="theme-color" content="#0a0a0a" />
+
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+
+    <!--
+      Static defaults below. usePageMeta.js (src/hooks/usePageMeta.js)
+      overrides title/description/canonical/og:*/twitter:* per route once
+      React mounts — every page in src/pages already calls it. These static
+      values are what's actually seen by anything that reads raw HTML
+      without running JS: the very first paint before React mounts, and
+      social link-preview bots (Facebook/LinkedIn/Slack) which never
+      execute JS at all. So these represent the site/homepage generally,
+      and every other page's real per-route values live in that hook.
+    -->
+    <link rel="canonical" href="https://www.allencodeco.com/" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Allen Code Co." />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:title" content="Allen Code Co. — Custom Software, Web Design & AI for Real Businesses" />
+    <meta property="og:description" content="Custom development, web design, UI/UX, and AI integration — built around your business. Tailored work for small business owners and founders." />
+    <meta property="og:url" content="https://www.allencodeco.com/" />
+    <meta property="og:image" content="https://www.allencodeco.com/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Allen Code Co. — We build what you need, for whoever you are." />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Allen Code Co. — Custom Software, Web Design & AI for Real Businesses" />
+    <meta name="twitter:description" content="Custom development, web design, UI/UX, and AI integration — built around your business. Tailored work for small business owners and founders." />
+    <meta name="twitter:image" content="https://www.allencodeco.com/og-image.png" />
+
+    <!--
+      Organization JSON-LD. Sitewide, route-invariant facts only (name, url,
+      description, logo, founder, contact email). No `sameAs` — Chris has
+      real Facebook/GitHub/LinkedIn profiles but their exact URLs aren't
+      confirmed here, and listing guessed URLs would misrepresent the
+      actual profiles. Add sameAs with the real URLs whenever they're
+      confirmed.
+    -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Allen Code Co.",
+      "url": "https://www.allencodeco.com/",
+      "description": "Custom development, web design, UI/UX, and AI integration — built around your business. Tailored work for small business owners and founders.",
+      "logo": "https://www.allencodeco.com/logo-512.png",
+      "email": "chris@allencodeco.com",
+      "founder": {
+        "@type": "Person",
+        "name": "Chris Allen"
+      }
+    }
+    </script>
   </head>
   <body class="bg-[#0a0a0a]">
     <div id="root"></div>
