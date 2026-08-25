@@ -1,0 +1,30 @@
+# Allen Code Co.
+
+> Solo build-to-sell software studio run by Chris Allen. Custom SaaS builds, MVP sprints, AI integration, technical audits, and acquisition-readiness consulting — plus four in-house SaaS products and a library of Next.js/Tailwind starter templates.
+
+## Products
+- [My Teachers Toolbox](https://www.allencodeco.com/products/my-teachers-toolbox): AI tools for K-5 teachers, built in real classrooms. Live at myteacherstoolbox.com.
+- [UnderFire AI](https://www.allencodeco.com/products/underfire-ai): Interview and salary negotiation coaching, on demand. Live at underfireai.com.
+- [Founders Helm](https://www.allencodeco.com/products/founders-helm): A solo founder operating system — ten integrated business tools in one workspace. Live at foundershelm.com.
+- [Crew Advisors](https://www.allencodeco.com/products/crew-advisors): Your AI advisory board — expert personas with persistent memory of your business. Coming soon.
+
+## Services
+- [Custom SaaS Builds](https://www.allencodeco.com/services): Full custom application, built and shipped by one senior developer. Starting at $18,000, 6–12 weeks.
+- [MVP Sprints](https://www.allencodeco.com/services): Scope-locked 4–6 week build to get a real product in front of real users. Starting at $9,500, 4–6 weeks.
+- [AI Integration & OpenRouter Routing](https://www.allencodeco.com/services): Model routing, cost controls, and fallbacks. Starting at $4,500, 1–3 weeks.
+- [Technical Audits](https://www.allencodeco.com/services): Senior-level codebase and architecture review with acquisition-readiness scoring. Flat fee $2,000, 3–5 business days.
+- [Acquisition-Readiness Consulting](https://www.allencodeco.com/services): Get docs, codebase, and metrics ready for buyer diligence. Starting at $6,000, 2–4 weeks.
+- [Custom Web Development](https://www.allencodeco.com/services): Custom-built websites, static HTML/CSS or React/Vite. Starting at $2,500, 1–3 weeks.
+- [UI/UX Design](https://www.allencodeco.com/services): User flow mapping, high-fidelity mockups, and handoff-ready specs. Starting at $2,500, 1–2 weeks.
+
+## Templates
+- [Templates store](https://www.allencodeco.com/templates): SaaS landing pages, dev portfolios, dashboard starters, and agency sites, built with Next.js and Tailwind. $59–$149 each.
+
+## About
+- [About](https://www.allencodeco.com/about): Chris Allen — solo developer, 15 years in professional kitchens before teaching himself to code. Writes every line himself; no subcontracted work.
+
+## Contact
+- [Contact](https://www.allencodeco.com/contact): Project inquiry form.
+- Email: chris@allencodeco.com
+- Book a 20-minute call: https://cal.com/allencodeco
+- Typical response time: within 1 business day
