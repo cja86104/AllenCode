@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Calendar, CheckCircle2, ArrowUpRight } from 'lucide-react';
+import { Mail, Calendar, CheckCircle2, ArrowUpRight } from 'lucide-react';
 import Reveal from '../components/Reveal';
 import Magnetic from '../components/Magnetic';
 import usePageMeta from '../hooks/usePageMeta';
@@ -78,6 +78,12 @@ export default function Contact() {
           </Reveal>
           <Reveal delay={0.1}>
             <div className="mt-10 space-y-4">
+              <a href="mailto:chris@allencodeco.com" className="flex items-center gap-3 text-white/70 hover:text-orange-500">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10">
+                  <Mail size={16} />
+                </span>
+                chris@allencodeco.com
+              </a>
               <a
                 href="https://cal.com/allencodeco"
                 target="_blank"

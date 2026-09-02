@@ -34,9 +34,9 @@ export default function Footer() {
               A solo build-to-sell software studio. Every product shipped acquisition-ready from day one.
             </p>
             <div className="mt-6 flex flex-col gap-3 text-sm">
-              <Link to="/contact" className="inline-flex items-center gap-2 text-white/70 hover:text-orange-500">
-                <Mail size={16} /> Contact
-              </Link>
+              <a href="mailto:chris@allencodeco.com" className="inline-flex items-center gap-2 text-white/70 hover:text-orange-500">
+                <Mail size={16} /> chris@allencodeco.com
+              </a>
               <a
                 href="https://cal.com/allencodeco"
                 target="_blank"
