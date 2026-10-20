@@ -14,6 +14,9 @@ export default function Services() {
   );
   const [checkoutItem, setCheckoutItem] = useState(null);
 
+  // Deposit checkout is intentionally kept but not wired to any button right now.
+  // "Reserve a slot" routes to /contact. To restore payments, swap the Link below
+  // back to a <button onClick={() => openDeposit(s)}> and re-add the price column.
   function openDeposit(service) {
     const isFlat = service.priceNote.toLowerCase().includes('flat');
     const depositAmount = isFlat ? service.startingPrice : Math.round(service.startingPrice * 0.4);
@@ -43,7 +46,7 @@ export default function Services() {
         <div className="mt-16 space-y-6">
           {services.map((s, i) => (
             <Reveal key={s.slug} delay={i * 0.06}>
-              <div className="grid gap-8 rounded-2xl border border-white/10 bg-white/[0.02] p-8 transition-colors hover:border-orange-500/40 lg:grid-cols-[1.4fr_1fr_auto] lg:items-center lg:gap-10">
+              <div className="grid gap-8 rounded-2xl border border-white/10 bg-white/[0.02] p-8 transition-colors hover:border-orange-500/40 lg:grid-cols-[1.4fr_auto] lg:items-center lg:gap-10">
                 <div>
                   <h2 className="font-display text-2xl tracking-tight sm:text-3xl">{s.name}</h2>
                   <p className="mt-3 max-w-xl text-white/60">{s.summary}</p>
@@ -58,17 +61,13 @@ export default function Services() {
                     {s.timeline} · {s.deposit}
                   </p>
                 </div>
-                <div className="lg:text-right">
-                  <p className="mono text-xs uppercase tracking-widest text-white/40">{s.priceNote}</p>
-                  <p className="font-display text-4xl text-orange-500">${s.startingPrice.toLocaleString()}</p>
-                </div>
                 <Magnetic>
-                  <button
-                    onClick={() => openDeposit(s)}
+                  <Link
+                    to="/contact"
                     className="inline-flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-full bg-orange-500 px-6 py-3 mono text-xs uppercase tracking-widest text-black hover:bg-orange-400 lg:w-auto"
                   >
                     Reserve a slot <ArrowUpRight size={14} />
-                  </button>
+                  </Link>
                 </Magnetic>
               </div>
             </Reveal>
