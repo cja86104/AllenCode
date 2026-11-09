@@ -53,17 +53,22 @@ function editorBox(code, width, height) {
 }
 
 /**
- * The approved headline as the page's h1. The two lines keep a space between them so its
- * accessible name reads as one sentence.
+ * The approved headline as the page's h1. The lines keep a space between them so its accessible
+ * name reads as one sentence.
  * @param {{ opacity: number, sized: boolean }} props
  */
 function Headline({ opacity, sized }) {
   return (
     <h1
       style={sized ? { opacity, fontSize: HEADLINE_FONT_SIZE_CSS, lineHeight: HEADLINE_LINE_HEIGHT } : { opacity }}
-      className={`text-center font-serif-display italic text-white ${sized ? '' : 'text-5xl leading-tight sm:text-7xl lg:text-left'}`}
+      className={`text-center font-serif-display italic text-white ${sized ? '' : 'text-4xl leading-tight sm:text-5xl lg:text-left'}`}
     >
-      <span className="block">{HEADLINE_LINES[0]}</span> <span className="block">{HEADLINE_LINES[1]}</span>
+      {HEADLINE_LINES.map((line, i) => (
+        <span key={line} className="block">
+          {i > 0 ? ' ' : ''}
+          {line}
+        </span>
+      ))}
     </h1>
   );
 }

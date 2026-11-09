@@ -65,7 +65,7 @@ at different depths, with parallax as the page scrolls.
 1. **Gate.** A dark editor with an empty file and a blinking orange cursor. Approved line:
    "It all starts with an empty file…" and "Scroll to enter." No sound control.
 2. **Awakening.** As the visitor scrolls, the file fills with a short excerpt of this site's own source,
-   then the characters lift and assemble into the approved headline, "We build software that ships."
+   then the characters lift and assemble into the approved headline, "Welcome to Allen Code Co. What would you like to build today?" (changed by Chris 2026-11-09)
 3. **The fork.** One calm choice: "I'm building a product or business" or "I want a site for me or my family."
    The choice is remembered (session storage, safe when storage is blocked) and can be changed from the nav.
 

@@ -160,7 +160,7 @@ test('with reduced motion /preview shows the code beside its result and no canva
   await page.goto(PREVIEW);
   await expect(page.locator('[data-code-beside]')).toBeVisible();
   await expect(page.locator('[data-code-beside] pre')).toContainText('ReactDOM.createRoot');
-  await expect(page.locator('[data-code-beside]')).toContainText('We build software');
+  await expect(page.locator('[data-code-beside]')).toContainText('Welcome to Allen Code Co.');
   await expect(page.locator('canvas')).toHaveCount(0);
   await expect(page.locator('[data-field="css"] pre')).toContainText('usePageMeta');
 });

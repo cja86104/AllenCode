@@ -23,7 +23,7 @@ const gate = {
     '  </React.StrictMode>',
     ');',
   ].join('\n'),
-  becomes: 'the headline, We build software that ships.',
+  becomes: 'the headline that welcomes you to Allen Code Co',
   approved: { by: 'Chris', on: '2026-11-08' },
 };
 

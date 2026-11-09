@@ -9,7 +9,7 @@ const DOOR_B = 'I want a site for me or my family';
 test('the approved line and headline are real text in the DOM', async ({ page }) => {
   await page.goto(PREVIEW);
   await expect(page.getByText('It all starts with an empty file…')).toHaveCount(1);
-  await expect(page.getByRole('heading', { level: 1, name: 'We build software that ships.' })).toHaveCount(1);
+  await expect(page.getByRole('heading', { level: 1, name: 'Welcome to Allen Code Co. What would you like to build today?' })).toHaveCount(1);
 });
 
 test('choosing a door persists across reload', async ({ page }) => {
@@ -55,7 +55,7 @@ test('with reduced motion the gate shows the code beside the headline and no can
   const beside = page.locator('[data-chapter="gate"] [data-code-beside]');
   await expect(beside).toBeVisible();
   await expect(beside.locator('pre')).toContainText('ReactDOM.createRoot');
-  await expect(beside).toContainText('We build software');
+  await expect(beside).toContainText('Welcome to Allen Code Co.');
   await expect(page.locator('canvas')).toHaveCount(0);
 });
 

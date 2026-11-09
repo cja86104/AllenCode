@@ -43,7 +43,7 @@
 - No audio, no autoplaying media with sound.
 - No prices and no buy buttons on any rendered surface. `startingPrice` in `src/data/services.js` and `price` in `src/data/templates.js` stay in the data, untouched.
 - **Real code only.** Every code excerpt shown is verbatim from a real repository at a recorded commit and approved by Chris before it ships (spec section 5). No invented code.
-- Approved copy, verbatim: opening line "It all starts with an empty file…" and headline "We build software that ships."
+- Approved copy, verbatim: opening line "It all starts with an empty file…" and headline "Welcome to Allen Code Co. What would you like to build today?" (changed by Chris 2026-11-09; was "We build software that ships.")
 - Fonts: JetBrains Mono for code and labels, Instrument Serif (italic) for display, Space Grotesk for interface text.
 - Stack is unchanged: Vite 5, React 18, React Router 6, Tailwind 3, Vercel; `api/` routes are untouched. The repo stays JavaScript.
 - Core Web Vitals targets: LCP under 2.5 s, CLS under 0.1, INP under 200 ms.
