@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -110,4 +110,34 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
   }
+}
+
+/* Lenis smooth scrolling (src/scroll/ScrollEngine.jsx). Overrides the native smooth scroll above
+   while Lenis is active, following the Lenis setup guide. */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+html.lenis {
+  scroll-behavior: auto;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+/* Static field (src/field/CssField.jsx): a faint, motionless texture of real code. */
+.css-field pre {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 2rem;
+  overflow: hidden;
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+  font-size: 13px;
+  line-height: 19px;
+  white-space: pre;
+  color: rgba(209, 209, 204, 0.035);
+  font-variant-ligatures: none;
+  column-width: 34em;
+  column-gap: 4em;
 }

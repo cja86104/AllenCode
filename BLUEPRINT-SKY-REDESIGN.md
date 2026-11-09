@@ -1,0 +1,401 @@
+# Source to Screen Implementation Plan (Master Blueprint)
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans (chosen by Chris: native execution) to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking. In this repo Chris makes every commit, so "Stop" steps replace commit steps.
+
+**Goal:** Replace the public site with the scroll-driven "Source to Screen" experience (real code lifting off a file and landing as real products, two doors, the visitor's own idea) on the existing Vite and React stack, with lint, typecheck and tests in place.
+
+**Architecture:** One lazily loaded WebGL2 glyph renderer (`FieldScene`, mounted above `<Routes>` and enabled per route) draws a faint ambient field of source characters and, at most, one transformation at a time: a real code excerpt laid out as an editor whose characters fly to a target layout (headline text, a product's poster frame, a wireframe). Scenes drive each transformation's progress from GSAP ScrollTrigger under Lenis. Without WebGL2, or with reduced motion, every chapter shows its code beside its result. All real text stays in the DOM. The experience is built at the unlinked, noindex route `/preview` and swapped onto `/` in Phase 6, so every phase leaves the live site deployable.
+
+**Tech Stack:** Vite 5, React 18, React Router 6.30, Tailwind 3, GSAP 3.15 with ScrollTrigger, Lenis 1.3, hand-written WebGL2, ESLint 9 flat config, TypeScript 5 (JSDoc with `// @ts-check`), Vitest 3 with Testing Library, Playwright 1.65, ffmpeg.
+
+**Spec:** `docs/superpowers/specs/2026-11-08-allencode-sky-redesign-design.md` (the file keeps its original name; its content is the Source to Screen spec).
+
+## Progress (read at the start of every session, update after every phase)
+
+| Phase | Status | Verified by |
+|---|---|---|
+| 0 Foundation and tooling | Complete | 0.1: `npm run verify` exit 0; 0.2: `npm run test:e2e` 1/1; 0.5: `npm run verify` exit 0 (28/28), `npm run test:e2e` 11/11, home page pixel-identical to baseline |
+| 1 Field rename and glyph engine | Complete, awaiting Chris's review | `npm run verify` exit 0 (68/68 unit), `npm run test:e2e` 16/16, `/` pixel-identical to the pre-redesign baseline; main bundle 130.17 kB gzip |
+| 2 Gate, awakening, fork | Not started | |
+| 3 Door A service chapters | Not started | |
+| 4 Product chapters and captures | Not started | |
+| 5 Door B, templates, previews | Not started | |
+| 6 Your idea, builder, brief, nav, swap to `/` | Not started | |
+| 7 Inner pages, router, transitions, retirements | Not started | |
+| 8 Full-repo gates, performance, a11y, SEO | Not started | |
+
+## Session rules (replace the unavailable `blueprint-guardian` agent)
+
+1. Start of session: read this file and the spec, then state which task is next.
+2. Read each file before editing it. Make the smallest change that completes the task.
+3. After every task run its verification command and `npm run verify`; run `npm run test:e2e` whenever a task touches routes, scenes or the renderer.
+4. Until Task 6.4 swaps the home page, compare a full-page screenshot of `/` against the baseline at the end of every phase; any difference stops the phase.
+5. End of phase: tick the boxes, update the Progress table with the real verification output, then stop for Chris's review and commit.
+6. Never create a branch, commit or push. Chris does all of that.
+7. Dependencies are installed and tests run outside Chris's folder (it holds Windows-only binaries); only source and config files are copied back, and Chris runs `npm install` after any phase that changes dependencies.
+
+## Global Constraints
+
+- Signature color is `#f97316` (orange-500) on near-black `#0a0a0a`. Locked.
+- No `@ts-ignore`, `@ts-expect-error`, `@ts-nocheck`, `as any`, `eslint-disable` or `ignoreBuildErrors`. No placeholder or mock content. Complete files only. Work in named phases with a stop between each.
+- Every new or changed JS file starts its leading comments with `// @ts-check` (enforced by `tests/policy.test.js`).
+- Chris makes all git commits and pushes. No branches are created.
+- No audio, no autoplaying media with sound.
+- No prices and no buy buttons on any rendered surface. `startingPrice` in `src/data/services.js` and `price` in `src/data/templates.js` stay in the data, untouched.
+- **Real code only.** Every code excerpt shown is verbatim from a real repository at a recorded commit and approved by Chris before it ships (spec section 5). No invented code.
+- Approved copy, verbatim: opening line "It all starts with an empty file…" and headline "We build software that ships."
+- Fonts: JetBrains Mono for code and labels, Instrument Serif (italic) for display, Space Grotesk for interface text.
+- Stack is unchanged: Vite 5, React 18, React Router 6, Tailwind 3, Vercel; `api/` routes are untouched. The repo stays JavaScript.
+- Core Web Vitals targets: LCP under 2.5 s, CLS under 0.1, INP under 200 ms.
+- Products come from `src/data/products.js`: My Teachers Toolbox, UnderFire AI and Founders Helm are `live`; Crew Advisors is `coming-soon` with `url: null`.
+- The spec and blueprint keep their file names.
+
+## Review Focus
+
+1. No WebGL2, a lost GPU context, or reduced motion: every chapter shows its code beside its result, all text readable, no canvas left behind (Tasks 1.7, 2.2, 3.2, 4.3, 5.4).
+2. Fonts slow or blocked: the glyph atlas waits for JetBrains Mono and the chapter shows its static state meanwhile; no characters drawn in a fallback font (Task 1.2).
+3. "Type your idea" input that is empty, very long, pasted HTML, emoji or other scripts: the DOM keeps the visitor's text safely escaped and capped at 120 characters; the flight uses only characters in the atlas; the sketch always has a header, a hero and a call to action (Task 6.1).
+4. Blocked storage, switching doors mid-scroll, route changes, back and forward, and StrictMode double mounts leave no stray ScrollTriggers, Lenis instances, canvases or GPU resources (Tasks 1.6, 2.1).
+5. Excerpt honesty: an unapproved excerpt or one without full provenance never renders, and secret-like content fails the tests (Task 1.5).
+
+## File Structure
+
+- `src/field/` (renamed from `src/sky/` in Task 1.1): `capabilities.js`, `governor.js`, `types.js`, `environment.js`, `fieldBus.js`, `glyphAtlas.js`, `layouts.js`, `syntax.js`, `transformation.js`, `shaders.js`, `glyphRenderer.js`, `FieldStage.jsx`, `CssField.jsx`, `FieldScene.jsx`, `FieldLayer.jsx`, `CodeBeside.jsx`.
+- `src/scroll/ScrollEngine.jsx` (Phase 0, unchanged).
+- `src/content/excerpts/`: `index.js` (registry and schema) plus one file per excerpt.
+- `src/door/`: `doorStorage.js`, `DoorProvider.jsx`, `Fork.jsx`.
+- `src/scenes/`: `Gate.jsx`, `Awakening.jsx`, `ServiceChapter.jsx`, `ProductChapter.jsx`, `DoorBIntro.jsx`, `TemplateChapter.jsx`, `IdeaSketch.jsx`, `Builder.jsx`, `BriefChapter.jsx`.
+- `src/components/`: `MediaLoop.jsx`, `ContactForm.jsx`.
+- `src/pages/Preview.jsx` (renamed from `SkyPreview.jsx`; replaced by the new home in Task 6.4).
+- `tools/excerpts/verify.mjs`, `tools/media/` (product and service captures), `tools/previews/` (template preview pages and recorder); media outputs in `public/media/`.
+- `tests/` (Vitest) and `e2e/` (Playwright).
+
+---
+
+## Phase 1: Field rename and glyph engine
+
+### Task 1.1: Rename sky to field
+
+**Files:** Move `src/sky/*` to `src/field/*` with these renames: `skyBus.js` to `fieldBus.js` (`createSkyBus` to `createFieldBus`, `skyBus` to `fieldBus`, `useSky` to `useField`, `SkyState` to `FieldState`), `SkyLayer.jsx` to `FieldLayer.jsx` (`SKY_ROUTES` to `FIELD_ROUTES`, `useIsSkyRoute` to `useIsFieldRoute`), `SkyScene.jsx` to `FieldScene.jsx`, `SkyStage.jsx` to `FieldStage.jsx`, `CssSky.jsx` to `CssField.jsx`; `src/pages/SkyPreview.jsx` to `src/pages/Preview.jsx` at route `/preview`; `data-sky` attributes to `data-field`; `.css-sky` to `.css-field`; `e2e/sky.spec.js` to `e2e/field.spec.js`; `tests/skyBus.test.js` to `tests/fieldBus.test.js`. Modify `src/App.jsx`, `src/scroll/ScrollEngine.jsx`, `src/index.css`, `public/robots.txt`, the tests that import these modules.
+
+- [x] **Step 1:** Update the tests and e2e specs to the new names and route first. Run `npx vitest run` and `npm run test:e2e`. Expected: FAIL on missing modules and the 404 at `/preview`.
+- [x] **Step 2:** Apply the renames. `rg -n -i "sky" src tests e2e public/robots.txt` returns nothing.
+- [x] **Step 3:** Run `npm run verify` and `npm run test:e2e`. Expected: PASS, same counts as Phase 0.
+- [x] **Step 4:** Removing the old files from Chris's folder needs deletion permission: request it once for the AllenCode folder, or move the old files to `_to_delete/` if declined.
+
+### Task 1.2: Glyph atlas
+
+**Files:** Create `src/field/glyphAtlas.js`, `tests/glyphAtlas.test.js`.
+
+**Produces:**
+- `collectGlyphs(texts: string[]) => string[]`: unique non-whitespace characters, in first-seen order.
+- `createGlyphAtlas(chars: string[], opts: {cell: number, font: string, createCanvas?: (w: number, h: number) => HTMLCanvasElement}) => {canvas: HTMLCanvasElement, columns: number, rows: number, cell: number, indexOf(char: string): number}` with `columns = 16`; `indexOf` returns -1 for characters not in the atlas.
+- `loadAtlasFont(family: string) => Promise<boolean>` using `document.fonts.load`, resolving `false` (never rejecting) when the font cannot load within 3 s.
+
+- [x] **Step 1:** Tests: `collectGlyphs drops whitespace and duplicates`; `atlas has 16 columns and enough rows`; `indexOf maps each character to its draw position and returns -1 for unknown characters`; `each character is drawn centered in its cell` (fake canvas records `fillText` calls); `loadAtlasFont resolves false when the font never loads` (fake `document.fonts`).
+- [x] **Step 2:** Run `npx vitest run tests/glyphAtlas.test.js`. Expected: FAIL (module missing). Implement. Run again. Expected: PASS.
+
+### Task 1.3: Syntax and layouts
+
+**Files:** Create `src/field/syntax.js`, `src/field/layouts.js`, `tests/syntax.test.js`, `tests/layouts.test.js`. Modify `src/field/types.js`.
+
+**Produces (types in `types.js`):** `Box = {x, y, w, h}`; `GlyphPoint = {x, y, char, color: [r, g, b]}`; `TargetPoint = {x, y, color: [r, g, b]}`.
+- `tokenizeLine(line: string) => {text: string, kind: 'keyword'|'type'|'string'|'plain'}[]` and `SYNTAX_COLORS` (keyword `#f97316`, type `#8cc7ff`, string `#a6d98c`, plain `#d1d1cc`, as 0..1 RGB).
+- `codeLayout(code: string, box: Box, metrics: {charWidth: number, lineHeight: number, padding: number}) => GlyphPoint[]`: one point per non-whitespace character at `x = box.x + padding + (col + 0.5) * charWidth`, `y = box.y + padding + (row + 0.5) * lineHeight`.
+- `imageLayout(image: {data: Uint8ClampedArray, width: number, height: number}, box: Box, step: number) => TargetPoint[]`: row-major samples.
+- `pointsFromAlpha(alpha: Uint8ClampedArray, width: number, height: number, step: number) => Float32Array` (normalized pairs where alpha is above 128) and `textLayout(mask: {alpha: Uint8ClampedArray, width: number, height: number}, box: Box, step: number, color: [number, number, number]) => TargetPoint[]`.
+
+- [x] **Step 1:** Tests: `keywords, capitalized types and quoted strings get their kinds`; `codeLayout skips whitespace and places row 2 column 4 exactly`; `codeLayout colors a keyword orange`; `imageLayout returns floor(w/step) by floor(h/step) samples with 0..1 colors`; `a fully opaque 4x4 mask with step 2 yields 4 points`; `textLayout keeps only opaque samples`.
+- [x] **Step 2:** Run, see FAIL, implement, run. Expected: PASS.
+
+### Task 1.4: Transformation
+
+**Files:** Create `src/field/transformation.js`, `tests/transformation.test.js`.
+
+**Produces:** `createTransformation(opts: {source: GlyphPoint[], targets: TargetPoint[], budget: number, seed: number, indexOf: (char: string) => number}) => Transformation` where `Transformation = {count: number, start: Float32Array, end: Float32Array, glyph: Float32Array, original: Float32Array, seed: Float32Array, row: Float32Array, srcColor: Float32Array, dstColor: Float32Array}`.
+
+Rules from the approved prototype: targets are first downsampled evenly to at most `budget`; original characters take evenly spaced targets in reading order; every other particle is a copy of a real source character (`source[i % source.length]`) starting on that character's position; characters missing from the atlas are dropped from the source.
+
+- [x] **Step 1:** Tests: `count equals the target count capped at the budget`; `every glyph index is a character from the source code`; `original characters keep reading order (their target y never decreases)`; `characters not in the atlas are dropped`; `the same seed gives identical buffers`; `an empty source or empty targets gives count 0`.
+- [x] **Step 2:** Run, see FAIL, implement, run. Expected: PASS.
+
+### Task 1.5: Excerpt registry
+
+**Files:** Create `src/content/excerpts/index.js`, `tools/excerpts/verify.mjs`, `tests/excerpts.test.js`. Modify `package.json` (script `excerpts:verify`).
+
+**Produces:** `Excerpt = {id: string, file: string, repo: string, path: string, lines: [number, number], commit: string, code: string, becomes: string, approved: {by: 'Chris', on: string} | null}`; `excerpts: Readonly<Record<string, Excerpt>>`; `getExcerpt(id: string) => Excerpt | null` returning null for unapproved excerpts.
+
+- [x] **Step 1:** Tests: `every excerpt has repo, path, line range, a 7-to-40-character commit and non-empty code`; `line count equals the line range`; `no excerpt is longer than 30 lines`; `no excerpt contains secret-like content` (patterns: `sk-`, `sk_live_`, `pk_live_`, `eyJ` JWT prefixes, `-----BEGIN`, `AKIA`, `ghp_`, and `KEY=`/`SECRET=`/`TOKEN=` assignments); `getExcerpt returns null for an unapproved excerpt`; `ids are unique`.
+- [x] **Step 2:** Run, see FAIL, implement. `tools/excerpts/verify.mjs` checks each excerpt against `git show <commit>:<path>` in a local checkout given by `EXCERPT_REPOS` (JSON map of repo to path) and reports any mismatch.
+- [x] **Step 3:** Run `npm run verify` and `npm run excerpts:verify` (AllenCode only at this point). Expected: PASS.
+
+### Task 1.6: Glyph renderer and ambient field
+
+**Files:** Create `src/field/glyphRenderer.js`; rewrite `src/field/shaders.js`; modify `src/field/FieldStage.jsx`, `src/field/FieldScene.jsx`; delete `src/field/starfield.js` (with the Task 1.1 permission); create `src/content/excerpts/ambient.js` holding the site's own source used by the ambient field (provenance per Task 1.5; approved in the Phase 1 review); create `e2e/renderer.spec.js`.
+
+**Produces:** `createGlyphRenderer(canvas: HTMLCanvasElement, opts: {atlas: Atlas}) => {resize(w: number, h: number, dpr: number): void, setAmbient(points: GlyphPoint[] | null, count: number): void, setTransformation(t: Transformation | null): void, setProgress(p: number): void, setFade(f: number): void, render(timeMs: number): void, destroy(): void}`. Two programs: ambient (drifting faint characters with depth parallax from `fieldBus.progress`) and transformation (the prototype's motion: staggered lift, arc, landing, characters stay characters, color mixes to the target).
+
+- [x] **Step 1:** E2E tests: `/preview draws a non-empty field` (screenshot of the canvas has lit pixels above a threshold); `scrolling changes the field` (two screenshots differ); `a lost WebGL context swaps to the CSS field`; `navigating away and back leaves exactly one canvas`; `the home page does not download the renderer`.
+- [x] **Step 2:** Run. Expected: FAIL. Implement; the governor sets the ambient count from the capability tier (3500, 1800, 700 starting values).
+- [x] **Step 3:** Run `npm run verify` and `npm run test:e2e`. Expected: PASS.
+
+### Task 1.7: Static fallbacks
+
+**Files:** Create `src/field/CodeBeside.jsx`, `tests/CodeBeside.test.jsx`; rewrite `src/field/CssField.jsx` and the `.css-field` rules in `src/index.css`.
+
+**Produces:** `<CodeBeside excerpt={Excerpt} result={ReactNode} />` renders the excerpt in a `<pre>` (with its file name and a text alternative) beside the result. `CssField` becomes a faint static code texture.
+
+- [x] **Step 1:** Tests: `CodeBeside renders the code verbatim, the file name and the result`; e2e `with reduced motion /preview shows CodeBeside and no canvas`; `with WebGL2 unavailable the CSS field renders and the text is present`.
+- [x] **Step 2:** Run, see FAIL, implement, run `npm run verify` and `npm run test:e2e`. Expected: PASS. Stop: Phase 1 review (visual review of `/preview` on desktop and phone; Chris approves the ambient excerpt).
+
+---
+
+## Phase 2: Gate, awakening and fork
+
+### Task 2.1: Door state and the fork
+
+**Files:** Create `src/door/doorStorage.js`, `src/door/DoorProvider.jsx`, `src/door/Fork.jsx`, `tests/doorStorage.test.js`.
+
+**Produces:** `readDoor() => 'a'|'b'|null`, `writeDoor(door: 'a'|'b') => void` (both safe when storage throws); `useDoor() => {door, setDoor}`; `setDoor` also writes `fieldBus.door`.
+
+- [ ] **Step 1:** Tests: `readDoor returns null when storage throws`; `writeDoor does not throw when storage is full`; `a written door is read back`; `setDoor updates fieldBus`.
+- [ ] **Step 2:** Run, see FAIL, implement, run. Expected: PASS.
+
+### Task 2.2: Gate and awakening
+
+**Files:** Create `src/scenes/Gate.jsx`, `src/scenes/Awakening.jsx`, `src/content/excerpts/gate.js` (an excerpt of this site's own source), `e2e/gate.spec.js`. Modify `src/pages/Preview.jsx`.
+
+- [ ] **Step 1:** E2E: `the approved line and headline are real text in the DOM`; `choosing a door persists across reload`; `with storage blocked the fork still works and reappears on reload`; `the fork buttons are reachable by keyboard`; `with reduced motion the gate shows the code beside the headline and no canvas`; `scrolling through the awakening draws characters that end on the headline` (screenshot comparison at progress 0 and 1).
+- [ ] **Step 2:** Run. Expected: FAIL. Implement: the gate types the excerpt into the empty file as the visitor scrolls; the awakening's transformation lands it on `textLayout` of the headline; the `h1` fades in as the particles fade.
+- [ ] **Step 3:** Measure frame time at phone and desktop widths and tune the tier budgets; record the values in the ledger.
+- [ ] **Step 4:** Run `npm run verify` and `npm run test:e2e`. Expected: PASS. Stop: Phase 2 review (Chris approves the gate excerpt and the motion).
+
+---
+
+## Phase 3: Door A service chapters
+
+### Task 3.1: Service excerpts and targets
+
+**Files:** Create `src/content/excerpts/service-*.js` (four), `tools/media/capture.mjs`, `public/media/services/*.jpg`.
+
+- [ ] **Step 1:** Confirm spec 14.D (the Founders Helm repository) with Chris.
+- [ ] **Step 2:** Propose one real excerpt per service from the product repositories (sign-in for MVP, dashboard for custom build, OpenRouter routing or streaming for AI integration, any file for the audit) and stop for Chris to approve each; record provenance and approval.
+- [ ] **Step 3:** Capture each target from public product pages only (never signed-in screens, never credentials) with `capture.mjs` (Playwright screenshot, cropped to the target, JPEG q85, at most 150 KB). Test: `tests/media.test.js` asserts every service target exists and is at most 150 KB.
+
+### Task 3.2: Service chapter
+
+**Files:** Create `src/scenes/ServiceChapter.jsx`, `tests/ServiceChapter.test.jsx`, `e2e/services.spec.js`. Modify `src/pages/Preview.jsx`.
+
+- [ ] **Step 1:** Tests: `each service renders its name, summary and timeline from services.js`; `no service chapter renders a dollar amount or a startingPrice value`; `the audit chapter highlights lines instead of flying`; e2e `door a reaches each service chapter and each lands on its target`.
+- [ ] **Step 2:** Run, see FAIL, implement, run `npm run verify` and `npm run test:e2e`. Expected: PASS. Stop: Phase 3 review.
+
+---
+
+## Phase 4: Product chapters and captures
+
+### Task 4.1: Product loops
+
+**Files:** Create `tools/media/make-loops.mjs`, `public/media/products/<slug>.mp4` and `<slug>.jpg`, `tests/media.products.test.js`. Modify `src/data/products.js` (add `previewVideo` and `poster` to the three live products).
+
+- [ ] **Step 1:** Test `every live product has a loop and poster, coming-soon products have neither, posters are at most 150 KB and loops at most 2 MB`. Run. Expected: FAIL.
+- [ ] **Step 2:** Capture 4 to 6 public screens per live product (My Teachers Toolbox through its public demo) with the built-in browser; never signed-in screens, never credentials. `make-loops.mjs` composes a 6 to 8 second muted H.264 loop (`+faststart`) and a poster per product.
+- [ ] **Step 3:** Run the test. Expected: PASS. Tell Chris these loops are replaceable with his own recordings.
+
+### Task 4.2: MediaLoop
+
+**Files:** Create `src/components/MediaLoop.jsx`, `tests/MediaLoop.test.jsx`.
+
+**Produces:** `<MediaLoop src: string, poster: string, alt: string />`: muted, looping, `playsInline`, `preload="none"`, plays only while in view.
+
+- [ ] **Step 1:** Tests: `renders the poster with its alt text`; `video is muted, looping and playsInline`; `plays when intersecting and pauses when not`; `never has sound`. Run, see FAIL, implement, run. Expected: PASS.
+
+### Task 4.3: Product chapter
+
+**Files:** Create `src/content/excerpts/product-*.js`, `src/scenes/ProductChapter.jsx`, `tests/ProductChapter.test.jsx`, `e2e/products.spec.js`. Modify `src/pages/Preview.jsx`.
+
+- [ ] **Step 1:** Propose one excerpt per product (file named for the product, for example `teachers-toolbox.tsx`) and stop for Chris's approval. Crew Advisors' excerpt comes from `crewadvisors` and is shown typing, unfinished.
+- [ ] **Step 2:** Tests with real `products` data: `exactly 3 live dots and 3 Open live site links`; `Crew Advisors has no live dot and no link and says coming soon`; `each counter's final text equals its stats value exactly`; `a product without stats renders no counters`; e2e `the code lands on the poster, then the loop plays, and the live link has rel noopener`.
+- [ ] **Step 3:** Run, see FAIL, implement (the transformation's targets are `imageLayout` of the poster; at the end the MediaLoop crossfades in), run `npm run verify` and `npm run test:e2e`. Expected: PASS. Stop: Phase 4 review.
+
+---
+
+## Phase 5: Door B, templates and previews
+
+### Task 5.1: Template data
+
+**Files:** Modify `src/data/templates.js`, `src/pages/Templates.jsx` (remove `data-aiwp-slot`). Create `tests/templates.data.test.js`.
+
+- [ ] **Step 1:** Tests: `the eight existing templates keep their prices in the data` (ignite 89, launchpad 99, monoline 59, terminal 69, gridview 129, control-panel 149, studio 89, atelier 95); `hearth, evergreen, keepsake, vow, gather and folio exist with status concept and no price`; `ids are unique`; `no template has a slot field`; `every template names an excerpt, a previewVideo and a poster that exist`.
+- [ ] **Step 2:** Run, see FAIL, implement the data model and categories (Family and Memories, Events, Personal and Creative).
+
+### Task 5.2: Preview pages, their excerpts and videos
+
+**Files:** Create `tools/previews/previews.config.js`, `tools/previews/build.mjs`, `tools/previews/record.mjs`, `tools/previews/src/<id>.html` (14), `public/media/templates/<id>.mp4` and `<id>.jpg`, `src/content/excerpts/template-*.js`.
+
+- [ ] **Step 1:** Build one static preview page per template from a few shared layouts; each carries a visible "Concept preview" label. Each template's excerpt is taken verbatim from its preview source (real code), with provenance pointing at this repository.
+- [ ] **Step 2:** `record.mjs` scrolls each page for 6 to 8 seconds, capturing frames with the DevTools screencast, and encodes with the system ffmpeg (H.264, muted, `+faststart`) plus a poster.
+- [ ] **Step 3:** Run `npx vitest run tests/templates.data.test.js`. Expected: PASS.
+
+### Task 5.3: Templates page and brief prefill
+
+**Files:** Modify `src/pages/Templates.jsx`, `src/pages/Contact.jsx`. Create `tests/Templates.test.jsx`.
+
+- [ ] **Step 1:** Read both files. Tests: `no template shows a price or a Buy button`; `every template links to /contact?template=<id>`; `concept templates say Concept preview, coming soon`; `Contact prefills the message from the template query parameter`.
+- [ ] **Step 2:** Run, see FAIL, implement, run `npm run verify`. Expected: PASS.
+
+### Task 5.4: Door B scenes
+
+**Files:** Create `src/scenes/DoorBIntro.jsx`, `src/scenes/TemplateChapter.jsx`, `tests/TemplateChapter.test.jsx`, `e2e/doorb.spec.js`. Modify `src/pages/Preview.jsx`.
+
+- [ ] **Step 1:** Tests: `door b shows the template chapter and door a does not`; `each template compiles from its excerpt to its poster, then its loop`; `no template chapter shows a price`; e2e `choosing door b then scrolling reaches the family-site transformation`.
+- [ ] **Step 2:** Run, see FAIL, implement (the Door B intro lands the Hearth preview's code on the Hearth poster). Write the Door B copy in plain language, show it to Chris at the stop, and revise on his notes.
+- [ ] **Step 3:** Run `npm run verify` and `npm run test:e2e`. Expected: PASS. Stop: Phase 5 review.
+
+---
+
+## Phase 6: Your idea, builder, brief, nav, and the swap to `/`
+
+### Task 6.1: Type your idea
+
+**Files:** Create `src/scenes/IdeaSketch.jsx`, `tests/sketchLayout.test.js`, `tests/IdeaSketch.test.jsx`. Modify `src/field/layouts.js`.
+
+**Produces:** `sketchBlocks(idea: string) => {kind: 'header'|'hero'|'calendar'|'grid'|'gallery'|'list'|'posts'|'cta', label: string}[]` and `sketchLayout(blocks, box: Box) => TargetPoint[]`.
+
+- [ ] **Step 1:** Tests: `every sketch has a header, a hero and a cta`; `booking adds a calendar; shop a grid; photos a gallery; menu a list; blog posts`; `an empty idea gives the base sketch`; `input is capped at 120 characters`; `pasted HTML renders as text`; `emoji and other scripts are kept in the DOM and skipped in the flight`; `submitting carries the idea to /contact as the first line of the brief`.
+- [ ] **Step 2:** Run, see FAIL, implement (a labeled input that works with no animation), run. Expected: PASS.
+
+### Task 6.2: How I work and the builder
+
+**Files:** Modify `src/components/HowIWork.jsx`. Create `src/scenes/Builder.jsx`, `tests/Builder.test.jsx`.
+
+- [ ] **Step 1:** Tests: `the three principles render with their existing titles`; `the builder photo has alt text and no data-aiwp-slot`. Implement the changelog layout and the builder scene, reusing existing copy verbatim. Run `npm run verify`. Expected: PASS.
+
+### Task 6.3: Contact form and the brief
+
+**Files:** Create `src/components/ContactForm.jsx`, `src/scenes/BriefChapter.jsx`, `tests/ContactForm.test.jsx`. Modify `src/pages/Contact.jsx`.
+
+- [ ] **Step 1:** Read `Contact.jsx` and `api/send-contact-email.js`. Tests: `submits the same payload to /api/send-contact-email as before` (field names read from the file); `shows the existing success and error states`; `prefills from template and idea query parameters`.
+- [ ] **Step 2:** Run, see FAIL, extract the form without changing behavior, use it in `Contact.jsx` and `BriefChapter` (the cursor returns to an empty file, now theirs). Run `npm run verify`. Expected: PASS.
+
+### Task 6.4: Door-aware nav, skip link, and the swap
+
+**Files:** Modify `src/components/Nav.jsx`, `src/App.jsx`, `src/field/FieldLayer.jsx`, `public/robots.txt`, `e2e/smoke.spec.js`. Create `src/pages/Home.jsx` (rewritten to compose every scene in order), `tests/Nav.test.jsx`, `e2e/swap.spec.js`.
+
+- [ ] **Step 1:** Tests: `primary action is Start a project for door a and Browse templates for door b`; `skip link is the first focusable element`; e2e `/ renders the Source to Screen experience`, `/preview no longer exists`, `every inner route still loads`, `tab order never traps focus inside a pinned scene`. Remove the "home page unchanged" e2e tests; this task changes the home page on purpose.
+- [ ] **Step 2:** Run, see FAIL, implement: nav actions, door switcher and skip link; `/` renders the new home; `FIELD_ROUTES` becomes `['/']`; the `/preview` route and its robots line are removed.
+- [ ] **Step 3:** Run `npm run verify` and `npm run test:e2e`. Expected: PASS. Stop: Phase 6 review, the last step before the new home goes live.
+
+---
+
+## Phase 7: Inner pages, router, transitions, retirements
+
+### Task 7.1: Router migration and View Transitions
+
+**Files:** Modify `src/App.jsx`, `src/main.jsx`. Create `e2e/transitions.spec.js`.
+
+- [ ] **Step 1:** Migrate `BrowserRouter` to `createBrowserRouter` with `RouterProvider` (Phase 0 finding b), keeping every route path, `ScrollToTop`, `Analytics`, the 404 route and the Vercel rewrite unchanged; enable `viewTransition` on links. E2E: `every route still loads by URL and by link`; `with startViewTransition removed, navigation still updates URL and content`.
+- [ ] **Step 2:** Run `npm run verify` and `npm run test:e2e`. Expected: PASS.
+
+### Task 7.2: Products and Product detail
+
+**Files:** Modify `src/pages/Products.jsx`, `src/pages/ProductDetail.jsx`, `src/components/ProductCard.jsx`, `tools/legacy-files.js`.
+
+- [ ] **Step 1:** Read `docs/PRODUCT-IMAGES.md` first. Restyle with the new tokens; preserve the single `image` field behavior. Test `product detail renders for every slug and Crew Advisors shows no link`. Remove the rewritten files from the legacy list; they gain `// @ts-check`.
+- [ ] **Step 2:** Run `npm run verify`. Expected: PASS.
+
+### Task 7.3: Services and Templates pages
+
+**Files:** Modify `src/pages/Services.jsx`, `src/pages/Templates.jsx`, `tools/legacy-files.js`.
+
+- [ ] **Step 1:** Restyle. Test `Services page renders no dollar amount`. Remove both files from the legacy list. Run `npm run verify`. Expected: PASS.
+
+### Task 7.4: About, Contact, footer, 404, checkout success
+
+**Files:** Modify `src/pages/About.jsx`, `src/pages/Contact.jsx`, `src/pages/NotFound.jsx`, `src/pages/CheckoutSuccess.jsx`, `src/components/Footer.jsx`, `tools/legacy-files.js`.
+
+- [ ] **Step 1:** Restyle; keep copy and behavior. Remove the files from the legacy list. Run `npm run verify`. Expected: PASS.
+
+### Task 7.5: Retirements
+
+- [ ] **Step 1:** List the remaining references: `rg -n "data-aiwp-slot|ScrambleText|WireframeCube|CodeTerminal|CustomCursor|Marquee|CheckoutModal" src`. `CheckoutModal` is retired only if nothing uses it once templates have no buy button.
+- [ ] **Step 2:** Deleting files on Chris's machine needs permission: request it once with the exact files, or move them to `_to_delete/` if declined. Decide on `CursorGlow.jsx` and `Noise.jsx` with Chris.
+- [ ] **Step 3:** Run `npm run verify` and `npm run test:e2e`. Expected: PASS and the search returns nothing. Stop: Phase 7 review.
+
+---
+
+## Phase 8: Full-repo gates, performance, accessibility, SEO
+
+### Task 8.1: Zero exclusions
+
+**Files:** Modify `tsconfig.json` (`checkJs: true`), `eslint.config.js`, `tests/policy.test.js`; delete `tools/legacy-files.js`; fix any file with findings.
+
+- [ ] **Step 1:** Remove the legacy list and turn `checkJs` on. Run `npm run lint` and `npm run typecheck`. Fix each finding at its root cause (no directives).
+- [ ] **Step 2:** Run `npm run verify`. Expected: PASS with zero exclusions.
+
+### Task 8.2: Performance, accessibility and SEO
+
+**Files:** Create `e2e/a11y.spec.js`, `e2e/seo.spec.js`. Append results to this file.
+
+- [ ] **Step 1:** Install `@axe-core/playwright`. Tests: `no serious or critical accessibility violations on /, /products, /services, /templates, /about and /contact`; `with JavaScript disabled the static shell still has the title, description and canonical`.
+- [ ] **Step 2:** Run Lighthouse against `npm run preview` (mobile and desktop); record LCP, CLS and total blocking time against the targets, and the JavaScript sizes from `npm run build`; set the JavaScript budget from these numbers. Fix regressions.
+- [ ] **Step 3:** Record what a crawler sees without JavaScript and give Chris the prerender decision (spec section 11).
+- [ ] **Step 4:** Run `npm run verify` and `npm run test:e2e`. Expected: PASS. Update the Progress table. Stop: final review.
+
+## Execution ledger
+
+Task numbers in Phase 0 entries are unchanged. References to later tasks inside those entries use the numbering of the Sky plan in force when they were written; the Source to Screen plan above replaces it.
+
+Baseline before any change (2026-11-08): `npm run build` passed; JS 408.06 kB (129.10 kB gzip), CSS 24.05 kB (5.46 kB gzip).
+
+- Task 0.1: complete (tests: `npm run verify` → exit 0; lint clean, typecheck clean, 3/3 tests, build ok). Gates proven by planted violations: policy test, lint and typecheck each failed on a probe file and passed after it was removed. The production bundle hash was unchanged.
+- Task 0.1: Ruling: this section is the ledger, not a git-ignored workspace, because Chris commits and reviews every phase. Cost if wrong: none.
+- Task 0.1: Ruling: installs and test runs happen in a Linux scratch copy, and only source and config files are copied back, because the folder's `node_modules` holds Windows-only binaries (`@rollup/rollup-win32-*`, `@esbuild/win32-x64`) that a Linux install would replace. Chris runs `npm install` on Windows after each phase that changes dependencies. Cost if wrong: one extra install.
+- Task 0.1: Ruling: ESLint stays on 9.x although npm marks it unsupported, because eslint-plugin-react and eslint-plugin-jsx-a11y do not declare ESLint 10 support. Revisit when they do. Cost if wrong: no upstream fixes for ESLint 9.
+- Task 0.1: Ruling: `tools/legacy-files.js` is the single legacy list used by both ESLint and the policy test (the plan had it inline in the ESLint config). `src/components/ScrambleText.jsx` contains an existing `eslint-disable`; it is legacy and retired in Task 6.5. Cost if wrong: none; the list only shrinks and Task 7.1 deletes it.
+- Task 0.1: Ruling: `api/**` is excluded from lint because the spec keeps the serverless routes untouched. Cost if wrong: unlinted code in `api/`.
+- Task 0.1: Ruling: the two file-system tests run in Vitest's Node environment (`@vitest-environment node`) because jsdom replaces `URL`. Cost if wrong: none.
+- Task 0.1: Ruling: added dev dependencies the plan did not list: `@types/node` (Node types for tests and tools), `@testing-library/dom` (required peer of Testing Library 16), `@types/eslint-plugin-jsx-a11y` (types for the ESLint config); added `tests/setup.js`. Vitest pinned to 3.x, which supports Vite 5. Cost if wrong: none.
+- Task 0.1: Ruling: `skipLibCheck` is on, so `tsc` checks this repo's code but not third-party `.d.ts` files; `react/prop-types` is off because props are typed with JSDoc and checked by `npm run typecheck`. Neither suppresses an error in this repo's code. Cost if wrong: a type bug inside a dependency's own declarations goes unflagged.
+
+- Task 0.2: complete (tests: `npm run test:e2e` → 1/1 pass; `npm run verify` → exit 0, 3/3 tests, build ok).
+- Task 0.2: Ruling: e2e tests and media capture run in the cloud workspace against its installed Chrome, through the `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` variable in `playwright.config.js`, because the device VM cannot download a browser. Unset, Playwright uses its own Chromium as normal. Cost if wrong: none on Chris's machine.
+- Task 0.2: Ruling: the preview server runs on a fixed port (`--port 4173 --strictPort`) so a busy port fails loudly instead of testing the wrong server; `test-results/` and `playwright-report/` were added to `.gitignore`. Cost if wrong: none.
+- Task 0.2: Ruling: Task 4.2 now records with the DevTools screencast plus the system ffmpeg, and Task 6.1 now includes the data-router migration; both texts were updated above (findings b and c). Cost if wrong: Task 6.1 touches `main.jsx` and `App.jsx` routing, covered by the e2e route test.
+- Task 0.3: complete (tests: `npx vitest run tests/capabilities.test.js tests/governor.test.js` → 14/14; `npm run verify` → exit 0, 17/17).
+- Task 0.3: Ruling: "restores 5 percent" means 5 percent of the base per window (linear recovery), and the governor evaluates non-overlapping 24-sample windows and ignores non-finite or negative frame times; both behaviors have tests. Cost if wrong: recovery is slower or faster than intended, tuned in Task 1.2.
+- Task 0.4: complete (tests: `npx vitest run tests/tokens.test.js` → 1/1; `npm run verify` → exit 0, 18/18). Full-page screenshots of `/` before and after are pixel-identical (0 differing pixels); the JS bundle is byte-identical; CSS grew 0.03 kB.
+- Task 0.5: complete (tests: `npm run verify` → exit 0, 28/28 unit tests; `npm run test:e2e` → 11/11). Full-page screenshot of `/` is pixel-identical to the pre-redesign baseline. Bundle: main JS 130.11 kB gzip (baseline 129.10 kB); the sky chunk (GSAP, Lenis, WebGL) is 54.25 kB gzip and loads only on sky routes.
+- Task 0.5: Ruling: type checking is opt-in per file with `// @ts-check` (`checkJs: false`, `strict: true`) instead of `checkJs: true` over listed folders, because `tsc` follows imports and checking `App.jsx` pulled in 55 errors from 16 legacy files. `tests/policy.test.js` now fails any non-legacy file without `// @ts-check`, and `@ts-nocheck` is banned. Task 7.1 switches `checkJs` on for everything. Cost if wrong: none; the policy test enforces the opt-in.
+- Task 0.5: Ruling: `ScrollEngine` is mounted inside the lazily loaded `SkyScene`, not directly in `App.jsx` as the plan said, because mounting it in `App.jsx` put GSAP and Lenis in every page's bundle (+54 kB gzip on the live home page). Guarded by the e2e test "the home page does not download the scroll engine or the WebGL starfield". Cost if wrong: none.
+- Task 0.5: Ruling: `setGlyphTargets` is not added until Task 1.1, which first uses it, so no unused code ships. Task 0.5's Produces block lists it; Task 1.1 adds it to `Starfield`. Cost if wrong: none.
+- Task 0.5: Ruling: the app shell keeps its `bg-[#0a0a0a]` background on regular routes and clears it only on sky routes. Removing it everywhere revealed the hero's `CursorGlow`, which is hidden behind that background on the live site today; the live site is left exactly as it is. Guarded by the e2e test "the page shell stays opaque on regular routes and clears only on sky routes". Cost if wrong: none.
+- Task 0.5: Ruling: `tests/setup.js` gives jsdom a minimal `matchMedia` because GSAP's ScrollTrigger calls it on registration; Lenis's recommended CSS rules were added to `src/index.css` (without `!important`). Cost if wrong: none.
+- Task 0.5: Ruling: files that used CRLF line endings (`src/App.jsx`, `src/hooks/usePageMeta.js`, `public/robots.txt`) keep CRLF; the repo's `* text=auto` normalizes them in git either way. Cost if wrong: none.
+- Task 0.5: Note: the `/_vercel/insights/script.js` 404 seen under `vite preview` is Vercel Analytics, which only exists on Vercel; it predates this work. Instrument Serif could not be confirmed visually because the sandbox cannot reach Google Fonts, so screenshots show the Georgia fallback.
+- Re-plan (2026-11-08): the starfield concept was replaced by Source to Screen after a throwaway prototype (cloud workspace only, never in this repo) that Chris and his wife reviewed and approved. Phases 1 to 7 of the Sky plan were rewritten as Phases 1 to 8 above; Phase 0 carries over unchanged. Chris decided: real code only, no template prices or buy buttons for now, and the spec and blueprint keep their file names.
+
+- Task 1.1: complete (tests: `npx vitest run` and `npm run test:e2e` red on the new names first, then `npm run verify` → exit 0, 28/28; `npm run test:e2e` → 11/11). Old `src/sky` files removed from Chris's folder with his deletion permission.
+- Task 1.2: complete (tests: `npx vitest run tests/glyphAtlas.test.js` → 7/7, red first).
+- Task 1.3: complete (tests: `npx vitest run tests/syntax.test.js tests/layouts.test.js` → 10/10, red first).
+- Task 1.4: complete (tests: `npx vitest run tests/transformation.test.js` → 7/7, red first).
+- Task 1.5: complete (tests: `npx vitest run tests/excerpts.test.js` → 9/9, red first). The ambient excerpt was checked byte for byte against `git show b670193:src/hooks/usePageMeta.js` lines 35 to 52 in Chris's checkout (identical SHA-256).
+- Task 1.5: Ruling: drafts (excerpts Chris has not approved) render only on the unlinked, noindex `/preview` route, through `getExcerpt(id, { includeDrafts })`, which `FieldLayer` enables for that route only, so Chris can see an excerpt before approving it. Everywhere else only approved excerpts render. Cost if wrong: none on live pages; Task 6.4 removes `/preview`.
+- Task 1.6: complete (tests: `npx vitest run tests/resolveTransform.test.js` → 3/3; e2e `renderer.spec.js` 3/3, red first; `npm run verify` → exit 0; `npm run test:e2e` → 16/16 after Task 1.7). Reviewed visually at six scroll points.
+- Task 1.6: Ruling: the renderer interface differs from the plan: `setAmbient(glyphs, capacity)` takes atlas indices (ambient positions are random, not an editor layout), plus `setAmbientCount`, `setAmbientState` and `setTransformState`. Scenes request a transformation by putting a `TransformSpec` on `fieldBus.transform`; the lazy chunk resolves it (`resolveTransform.js`, `editorMetrics.js`, both new). Phase 1 supports text targets only; image targets are added in Phase 4 where they are first used. Cost if wrong: Phase 4 extends `TransformSpec`.
+- Task 1.6: Ruling: capabilities now report `ambientCount` (3500/1800/700) and `transformBudget` (4000/2500/1200) instead of `starCount`. Cost if wrong: retuned in Task 2.2 Step 3.
+- Task 1.6: Ruling: the field self-hosts JetBrains Mono 500 and Instrument Serif italic (Fontsource, OFL-1.1) inside its lazy chunk, because the field waits for its font and must not depend on a third-party CDN; live pages still use Google Fonts and are unaffected. Cost if wrong: two font families defined twice on `/preview`.
+- Task 1.6: Ruling: the `/preview` route is lazy-loaded so it adds nothing to the live pages' bundle (main bundle 130.17 kB gzip against the 129.10 kB baseline). Cost if wrong: none.
+- Task 1.6: Ruling (found in visual review, not by a test): sparse landing text dropped original characters; `resolveTransform` now samples more finely until there are two landing places per code character (test "sparse landing text is sampled more densely so every original character is kept", red first). Note: the first two `resolveTransform` tests were run only after the implementation existed.
+- Task 1.6: Ruling (found in visual review, then pinned by a red-first e2e test): `overflow-x: hidden` on the app shell made it a scroll container and broke `position: sticky`; field routes now use `overflow-x: clip`, regular routes keep their original classes. Cost if wrong: horizontal overflow on field routes in browsers older than Safari 16.
+- Task 1.7: complete (tests: `npx vitest run tests/CodeBeside.test.jsx tests/fieldBus.test.js` red first; `npm run verify` → exit 0, 68/68; `npm run test:e2e` → 16/16).
+- Task 1.7: Ruling: reduced motion now uses the static field and code-beside-result chapters with no canvas (spec section 8), so `FieldStage` lost its reduced-motion path; `fieldBus.mode` ('pending', 'webgl', 'static') tells chapters which form to show. Code displays turn ligatures off so `=>` shows as typed. Cost if wrong: none.
+- Task 1.7: Ruling: test infrastructure: `tests/setup.js` calls Testing Library's `cleanup` after each test (automatic cleanup needs Vitest globals, which are off); `pngjs` and `@types/pngjs` added for pixel checks in e2e. Cost if wrong: none.
+- Phase 1: dependencies changed (`@fontsource/jetbrains-mono`, `@fontsource/instrument-serif`, `pngjs`, `@types/pngjs`): Chris runs `npm install`.
+
+## Phase 0 findings
+
+Recorded 2026-11-08 during Task 0.2.
+
+- **(a) GSAP licensing:** GSAP and all its plugins, including ScrollTrigger, are free for commercial use under the standard no-charge license (effective 2025-04-30). The license prohibits using GSAP in no-code visual animation or site-building tools that compete with Webflow. This site is a permitted use. Check the license before putting GSAP inside AWP or ColabMotion. Sources: https://gsap.com/community/standard-license/ and https://webflow.com/blog/gsap-becomes-free
+- **(b) View Transitions and the router:** installed react-router-dom is 6.30.4. Its source only calls `document.startViewTransition` inside `RouterProvider` (data router). Under the current `BrowserRouter`, `viewTransition` on `<Link>` does nothing, and `useViewTransitionState` (used by `<NavLink viewTransition>`) throws. Task 6.1 therefore migrates to `createBrowserRouter`.
+- **(c) Headless browser and video:** the device VM cannot download Playwright's browser (network allowlist returns 403) or install system packages (no root). The cloud workspace has Google Chrome for Testing 153 at `/usr/bin/google-chrome`; Playwright drives it through `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`, and WebGL2 works in it headless. Playwright's built-in `recordVideo` fails there because its bundled ffmpeg build is missing; capturing frames with the DevTools screencast and encoding with the system ffmpeg works (verified: 41 frames encoded to a 1.7 s H.264 MP4). On Chris's Windows machine, `npx playwright install chromium` once is enough and the variable stays unset.

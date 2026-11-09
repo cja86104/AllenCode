@@ -1,8 +1,14 @@
+// @ts-check
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
 const SITE_URL = 'https://www.allencodeco.com';
 
+/**
+ * @param {'name' | 'property'} attr
+ * @param {string} key
+ * @param {string} content
+ */
 function upsertMeta(attr, key, content) {
   let el = document.querySelector(`meta[${attr}="${key}"]`);
   if (!el) {
@@ -13,6 +19,7 @@ function upsertMeta(attr, key, content) {
   el.setAttribute('content', content);
 }
 
+/** @param {string} href */
 function upsertCanonical(href) {
   let el = document.querySelector('link[rel="canonical"]');
   if (!el) {
@@ -32,8 +39,17 @@ function upsertCanonical(href) {
 // this code, so a shared deep link (e.g. /products/underfire-ai) still
 // falls back to the static tags in index.html — see the comment block in
 // public/sitemap.xml for the full explanation of that limitation.
-export default function usePageMeta(title, description) {
+//
+// Pass `{ noindex: true }` for routes that must stay out of search results; the robots
+// tag is removed again when the page unmounts.
+/**
+ * @param {string} title
+ * @param {string} description
+ * @param {{ noindex?: boolean }} [options]
+ */
+export default function usePageMeta(title, description, options = {}) {
   const location = useLocation();
+  const noindex = options.noindex === true;
 
   useEffect(() => {
     const url = `${SITE_URL}${location.pathname}`;
@@ -49,4 +65,15 @@ export default function usePageMeta(title, description) {
     upsertMeta('name', 'twitter:title', title);
     upsertMeta('name', 'twitter:description', description);
   }, [title, description, location.pathname]);
+
+  useEffect(() => {
+    if (!noindex) return undefined;
+    const robots = document.createElement('meta');
+    robots.setAttribute('name', 'robots');
+    robots.setAttribute('content', 'noindex, nofollow');
+    document.head.appendChild(robots);
+    return () => {
+      robots.remove();
+    };
+  }, [noindex]);
 }

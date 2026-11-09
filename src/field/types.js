@@ -1,0 +1,52 @@
+// @ts-check
+/**
+ * Shared JSDoc types for the field system. This module has no runtime code.
+ *
+ * @typedef {'high' | 'medium' | 'low'} Tier
+ *
+ * @typedef {object} CapabilityEnv
+ * @property {boolean} webgl2 Whether a WebGL2 context can be created.
+ * @property {boolean} prefersReducedMotion The `prefers-reduced-motion: reduce` media query result.
+ * @property {number} hardwareConcurrency Logical CPU cores (`navigator.hardwareConcurrency`).
+ * @property {number} [deviceMemory] Approximate RAM in GB (`navigator.deviceMemory`); absent in some browsers.
+ * @property {number} viewportWidth Viewport width in CSS pixels.
+ *
+ * @typedef {object} Capabilities
+ * @property {boolean} webgl2
+ * @property {boolean} reducedMotion
+ * @property {Tier} tier
+ * @property {number} ambientCount Ambient characters to start with for the tier.
+ * @property {number} transformBudget Most particles one transformation may use.
+ *
+ * @typedef {object} Box
+ * @property {number} x
+ * @property {number} y
+ * @property {number} w
+ * @property {number} h
+ *
+ * @typedef {object} GlyphPoint A code character at its place in an editor layout.
+ * @property {number} x
+ * @property {number} y
+ * @property {string} char
+ * @property {[number, number, number]} color 0..1 RGB.
+ *
+ * @typedef {object} TargetPoint A place a character can land, with the color of what is there.
+ * @property {number} x
+ * @property {number} y
+ * @property {[number, number, number]} color 0..1 RGB.
+ *
+ * @typedef {object} TransformSpec One code-to-text transformation a scene asks the field to play.
+ * @property {string} key Changes whenever the layout changes, so the field rebuilds it.
+ * @property {string} code The excerpt's code, laid out as an editor in `sourceBox`.
+ * @property {Box} sourceBox Viewport box of the editor, in CSS pixels.
+ * @property {string} text Where the characters land: this text, drawn in `font` inside `targetBox`. `\n` breaks lines.
+ * @property {string} font CSS font for the landing text.
+ * @property {Box} targetBox Viewport box of the landing text, in CSS pixels.
+ * @property {number} step Spacing of landing places, in CSS pixels.
+ * @property {[number, number, number]} color 0..1 RGB of the landed characters.
+ *
+ * @typedef {object} Governor
+ * @property {(frameMs: number) => number} sample Records one frame time in milliseconds and returns the current count.
+ */
+
+export {};

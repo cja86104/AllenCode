@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "allowJs": true,
+    "checkJs": false,
+    "strict": true,
+    "noEmit": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "types": ["node"]
+  },
+  "include": [
+    "src/**/*",
+    "tests/**/*",
+    "tools/**/*",
+    "e2e/**/*",
+    "eslint.config.js",
+    "vitest.config.js",
+    "playwright.config.js",
+    "tailwind.config.js"
+  ],
+  "exclude": ["node_modules", "dist", "tools/previews/out"]
+}

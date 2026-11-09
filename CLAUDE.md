@@ -19,9 +19,9 @@ Short version: one `image` field in `src/data/products.js` drives all three surf
 `showcaseImage` — both silently override `image`. Verify with `npm run build` (only validation
 script in this repo).
 
-## ⚠ No Master Blueprint Found
+## Master Blueprint
 
-No blueprint file was detected in this project root. Add your blueprint file to this directory and update this line with the filename:
+The master blueprint for the current redesign is the file named below. Read its Progress table at the start of every session and update it after every phase:
 ```
-Blueprint: [YOUR-BLUEPRINT-FILENAME-HERE]
+Blueprint: BLUEPRINT-SKY-REDESIGN.md
 ```
