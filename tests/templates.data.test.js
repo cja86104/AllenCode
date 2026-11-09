@@ -3,6 +3,7 @@
 import { existsSync, statSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { templateCategories, templates } from '../src/data/templates.js';
+import { excerpts, getExcerpt, validateExcerpt } from '../src/content/excerpts/index.js';
 
 const EXISTING_PRICES = { ignite: 89, launchpad: 99, monoline: 59, terminal: 69, gridview: 129, 'control-panel': 149, studio: 89, atelier: 95 };
 const FAMILY_CONCEPTS = ['hearth', 'evergreen', 'keepsake', 'vow', 'gather', 'folio'];
@@ -44,6 +45,18 @@ describe('template data', () => {
     expect(templateCategories).toEqual(expect.arrayContaining(['Family and Memories', 'Events', 'Personal and Creative']));
     for (const template of templates) expect(templateCategories, template.id).toContain(template.category);
     for (const category of templateCategories) expect(templates.some((t) => t.category === category), category).toBe(true);
+  });
+
+  it("every template's excerpt is real code from its own preview page, valid and approved", () => {
+    for (const template of templates) {
+      const excerpt = excerpts[template.excerpt];
+      expect(excerpt, template.id).toBeDefined();
+      expect(excerpt.repo, template.id).toBe('cja86104/AllenCode');
+      expect(excerpt.path, template.id).toBe(`tools/previews/src/${template.id}.html`);
+      expect(excerpt.approved, template.id).toEqual({ by: 'Chris', on: '2026-11-09' });
+      expect(validateExcerpt(excerpt), template.id).toEqual([]);
+      expect(getExcerpt(template.excerpt)?.id, template.id).toBe(template.excerpt);
+    }
   });
 
   it('every template names its excerpt, and its preview loop and poster exist within size limits', () => {

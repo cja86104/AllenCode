@@ -6,6 +6,8 @@ import Fork from '../door/Fork.jsx';
 import { useDoor } from '../door/DoorProvider.jsx';
 import ServiceChapters from '../scenes/ServiceChapters.jsx';
 import ProductChapters from '../scenes/ProductChapter.jsx';
+import DoorBIntro from '../scenes/DoorBIntro.jsx';
+import TemplateChapter from '../scenes/TemplateChapter.jsx';
 import { excerpts } from '../content/excerpts/index.js';
 
 /**
@@ -32,6 +34,12 @@ export default function Preview() {
         <>
           <ServiceChapters includeDrafts />
           <ProductChapters includeDrafts />
+        </>
+      )}
+      {door === 'b' && (
+        <>
+          <DoorBIntro includeDrafts />
+          <TemplateChapter includeDrafts />
         </>
       )}
 

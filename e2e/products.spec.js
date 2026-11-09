@@ -70,8 +70,8 @@ test('counters count up with the scroll and end on the exact values from product
   await scrollChapter(page, chapter, 0);
   await expect(counters).toHaveText(['0', '0K+', '0', '0']);
   await scrollChapter(page, chapter, 0.3);
+  await expect.poll(() => counters.allTextContents()).not.toEqual(['0', '0K+', '0', '0']);
   const midway = await counters.allTextContents();
-  expect(midway).not.toEqual(['0', '0K+', '0', '0']);
   expect(midway).not.toEqual(['239', '47K+', '8', '17']);
   await scrollChapter(page, chapter, 0.8);
   await expect(counters).toHaveText(['239', '47K+', '8', '17']);
@@ -84,8 +84,8 @@ test('Crew Advisors types as the visitor scrolls, never finishes, and has no lin
   await scrollChapter(page, chapter, 0);
   const early = (await code.textContent())?.length ?? 0;
   await scrollChapter(page, chapter, 1);
+  await expect.poll(async () => (await code.textContent())?.length ?? 0).toBeGreaterThan(early);
   const late = (await code.textContent())?.length ?? 0;
-  expect(late).toBeGreaterThan(early);
   expect(late).toBeLessThan(crewExcerpt.code.length);
   await expect(chapter.locator('[data-cursor]')).toBeVisible();
   await expect(chapter.getByText('Coming soon')).toBeVisible();
