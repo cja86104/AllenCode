@@ -86,6 +86,21 @@ describe('approved excerpts', () => {
     expect(getExcerpt('gate')?.id).toBe('gate');
   });
 
+  it('the four product excerpts are approved by Chris, valid, and named for their products', () => {
+    const files = {
+      'product-my-teachers-toolbox': 'teachers-toolbox.tsx',
+      'product-underfire-ai': 'underfire.ts',
+      'product-founders-helm': 'founders-helm.tsx',
+      'product-crew-advisors': 'crew-advisors.ts',
+    };
+    for (const [id, file] of Object.entries(files)) {
+      expect(excerpts[id]?.approved, id).toEqual({ by: 'Chris', on: '2026-11-09' });
+      expect(excerpts[id].file, id).toBe(file);
+      expect(validateExcerpt(excerpts[id]), id).toEqual([]);
+      expect(getExcerpt(id)?.id, id).toBe(id);
+    }
+  });
+
   it('the four service excerpts are approved by Chris and render without drafts', () => {
     for (const id of ['service-mvp', 'service-custom', 'service-ai', 'service-audit']) {
       expect(excerpts[id].approved, id).toEqual({ by: 'Chris', on: '2026-11-09' });

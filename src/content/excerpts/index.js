@@ -5,6 +5,10 @@ import serviceMvp from './service-mvp.js';
 import serviceCustom from './service-custom.js';
 import serviceAi from './service-ai.js';
 import serviceAudit from './service-audit.js';
+import productMyTeachersToolbox from './product-my-teachers-toolbox.js';
+import productUnderfireAi from './product-underfire-ai.js';
+import productFoundersHelm from './product-founders-helm.js';
+import productCrewAdvisors from './product-crew-advisors.js';
 
 /**
  * A verbatim excerpt of real source code (spec section 5).
@@ -42,6 +46,10 @@ export const excerpts = Object.freeze({
   [serviceCustom.id]: serviceCustom,
   [serviceAi.id]: serviceAi,
   [serviceAudit.id]: serviceAudit,
+  [productMyTeachersToolbox.id]: productMyTeachersToolbox,
+  [productUnderfireAi.id]: productUnderfireAi,
+  [productFoundersHelm.id]: productFoundersHelm,
+  [productCrewAdvisors.id]: productCrewAdvisors,
 });
 
 /**

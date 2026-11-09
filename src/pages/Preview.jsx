@@ -5,6 +5,7 @@ import Gate from '../scenes/Gate.jsx';
 import Fork from '../door/Fork.jsx';
 import { useDoor } from '../door/DoorProvider.jsx';
 import ServiceChapters from '../scenes/ServiceChapters.jsx';
+import ProductChapters from '../scenes/ProductChapter.jsx';
 import { excerpts } from '../content/excerpts/index.js';
 
 /**
@@ -27,7 +28,12 @@ export default function Preview() {
         <Fork />
       </section>
 
-      {door === 'a' && <ServiceChapters includeDrafts />}
+      {door === 'a' && (
+        <>
+          <ServiceChapters includeDrafts />
+          <ProductChapters includeDrafts />
+        </>
+      )}
 
       <footer className="relative z-10 mx-auto max-w-4xl px-6 pb-16 lg:px-10">
         <p className="mono text-[10px] uppercase tracking-[0.3em] text-white/40">Preview (not public)</p>
