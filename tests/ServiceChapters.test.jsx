@@ -53,9 +53,9 @@ describe('ServiceChapters', () => {
     expect(audit.querySelectorAll('[data-audit-line]')).toHaveLength(23);
   });
 
-  it('renders nothing for an excerpt that is not approved when drafts are off', () => {
+  it('with drafts off, the approved code still shows in all four chapters', () => {
     const { container } = render(<ServiceChapters includeDrafts={false} />);
-    expect(container.querySelectorAll('pre')).toHaveLength(0);
+    expect(container.querySelectorAll('pre')).toHaveLength(4);
     expect(screen.getAllByRole('heading', { level: 2 })).toHaveLength(4);
   });
 });

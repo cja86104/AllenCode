@@ -37,7 +37,7 @@ const serviceAudit = {
     "}",
   ].join('\n'),
   becomes: 'an audit, checked line by line',
-  approved: null,
+  approved: { by: 'Chris', on: '2026-11-09' },
 };
 
 export default serviceAudit;

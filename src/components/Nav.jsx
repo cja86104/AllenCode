@@ -12,11 +12,18 @@ const LINKS = [
   { to: '/contact', label: 'Contact' },
 ];
 
-export default function Nav() {
+/**
+ * Site navigation. On regular routes it is sticky and takes its own space at the top of the page.
+ * With `overlay` (field routes) it is fixed over the page instead, so pinned scenes start at the very
+ * top and their full height is on screen when the page opens.
+ */
+export default function Nav({ overlay = false }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/10 bg-[#0a0a0a]/80 backdrop-blur-md">
+    <header
+      className={`${overlay ? 'fixed inset-x-0' : 'sticky'} top-0 z-50 border-b border-white/10 bg-[#0a0a0a]/80 backdrop-blur-md`}
+    >
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-10">
         <Link to="/" onClick={() => setOpen(false)} className="mono text-sm font-bold uppercase tracking-[0.2em] text-white">
           Allen<span className="text-orange-500">Code</span> Co.

@@ -6,8 +6,8 @@ const TYPED_BY = 0.35;
 const FLIGHT_FROM = 0.4;
 /** Share of the flight after which the real headline takes over. */
 const HANDOFF_FROM = 0.88;
-/** Section progress by which the approved gate line has faded. */
-const INTRO_UNTIL = 0.06;
+/** Section progress by which the approved gate line and the scroll cue have faded. */
+const INTRO_UNTIL = 0.1;
 
 /** @param {number} x */
 const clamp01 = (x) => Math.min(1, Math.max(0, x));

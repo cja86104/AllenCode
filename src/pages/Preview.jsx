@@ -23,13 +23,13 @@ export default function Preview() {
     <>
       <Gate includeDrafts />
 
-      <section className="relative z-10 mx-auto flex min-h-[70vh] max-w-4xl flex-col items-center justify-center px-6 lg:px-10">
+      <section className="relative z-10 mx-auto flex max-w-4xl flex-col items-center justify-center px-6 py-16 lg:px-10 lg:py-20">
         <Fork />
       </section>
 
       {door === 'a' && <ServiceChapters includeDrafts />}
 
-      <footer className="relative z-10 mx-auto max-w-4xl px-6 pb-24 lg:px-10">
+      <footer className="relative z-10 mx-auto max-w-4xl px-6 pb-16 lg:px-10">
         <p className="mono text-[10px] uppercase tracking-[0.3em] text-white/40">Preview (not public)</p>
         {drafts.length > 0 && (
           <p className="mono mt-3 text-xs text-white/50">

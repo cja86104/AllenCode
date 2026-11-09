@@ -38,7 +38,7 @@ const serviceAi = {
     "  });",
   ].join('\n'),
   becomes: 'an advisor reply in Crew Advisors',
-  approved: null,
+  approved: { by: 'Chris', on: '2026-11-09' },
 };
 
 export default serviceAi;

@@ -75,3 +75,26 @@ test('a chapter with a screen flies its code onto that screen as the visitor scr
   await page.evaluate((y) => window.scrollTo(0, y), Math.round(top + span));
   await expect(screen).toHaveCSS('opacity', '1');
 });
+
+test('after a lost context is restored mid-flight, the fresh canvas keeps drawing the flight', async ({ page }) => {
+  await page.goto(PREVIEW);
+  await expect(page.locator('canvas[data-field="webgl"]')).toHaveAttribute('data-ready', 'true');
+  await page.getByRole('button', { name: "I'm building a product or business" }).click();
+  const mvp = page.locator('[data-chapter="mvp-sprints"]');
+  const top = await mvp.evaluate((el) => el.getBoundingClientRect().top + window.scrollY);
+  const span = await mvp.evaluate((el) => el.getBoundingClientRect().height - window.innerHeight);
+  await page.evaluate((y) => window.scrollTo(0, y), Math.round(top + span * 0.5));
+  await expect(mvp.locator('pre')).toHaveCSS('opacity', '0');
+
+  await page.locator('canvas[data-field="webgl"]').evaluate((el) => {
+    el.setAttribute('data-before-loss', '');
+    const ext = /** @type {HTMLCanvasElement} */ (el).getContext('webgl2')?.getExtension('WEBGL_lose_context');
+    ext?.loseContext();
+    setTimeout(() => ext?.restoreContext(), 100);
+  });
+  await expect(page.locator('canvas[data-field="webgl"][data-ready="true"]:not([data-before-loss])')).toHaveCount(1);
+
+  const { width, height } = page.viewportSize() ?? { width: 0, height: 0 };
+  const stage = { x: Math.round(width * 0.42), y: Math.round(height * 0.14), width: Math.round(width * 0.54), height: Math.round(height * 0.74) };
+  await expect.poll(async () => visibleCodePixels(await page.screenshot({ clip: stage }))).toBeGreaterThan(400);
+});

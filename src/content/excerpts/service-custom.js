@@ -39,7 +39,7 @@ const serviceCustom = {
     "      : Promise.resolve({ count: null }),",
   ].join('\n'),
   becomes: 'the Founders Helm dashboard',
-  approved: null,
+  approved: { by: 'Chris', on: '2026-11-09' },
 };
 
 export default serviceCustom;

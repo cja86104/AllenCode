@@ -171,8 +171,8 @@ function FlightChapter({ service, excerpt, screen }) {
   const frameOpacity = 1 - Math.min(1, timeline.flight * 4);
 
   return (
-    <section ref={sectionRef} data-chapter={slug} className="relative h-[300vh]">
-      <div className="sticky top-0 h-screen overflow-hidden">
+    <section ref={sectionRef} data-chapter={slug} className="relative h-[220vh]">
+      <div className="pin-frame sticky top-0 overflow-hidden">
         <div style={{ left: text.x, top: text.y, width: text.w }} className="absolute">
           <ServiceText service={service} compact={viewport.w < DESKTOP_MIN_WIDTH} />
         </div>
@@ -227,7 +227,7 @@ function StaticChapter({ service, excerpt, screen }) {
   return (
     <section
       data-chapter={service.slug}
-      className="relative z-10 mx-auto grid max-w-6xl gap-10 px-6 py-24 lg:grid-cols-[0.85fr_1.15fr] lg:items-center lg:px-10"
+      className="relative z-10 mx-auto grid max-w-6xl gap-10 px-6 py-16 lg:grid-cols-[0.85fr_1.15fr] lg:items-center lg:px-10"
     >
       <ServiceText service={service} />
       <div className="min-w-0 space-y-6">
@@ -297,7 +297,7 @@ function AuditChapter({ service, excerpt, animate }) {
     return (
       <section
         data-chapter={service.slug}
-        className="relative z-10 mx-auto grid max-w-6xl gap-10 px-6 py-24 lg:grid-cols-[0.85fr_1.15fr] lg:items-center lg:px-10"
+        className="relative z-10 mx-auto grid max-w-6xl gap-10 px-6 py-16 lg:grid-cols-[0.85fr_1.15fr] lg:items-center lg:px-10"
       >
         <ServiceText service={service} />
         <div className="min-w-0">{panel}</div>
@@ -306,8 +306,8 @@ function AuditChapter({ service, excerpt, animate }) {
   }
 
   return (
-    <section ref={sectionRef} data-chapter={service.slug} className="relative h-[250vh]">
-      <div className="sticky top-0 flex h-screen items-center">
+    <section ref={sectionRef} data-chapter={service.slug} className="relative h-[180vh]">
+      <div className="pin-frame sticky top-0 flex items-center">
         <div className="relative z-10 mx-auto grid w-full max-w-6xl gap-10 px-6 lg:grid-cols-[0.85fr_1.15fr] lg:items-center lg:px-10">
           <ServiceText service={service} />
           <div className="min-w-0">{panel}</div>

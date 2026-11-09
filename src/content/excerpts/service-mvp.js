@@ -34,7 +34,7 @@ const serviceMvp = {
     "              </p>",
   ].join('\n'),
   becomes: 'the UnderFire AI landing page it renders',
-  approved: null,
+  approved: { by: 'Chris', on: '2026-11-09' },
 };
 
 export default serviceMvp;

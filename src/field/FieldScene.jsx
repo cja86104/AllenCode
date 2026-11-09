@@ -13,6 +13,12 @@ import { fieldBus } from './fieldBus.js';
 import { getExcerpt } from '../content/excerpts/index.js';
 
 /**
+ * Restarts allowed after lost GPU contexts in one visit. A device that keeps losing its context
+ * settles on the CSS field instead of flickering between the two.
+ */
+export const MAX_FIELD_RESTARTS = 3;
+
+/**
  * The field and its scroll engine for one field route. Loaded lazily by FieldLayer so GSAP, Lenis
  * and the WebGL code never reach pages without the field.
  *
@@ -23,8 +29,10 @@ export default function FieldScene({ includeDrafts }) {
   const capabilities = useMemo(() => detectCapabilities(readCapabilityEnv()), []);
   const [webglFailed, setWebglFailed] = useState(false);
   const onFailure = useCallback(() => setWebglFailed(true), []);
+  const [restarts, setRestarts] = useState(0);
+  const onRestart = useCallback(() => setRestarts((count) => count + 1), []);
   // Reduced motion gets the static field and code-beside-result chapters (spec section 8).
-  const useWebGL = capabilities.webgl2 && !webglFailed && !reducedMotion;
+  const useWebGL = capabilities.webgl2 && !webglFailed && !reducedMotion && restarts <= MAX_FIELD_RESTARTS;
   const ambient = useMemo(() => getExcerpt('ambient', { includeDrafts }), [includeDrafts]);
 
   useEffect(() => {
@@ -36,7 +44,14 @@ export default function FieldScene({ includeDrafts }) {
     <>
       <ScrollEngine enabled={!reducedMotion} />
       {useWebGL ? (
-        <FieldStage capabilities={capabilities} includeDrafts={includeDrafts} onFailure={onFailure} />
+        // A new key mounts a new canvas, so a restart always gets a fresh GPU context.
+        <FieldStage
+          key={restarts}
+          capabilities={capabilities}
+          includeDrafts={includeDrafts}
+          onFailure={onFailure}
+          onRestart={onRestart}
+        />
       ) : (
         <CssField code={ambient ? ambient.code : null} />
       )}

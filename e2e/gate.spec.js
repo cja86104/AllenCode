@@ -101,3 +101,15 @@ test.describe('on a phone', () => {
     expect((box?.x ?? 0) + (box?.width ?? 999)).toBeLessThanOrEqual(390);
   });
 });
+
+for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {
+  test(`at ${viewport.width}px the scroll cue is on screen when the page opens`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    await page.goto(PREVIEW);
+    const cue = page.getByText('Scroll to enter');
+    await expect(cue).toBeVisible();
+    const box = await cue.boundingBox();
+    expect(box).not.toBeNull();
+    expect((box?.y ?? viewport.height) + (box?.height ?? 0)).toBeLessThanOrEqual(viewport.height);
+  });
+}

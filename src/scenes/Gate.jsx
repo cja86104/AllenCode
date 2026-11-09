@@ -113,7 +113,7 @@ export default function Gate({ includeDrafts }) {
 
   if (isStatic || !excerpt) {
     return (
-      <section data-chapter="gate" className="relative mx-auto max-w-6xl px-6 py-24 lg:px-10">
+      <section data-chapter="gate" className="relative mx-auto max-w-6xl px-6 pb-16 pt-24 lg:px-10">
         <p className="mono mb-10 text-xs uppercase tracking-[0.3em] text-ember">{GATE_LINE}</p>
         {excerpt ? (
           <CodeBeside excerpt={excerpt} result={<Headline opacity={1} sized={false} />} />
@@ -133,8 +133,8 @@ export default function Gate({ includeDrafts }) {
   const frameOpacity = 1 - Math.min(1, timeline.flight * 4);
 
   return (
-    <section ref={sectionRef} data-chapter="gate" className="relative h-[400vh]">
-      <div className="sticky top-0 h-screen overflow-hidden">
+    <section ref={sectionRef} data-chapter="gate" className="relative h-[280vh]">
+      <div className="pin-frame sticky top-0 overflow-hidden">
         <p
           style={{ opacity: timeline.intro, left: box.x, top: Math.max(8, box.y - TITLE_BAR_HEIGHT - 56) }}
           className="mono absolute text-xs uppercase tracking-[0.3em] text-ember"
@@ -184,7 +184,7 @@ export default function Gate({ includeDrafts }) {
 
         <p
           style={{ opacity: timeline.intro }}
-          className="mono absolute bottom-10 left-0 right-0 text-center text-[10px] uppercase tracking-[0.35em] text-white/50"
+          className="mono absolute bottom-8 left-0 right-0 text-center text-xs uppercase tracking-[0.35em] text-white/80"
         >
           Scroll to enter
         </p>

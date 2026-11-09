@@ -85,4 +85,11 @@ describe('approved excerpts', () => {
     expect(excerpts.gate.approved).toEqual({ by: 'Chris', on: '2026-11-08' });
     expect(getExcerpt('gate')?.id).toBe('gate');
   });
+
+  it('the four service excerpts are approved by Chris and render without drafts', () => {
+    for (const id of ['service-mvp', 'service-custom', 'service-ai', 'service-audit']) {
+      expect(excerpts[id].approved, id).toEqual({ by: 'Chris', on: '2026-11-09' });
+      expect(getExcerpt(id)?.id, id).toBe(id);
+    }
+  });
 });

@@ -37,14 +37,74 @@ test('with reduced motion data-scroll-engine is off', async ({ page }) => {
   await expect(page.locator('html')).toHaveAttribute('data-scroll-engine', 'off');
 });
 
-test('a lost WebGL context swaps to the CSS field', async ({ page }) => {
-  await page.goto(PREVIEW);
-  const canvas = page.locator('canvas[data-field="webgl"]');
+/**
+ * Marks the current field canvas, then loses its context through WEBGL_lose_context. The extension
+ * is kept on window so a test can restore the same context.
+ * @param {import('@playwright/test').Page} page
+ */
+async function loseFieldContext(page) {
+  const canvas = page.locator('canvas[data-field="webgl"][data-ready="true"]');
   await expect(canvas).toHaveCount(1);
   await canvas.evaluate((el) => {
+    el.setAttribute('data-before-loss', '');
     const gl = /** @type {HTMLCanvasElement} */ (el).getContext('webgl2');
-    gl?.getExtension('WEBGL_lose_context')?.loseContext();
+    const ext = gl?.getExtension('WEBGL_lose_context') ?? null;
+    /** @type {any} */ (window).__fieldLoseExt = ext;
+    ext?.loseContext();
   });
+}
+
+/** @param {import('@playwright/test').Page} page */
+async function restoreFieldContext(page) {
+  await page.evaluate(() => /** @type {any} */ (window).__fieldLoseExt?.restoreContext());
+}
+
+const freshCanvas = '[data-field="webgl"][data-ready="true"]:not([data-before-loss])';
+
+test('a lost WebGL context that the browser restores comes back on a fresh canvas', async ({ page }) => {
+  await page.goto(PREVIEW);
+  await loseFieldContext(page);
+  await restoreFieldContext(page);
+  await expect(page.locator(freshCanvas)).toHaveCount(1);
+  await expect(page.locator('canvas')).toHaveCount(1);
+  await expect(page.locator('[data-field="css"]')).toHaveCount(0);
+});
+
+test('a lost WebGL context that never comes back restarts on a fresh canvas after the wait', async ({ page }) => {
+  await page.goto(PREVIEW);
+  await loseFieldContext(page);
+  await expect(page.locator(freshCanvas)).toHaveCount(1, { timeout: 6000 });
+  await expect(page.locator('[data-field="css"]')).toHaveCount(0);
+});
+
+test('when the GPU cannot give a new context, the page falls back to the static field', async ({ page }) => {
+  await page.goto(PREVIEW);
+  await expect(page.locator('canvas[data-field="webgl"][data-ready="true"]')).toHaveCount(1);
+  await page.evaluate(() => {
+    const original = HTMLCanvasElement.prototype.getContext;
+    Object.defineProperty(HTMLCanvasElement.prototype, 'getContext', {
+      configurable: true,
+      value(/** @type {string} */ type, /** @type {unknown[]} */ ...rest) {
+        if (type === 'webgl2' && !this.hasAttribute('data-before-loss')) return null;
+        return Reflect.apply(original, this, [type, ...rest]);
+      },
+    });
+  });
+  await loseFieldContext(page);
+  await expect(page.locator('[data-field="css"]')).toHaveCount(1, { timeout: 6000 });
+  await expect(page.locator('canvas[data-field="webgl"]')).toHaveCount(0);
+  await expect(page.locator('[data-code-beside]')).toBeVisible();
+});
+
+test('after three restarts in one visit the page settles on the static field', async ({ page }) => {
+  await page.goto(PREVIEW);
+  for (let i = 0; i < 3; i += 1) {
+    await loseFieldContext(page);
+    await restoreFieldContext(page);
+    await expect(page.locator(freshCanvas)).toHaveCount(1);
+  }
+  await loseFieldContext(page);
+  await restoreFieldContext(page);
   await expect(page.locator('[data-field="css"]')).toHaveCount(1);
   await expect(page.locator('canvas[data-field="webgl"]')).toHaveCount(0);
 });

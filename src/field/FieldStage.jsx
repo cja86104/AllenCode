@@ -4,6 +4,7 @@ import { ATLAS_CELL, ATLAS_FONT, ATLAS_FONT_FAMILY, collectGlyphs, createGlyphAt
 import { createGlyphRenderer } from './glyphRenderer.js';
 import { resolveTransform } from './resolveTransform.js';
 import { createGovernor } from './governor.js';
+import { watchContext } from './contextRecovery.js';
 import { fieldBus } from './fieldBus.js';
 import { excerpts, getExcerpt } from '../content/excerpts/index.js';
 
@@ -54,12 +55,14 @@ function smoothstep(edge0, edge1, x) {
 
 /**
  * The WebGL2 glyph field. Loaded lazily with FieldScene. Waits for JetBrains Mono so no character
- * is drawn in a fallback face, and calls `onFailure` when the font, WebGL setup or the GPU context
- * fails, so FieldScene can swap to the CSS field.
+ * is drawn in a fallback face, and calls `onFailure` when the font or WebGL setup fails, so
+ * FieldScene can swap to the CSS field. A lost GPU context stops drawing and calls `onRestart` once
+ * the browser restores it (or after a visible wait), so FieldScene can remount the field on a fresh
+ * canvas.
  *
- * @param {{ capabilities: import('./types.js').Capabilities, includeDrafts: boolean, onFailure: () => void }} props
+ * @param {{ capabilities: import('./types.js').Capabilities, includeDrafts: boolean, onFailure: () => void, onRestart: () => void }} props
  */
-export default function FieldStage({ capabilities, includeDrafts, onFailure }) {
+export default function FieldStage({ capabilities, includeDrafts, onFailure, onRestart }) {
   const canvasRef = useRef(/** @type {HTMLCanvasElement | null} */ (null));
   const { ambientCount, transformBudget } = capabilities;
 
@@ -134,7 +137,6 @@ export default function FieldStage({ capabilities, includeDrafts, onFailure }) {
         const fade = state.transformProgress <= 0 ? 0 : 1 - smoothstep(FADE_FROM, 1, state.transformProgress);
         renderer.setTransformState(state.transformProgress, fade);
       };
-      const onContextLost = () => onFailure();
       /** @param {number} time */
       const loop = (time) => {
         if (lastTime) renderer.setAmbientCount(governor.sample(time - lastTime));
@@ -143,7 +145,13 @@ export default function FieldStage({ capabilities, includeDrafts, onFailure }) {
         frame = requestAnimationFrame(loop);
       };
 
-      canvas.addEventListener('webglcontextlost', onContextLost);
+      const stopWatching = watchContext(canvas, {
+        onLost: () => {
+          cancelAnimationFrame(frame);
+          delete canvas.dataset.ready;
+        },
+        onRestart,
+      });
       window.addEventListener('resize', resize);
       const unsubscribe = fieldBus.subscribe(sync);
       resize();
@@ -156,7 +164,7 @@ export default function FieldStage({ capabilities, includeDrafts, onFailure }) {
         cancelAnimationFrame(frame);
         unsubscribe();
         window.removeEventListener('resize', resize);
-        canvas.removeEventListener('webglcontextlost', onContextLost);
+        stopWatching();
         delete canvas.dataset.ready;
         renderer.destroy();
       };
@@ -167,7 +175,7 @@ export default function FieldStage({ capabilities, includeDrafts, onFailure }) {
       cancelled = true;
       teardown();
     };
-  }, [ambientCount, transformBudget, includeDrafts, onFailure]);
+  }, [ambientCount, transformBudget, includeDrafts, onFailure, onRestart]);
 
   return (
     <canvas

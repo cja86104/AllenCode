@@ -125,6 +125,15 @@ html.lenis {
   overflow: hidden;
 }
 
+/* Pinned scene frames (src/scenes): the visible viewport's height. On phones 100vh is the height with
+   the browser's toolbars hidden, which puts the bottom of a frame behind the toolbar; 100dvh tracks
+   what is actually visible (and matches window.innerHeight, which the scenes lay out against).
+   Browsers without dvh keep the 100vh line. */
+.pin-frame {
+  height: 100vh;
+  height: 100dvh;
+}
+
 /* Static field (src/field/CssField.jsx): a faint, motionless texture of real code. */
 .css-field pre {
   position: absolute;

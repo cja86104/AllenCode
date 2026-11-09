@@ -39,7 +39,7 @@ function AppShell() {
           onFieldRoute ? 'overflow-x-clip' : 'overflow-x-hidden bg-[#0a0a0a]'
         }`}
       >
-        <Nav />
+        <Nav overlay={onFieldRoute} />
         <main className="flex-1">
           <Routes>
             <Route path="/" element={<Home />} />

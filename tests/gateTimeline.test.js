@@ -24,7 +24,8 @@ describe('gateTimeline', () => {
     expect(gateTimeline(1).handoff).toBe(1);
   });
 
-  it('fades the approved line out as typing begins', () => {
+  it('fades the approved line and the scroll cue out over the first tenth of the gate', () => {
+    expect(gateTimeline(0.05).intro).toBeCloseTo(0.5);
     expect(gateTimeline(0.1).intro).toBe(0);
   });
 
