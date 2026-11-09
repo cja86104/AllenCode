@@ -18,7 +18,7 @@
 | 1 Field rename and glyph engine | Complete, awaiting Chris's review | `npm run verify` exit 0 (68/68 unit), `npm run test:e2e` 16/16, `/` pixel-identical to the pre-redesign baseline; main bundle 130.17 kB gzip |
 | 2 Gate, awakening, fork | Complete, awaiting Chris's review | `npm run verify` exit 0 (93/93 unit), `npm run test:e2e` 24/24, `/` pixel-identical to the pre-redesign baseline; main bundle 130.58 kB gzip |
 | 3 Door A service chapters | Built; all four excerpts approved; MVP (UnderFire) and custom-build (Founders Helm) screens registered; lost GPU contexts recover; waiting on the Crew Advisors screen and a corrected UnderFire screen | `npm run verify` exit 0 (121/121 unit), `npm run test:e2e` 36/36, `/` pixel-identical to the pre-redesign baseline; main bundle 130.69 kB gzip |
-| 4 Product chapters and captures | Not started | |
+| 4 Product chapters and captures | In progress: 4.1 loops and 4.2 MediaLoop built; 4.3 waiting on Chris's approval of the four product excerpts | 4.1 and 4.2: `npm run verify` exit 0 (133/133 unit), `npm run test:e2e` 36/36, `/` pixel-identical; main bundle 130.74 kB gzip |
 | 5 Door B, templates, previews | Not started | |
 | 6 Your idea, builder, brief, nav, swap to `/` | Not started | |
 | 7 Inner pages, router, transitions, retirements | Not started | |
@@ -197,9 +197,9 @@ Rules from the approved prototype: targets are first downsampled evenly to at mo
 
 **Files:** Create `tools/media/make-loops.mjs`, `public/media/products/<slug>.mp4` and `<slug>.jpg`, `tests/media.products.test.js`. Modify `src/data/products.js` (add `previewVideo` and `poster` to the three live products).
 
-- [ ] **Step 1:** Test `every live product has a loop and poster, coming-soon products have neither, posters are at most 150 KB and loops at most 2 MB`. Run. Expected: FAIL.
-- [ ] **Step 2:** Capture 4 to 6 public screens per live product (My Teachers Toolbox through its public demo) with the built-in browser; never signed-in screens, never credentials. `make-loops.mjs` composes a 6 to 8 second muted H.264 loop (`+faststart`) and a poster per product.
-- [ ] **Step 3:** Run the test. Expected: PASS. Tell Chris these loops are replaceable with his own recordings.
+- [x] **Step 1:** Test `every live product has a loop and poster, coming-soon products have neither, posters are at most 150 KB and loops at most 2 MB`. Run. Expected: FAIL.
+- [x] **Step 2:** Capture 4 to 6 public screens per live product (My Teachers Toolbox through its public demo) with the built-in browser; never signed-in screens, never credentials. `make-loops.mjs` composes a 6 to 8 second muted H.264 loop (`+faststart`) and a poster per product.
+- [x] **Step 3:** Run the test. Expected: PASS. Tell Chris these loops are replaceable with his own recordings.
 
 ### Task 4.2: MediaLoop
 
@@ -207,7 +207,7 @@ Rules from the approved prototype: targets are first downsampled evenly to at mo
 
 **Produces:** `<MediaLoop src: string, poster: string, alt: string />`: muted, looping, `playsInline`, `preload="none"`, plays only while in view.
 
-- [ ] **Step 1:** Tests: `renders the poster with its alt text`; `video is muted, looping and playsInline`; `plays when intersecting and pauses when not`; `never has sound`. Run, see FAIL, implement, run. Expected: PASS.
+- [x] **Step 1:** Tests: `renders the poster with its alt text`; `video is muted, looping and playsInline`; `plays when intersecting and pauses when not`; `never has sound`. Run, see FAIL, implement, run. Expected: PASS.
 
 ### Task 4.3: Product chapter
 
@@ -424,6 +424,11 @@ Baseline before any change (2026-11-08): `npm run build` passed; JS 408.06 kB (1
 - Task 3.4: verification: `npm run verify` exit 0, 114/114; `npm run test:e2e` 32/32. Main bundle 130.70 kB gzip (+0.04 kB, the nav's `overlay` prop).
 - Task 3.5 (Chris, 2026-11-09: "fix recover animation auto on phone"): a lost GPU context no longer drops the page to the static field for the rest of the visit. `src/field/contextRecovery.js` (`watchContext`) cancels the loss event so the browser may restore the context, stops drawing, and asks for one restart when the context is restored or after `RESTORE_WAIT_MS` (2 s) of the page being visible; time in the background does not count. `FieldScene` remounts `FieldStage` with a new key, so each restart gets a new canvas and context and picks up the current transformation from `fieldBus`. After `MAX_FIELD_RESTARTS` (3) in one visit the page settles on the CSS field; a GPU that cannot give a new context also falls back. Tests: 7 unit tests for the watcher and 4 e2e tests replacing "a lost WebGL context swaps to the CSS field" (restored, never restored, no new context, restart cap), all red first except "no new context", which already held and still does; plus "after a lost context is restored mid-flight, the fresh canvas keeps drawing the flight", proven against a disabled restart (fails) and passing with it. Cost if wrong: tune the wait or the cap.
 - Task 3.5: verification: `npm run verify` exit 0, 121/121; `npm run test:e2e` 36/36; `/` pixel-identical; main bundle 130.69 kB gzip (the field chunk carries the watcher). Not verified on a real phone: Safari's engine cannot be downloaded in the workspace; the restore path uses the standard `webglcontextlost`/`webglcontextrestored` events Safari implements.
+- Task 4.1 (2026-11-09): Ruling (Chris, 2026-11-09: "use landing page for MTT"): the My Teachers Toolbox loop is made from its public landing page, not its public demo. All three loops come from public landing pages only (`www.myteacherstoolbox.com`, `www.underfireai.com`, `www.foundershelm.com`), captured by `tools/media/capture-products.mjs` with headless Chromium at 1440 x 900 (scale 1.25) instead of the built-in browser, so Chris can re-run it (`npm run media:capture`, then `npm run media:loops`). Frames: My Teachers Toolbox 4 (hero, "Everything you need.", "Do the math on your own week.", the second row of tools); UnderFire AI 5 (hero cropped above its "Packs from $25" button, features, interview formats, five steps, FAQ); Founders Helm 5 (hero, "Not another tab.", "Ship the page", the AI advisor, "Everything else you were also paying for."). The capture refuses any frame whose visible text shows a dollar figure or a withdrawn My Teachers Toolbox claim ("46 countries", "new teachers", "first-year teacher"); it refused MTT's FAQ (subscription prices in its open answer), and its "Three steps" frame was dropped because its steps had not animated in. Founders Helm's hero and AI advisor frames carry an explicit `notPrices` reason: their dollar figures are sample MRR, deal and churn values inside product illustrations, the same kind of figure as the approved custom-build screen. Cost if wrong: drop or move those two frames and re-run.
+- Task 4.1: `tools/media/make-loops.mjs` crossfades the frames (0.5 s fades, holds scaled so every loop is 7.5 s), ends on the first frame so it loops without a jump (last vs first frame: mean difference 2.4 to 3 of 255, compression only), and encodes 1280 x 800 H.264 at 30 fps, CRF 24, `+faststart`, no audio track; the poster is that first frame. Sizes: My Teachers Toolbox loop 455 KB and poster 106 KB, UnderFire AI 666 KB and 93 KB, Founders Helm 552 KB and 96 KB. `previewVideo` and `poster` were added to the three live products in `src/data/products.js` (CRLF kept; no page reads them yet, and `/` stays pixel-identical). The UnderFire loop shows the Times New Roman font bug until Chris fixes it and re-runs the two scripts. These loops are replaceable with Chris's own recordings.
+- Task 4.2 (2026-11-09): `src/components/MediaLoop.jsx` adds, beyond the four planned tests: an `active` prop (default true) so the product chapter can hold the loop until the code has landed; no playback with reduced motion (the poster stays); the `muted` attribute set directly (React sets only the property, and iOS autoplays inline video only with the attribute) and any unmuting undone at once; a blocked autoplay keeps the poster; `pause()` only after it started playing. 7 tests, red first.
+- Task 4.1 and 4.2 verification: `npm run verify` exit 0, 133/133; `npm run test:e2e` 36/36; `/` pixel-identical; main bundle 130.74 kB gzip (+0.05 kB, the new `products.js` fields).
+- Note (2026-11-09): this session continued on a second computer (`C:\Users\cja86`), where the repo sits at `Desktop\AllenCode\AllenCode` and is checked out with CRLF line endings. Its tree at `ae12da2` matched the workspace exactly once line endings were normalized.
 
 ## Phase 0 findings
 
