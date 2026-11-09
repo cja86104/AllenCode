@@ -16,8 +16,8 @@
 |---|---|---|
 | 0 Foundation and tooling | Complete | 0.1: `npm run verify` exit 0; 0.2: `npm run test:e2e` 1/1; 0.5: `npm run verify` exit 0 (28/28), `npm run test:e2e` 11/11, home page pixel-identical to baseline |
 | 1 Field rename and glyph engine | Complete, awaiting Chris's review | `npm run verify` exit 0 (68/68 unit), `npm run test:e2e` 16/16, `/` pixel-identical to the pre-redesign baseline; main bundle 130.17 kB gzip |
-| 2 Gate, awakening, fork | Not started | |
-| 3 Door A service chapters | Not started | |
+| 2 Gate, awakening, fork | Complete, awaiting Chris's review | `npm run verify` exit 0 (93/93 unit), `npm run test:e2e` 24/24, `/` pixel-identical to the pre-redesign baseline; main bundle 130.58 kB gzip |
+| 3 Door A service chapters | Built; MVP (UnderFire) and custom-build (Founders Helm) screens registered; waiting on Chris's excerpt approvals, the Crew Advisors screen and a corrected UnderFire screen | `npm run verify` exit 0 (113/113 unit), `npm run test:e2e` 30/30, `/` pixel-identical to the pre-redesign baseline; main bundle 130.66 kB gzip |
 | 4 Product chapters and captures | Not started | |
 | 5 Door B, templates, previews | Not started | |
 | 6 Your idea, builder, brief, nav, swap to `/` | Not started | |
@@ -158,17 +158,17 @@ Rules from the approved prototype: targets are first downsampled evenly to at mo
 
 **Produces:** `readDoor() => 'a'|'b'|null`, `writeDoor(door: 'a'|'b') => void` (both safe when storage throws); `useDoor() => {door, setDoor}`; `setDoor` also writes `fieldBus.door`.
 
-- [ ] **Step 1:** Tests: `readDoor returns null when storage throws`; `writeDoor does not throw when storage is full`; `a written door is read back`; `setDoor updates fieldBus`.
-- [ ] **Step 2:** Run, see FAIL, implement, run. Expected: PASS.
+- [x] **Step 1:** Tests: `readDoor returns null when storage throws`; `writeDoor does not throw when storage is full`; `a written door is read back`; `setDoor updates fieldBus`.
+- [x] **Step 2:** Run, see FAIL, implement, run. Expected: PASS.
 
 ### Task 2.2: Gate and awakening
 
 **Files:** Create `src/scenes/Gate.jsx`, `src/scenes/Awakening.jsx`, `src/content/excerpts/gate.js` (an excerpt of this site's own source), `e2e/gate.spec.js`. Modify `src/pages/Preview.jsx`.
 
-- [ ] **Step 1:** E2E: `the approved line and headline are real text in the DOM`; `choosing a door persists across reload`; `with storage blocked the fork still works and reappears on reload`; `the fork buttons are reachable by keyboard`; `with reduced motion the gate shows the code beside the headline and no canvas`; `scrolling through the awakening draws characters that end on the headline` (screenshot comparison at progress 0 and 1).
-- [ ] **Step 2:** Run. Expected: FAIL. Implement: the gate types the excerpt into the empty file as the visitor scrolls; the awakening's transformation lands it on `textLayout` of the headline; the `h1` fades in as the particles fade.
+- [x] **Step 1:** E2E: `the approved line and headline are real text in the DOM`; `choosing a door persists across reload`; `with storage blocked the fork still works and reappears on reload`; `the fork buttons are reachable by keyboard`; `with reduced motion the gate shows the code beside the headline and no canvas`; `scrolling through the awakening draws characters that end on the headline` (screenshot comparison at progress 0 and 1).
+- [x] **Step 2:** Run. Expected: FAIL. Implement: the gate types the excerpt into the empty file as the visitor scrolls; the awakening's transformation lands it on `textLayout` of the headline; the `h1` fades in as the particles fade.
 - [ ] **Step 3:** Measure frame time at phone and desktop widths and tune the tier budgets; record the values in the ledger.
-- [ ] **Step 4:** Run `npm run verify` and `npm run test:e2e`. Expected: PASS. Stop: Phase 2 review (Chris approves the gate excerpt and the motion).
+- [x] **Step 4:** Run `npm run verify` and `npm run test:e2e`. Expected: PASS. Stop: Phase 2 review (Chris approves the gate excerpt and the motion).
 
 ---
 
@@ -178,7 +178,7 @@ Rules from the approved prototype: targets are first downsampled evenly to at mo
 
 **Files:** Create `src/content/excerpts/service-*.js` (four), `tools/media/capture.mjs`, `public/media/services/*.jpg`.
 
-- [ ] **Step 1:** Confirm spec 14.D (the Founders Helm repository) with Chris.
+- [x] **Step 1:** Confirm spec 14.D (the Founders Helm repository) with Chris.
 - [ ] **Step 2:** Propose one real excerpt per service from the product repositories (sign-in for MVP, dashboard for custom build, OpenRouter routing or streaming for AI integration, any file for the audit) and stop for Chris to approve each; record provenance and approval.
 - [ ] **Step 3:** Capture each target from public product pages only (never signed-in screens, never credentials) with `capture.mjs` (Playwright screenshot, cropped to the target, JPEG q85, at most 150 KB). Test: `tests/media.test.js` asserts every service target exists and is at most 150 KB.
 
@@ -186,8 +186,8 @@ Rules from the approved prototype: targets are first downsampled evenly to at mo
 
 **Files:** Create `src/scenes/ServiceChapter.jsx`, `tests/ServiceChapter.test.jsx`, `e2e/services.spec.js`. Modify `src/pages/Preview.jsx`.
 
-- [ ] **Step 1:** Tests: `each service renders its name, summary and timeline from services.js`; `no service chapter renders a dollar amount or a startingPrice value`; `the audit chapter highlights lines instead of flying`; e2e `door a reaches each service chapter and each lands on its target`.
-- [ ] **Step 2:** Run, see FAIL, implement, run `npm run verify` and `npm run test:e2e`. Expected: PASS. Stop: Phase 3 review.
+- [x] **Step 1:** Tests: `each service renders its name, summary and timeline from services.js`; `no service chapter renders a dollar amount or a startingPrice value`; `the audit chapter highlights lines instead of flying`; e2e `door a reaches each service chapter and each lands on its target`.
+- [x] **Step 2:** Run, see FAIL, implement, run `npm run verify` and `npm run test:e2e`. Expected: PASS. Stop: Phase 3 review.
 
 ---
 
@@ -390,7 +390,34 @@ Baseline before any change (2026-11-08): `npm run build` passed; JS 408.06 kB (1
 - Task 1.7: complete (tests: `npx vitest run tests/CodeBeside.test.jsx tests/fieldBus.test.js` red first; `npm run verify` → exit 0, 68/68; `npm run test:e2e` → 16/16).
 - Task 1.7: Ruling: reduced motion now uses the static field and code-beside-result chapters with no canvas (spec section 8), so `FieldStage` lost its reduced-motion path; `fieldBus.mode` ('pending', 'webgl', 'static') tells chapters which form to show. Code displays turn ligatures off so `=>` shows as typed. Cost if wrong: none.
 - Task 1.7: Ruling: test infrastructure: `tests/setup.js` calls Testing Library's `cleanup` after each test (automatic cleanup needs Vitest globals, which are off); `pngjs` and `@types/pngjs` added for pixel checks in e2e. Cost if wrong: none.
+- Phase 1 review: Chris approved the ambient excerpt (`usePageMeta.js` lines 35 to 52 at b670193) on 2026-11-08; `approved` set in `src/content/excerpts/ambient.js`.
 - Phase 1: dependencies changed (`@fontsource/jetbrains-mono`, `@fontsource/instrument-serif`, `pngjs`, `@types/pngjs`): Chris runs `npm install`.
+
+- Task 2.1: complete (tests: `npx vitest run tests/doorStorage.test.jsx` → 6/6 and `tests/Fork.test.jsx` → 2/2, both red first). The door test file is `.jsx` (it renders the provider), not `.js` as planned.
+- Task 2.1: Ruling: the fork's button group carries the screen-reader label "What brings you here?" (new wording, not visible on screen); Chris may reword it. `DoorProvider` wraps the whole app because the nav reads the door in Task 6.4 (+0.41 kB gzip on the shared bundle). Cost if wrong: none.
+- Task 2.2: complete (tests: `npx vitest run` → 93/93; `npm run test:e2e` → 24/24; reviewed visually at desktop and phone widths). The gate excerpt is this site's entry point, `src/main.jsx` lines 1 to 10 at 43ddef6, a draft until Chris approves it.
+- Task 2.2: Ruling: the gate and the awakening are one pinned section in `src/scenes/Gate.jsx` (the plan listed `Awakening.jsx` separately), with the timing as a pure, tested function (`gateTimeline.js`) and the headline geometry shared by the canvas and the h1 (`headline.js`); `CodeLines.jsx` is shared by the gate and `CodeBeside`. The Phase 1 renderer check is retired and its e2e checks now run against the gate. Cost if wrong: none.
+- Task 2.2: Ruling (found in visual review): the renderer drew the code at its starting positions before the flight, so the "empty file" showed a ghost copy; the renderer now draws nothing at transformation progress 0. The first e2e test for this proved too weak (it counted the title bar and missed the dimmed ghost); it was rewritten to read only the code area and confirmed by restoring the bug (2291 code pixels) and the fix (0). Cost if wrong: none.
+- Task 2.2: Ruling (found in visual review, then pinned by a red-first e2e test): on phones the editor overflowed (532 px on a 390 px screen); `TransformSpec.codeScale` and `editorSize(code, scale)` now scale the editor and the starting characters together. Cost if wrong: small code on phones (about 8.8 px for `main.jsx` at 390 px).
+- Task 2.2: Not done: Step 3 (tune the tier budgets from measured frame times). This environment renders WebGL in software, so its frame times say nothing about real devices; budgets are unchanged. Chris checks `/preview` on his phone and reports any stutter.
+- Phase 2: tests not watched red first: the `CodeLines` unit tests and the first six gate e2e tests (written before the scene but first run after it existed).
+- Phase 2 review: Chris approved the gate excerpt (`src/main.jsx` lines 1 to 10 at 43ddef6) and the fork's screen-reader label "What brings you here?" on 2026-11-08.
+
+- Task 3.1: Step 2 partly done: four real excerpts generated verbatim from fresh clones and checked with `excerpts:verify` (all "ok"): `underfireai` `components/auth/auth-form.tsx` 42 to 69 @ bee33d2 (MVP sprints), `Solo-Founder-OS` `app/(dashboard)/dashboard/page.tsx` 128 to 152 @ 80ffcd6 (custom builds), `crewadvisors` `lib/ai/chat-client.ts` 31 to 54 @ 4b4c3b4 (AI integration), `crewadvisors` `middleware.ts` 51 to 73 @ 4b4c3b4 (audits). They are drafts until Chris approves them.
+- Task 3.1: Ruling: Step 3 (capture targets from public pages) replaced by Chris's decision on 2026-11-09 to supply real signed-in screenshots for MVP sprints (UnderFire), custom builds (Founders Helm) and AI integration (Crew Advisors). The product marketing images were rejected because they are AI-generated with garbled interface text ("Foundersheim", "Full Autezme"). Until a screenshot is registered in `src/data/serviceScreens.js`, its chapter shows the code beside the service copy; `tests/serviceScreens.test.js` checks every registered screen exists, is at most 400 kB and matches its recorded size. Cost if wrong: none; the chapters are complete without the flight.
+- Task 3.1: Finding outside this repo: underfireai.com's sign-in page renders in Times New Roman (no web fonts load; computed font "Times New Roman"). Reported to Chris, not changed.
+- Task 3.2: complete (tests: `npx vitest run tests/chapterTimeline.test.js tests/ServiceChapters.test.jsx` red first, then 9/9; `npm run verify` → exit 0, 111/111; `npm run test:e2e` → 29/29). The services e2e tests were written after the chapters and not watched fail first. The flight path was reviewed visually at desktop and phone widths with a temporary image in the cloud workspace only, then reverted (`git diff` identical, no `TEMP` left).
+- Task 3.2: Ruling: image targets were added in Phase 3 rather than Phase 4 because the service chapters need them: `TransformSpec.target` is now a typed text-or-image target, and `FieldStage` decodes image targets and reads their pixels before resolving (tests red first). Cost if wrong: none.
+- Task 3.2: Ruling (found in visual review, then pinned by red-first unit tests): the gate's cleanup cleared a transformation the next chapter had already claimed, so flights never drew. `fieldBus` now has keyed ownership (`claimTransform`, `releaseTransform`, `setTransformProgress`); a scene can only clear or move the transformation it owns. Cost if wrong: none.
+- Task 3.2: Ruling (found in visual review): on phones the pinned chapter's text collided with the editor; pinned chapters on narrow screens leave out the scope list (it remains in the static and desktop forms). Cost if wrong: phone visitors see the scope list only in the static form.
+- Task 3.2: Ruling: the chapters live in one file, `src/scenes/ServiceChapters.jsx` (the plan named `ServiceChapter.jsx`), with pure `chapterTimeline.js` and a shared `useSectionProgress.js` hook (extracted from the gate). The fifth service, acquisition-readiness consulting, has no chapter; the spec names four. The visible label "Timeline:" before each timeline is new wording. Cost if wrong: one more chapter or a reworded label.
+- Task 3.2: An `eslint-disable-line` was typed in a draft and removed before any run: the effect now computes its geometry inside the effect from honest dependencies (`flightGeometry` is pure).
+- Task 3.3 (2026-11-09): Chris supplied two screens. Founders Helm: a saved copy of `foundershelm.com/dashboard`, rendered with scripts blocked using its own published stylesheets and fonts (fetched from `www.foundershelm.com`), 1800 x 1125 JPEG, 152 kB, registered for custom builds. Chris chose to keep it as saved, including the workspace label "John Allen's Workspace" and the empty account figures. UnderFire AI: his screenshot of the live landing page, cropped to 1416 x 660 above the "Packs from $25" button and the browser scrollbar, JPEG, 115 kB, registered for MVP sprints. AI integration stays code-only until the Crew Advisors screen arrives. Cost if wrong: one file swap in `public/media/services/` and `src/data/serviceScreens.js`.
+- Task 3.3: Ruling (Chris, 2026-11-09): the MVP excerpt is now the UnderFire landing hero, `app/page.tsx` lines 334 to 352 @ bee33d2 (badge, headline and pitch, the exact words on the screen it lands on, no price), replacing the sign-in handler. `excerpts:verify` reports "ok". Still a draft until Chris approves it. At 1440 px the 135-character lines draw at about 9 px mid-flight (the sign-in code drew at about 10.5 px). Cost if wrong: switch back to `components/auth/auth-form.tsx` 42 to 69.
+- Task 3.3: Ruling (Chris, 2026-11-09): the UnderFire screen is used now although it shows the font bug (Times New Roman instead of Inter); Chris will send a corrected screenshot later. Cause found in `underfireai` @ bee33d2: `app/layout.tsx` defines `--font-inter`, but `tailwind.config.ts` sets `sans` to `['Inter', 'var(--font-sans)', ...]`, and `--font-sans` is never defined, which invalidates the whole `font-family` so the browser falls back to its default serif (`display` and `mono` reference undefined `--font-display` and `--font-mono` the same way). Not changed here; it is another repo. Cost if wrong: the MVP chapter shows the serif headline until the swap.
+- Task 3.3: Ruling (found in visual review of the real screens, then pinned by red-first unit tests): dark product screens landed as near-black characters, so the screen never visibly formed before the real image took over. `imageLayout` now lifts every sampled color toward white by `IMAGE_COLOR_FLOOR` (0.3); brighter parts stay brighter, so the screen's layout still reads. Cost if wrong: one constant to tune.
+- Task 3.3: Added `e2e/services.spec.js` "a chapter with a screen flies its code onto that screen as the visitor scrolls", proven against a broken flight (claim removed: 8 bright pixels in the stage against more than 400 required) and passing with the flight restored. `visibleCodePixels` moved from `e2e/gate.spec.js` to the shared `e2e/pixels.js`. Verification: `npm run verify` exit 0, 113/113; `npm run test:e2e` 30/30; main bundle 130.66 kB gzip (unchanged).
+- Phase 4 note (Chris, 2026-11-09): the My Teachers Toolbox product chapter uses the MTT landing page (public, so it can be captured without signing in). It is not a service-chapter stand-in.
 
 ## Phase 0 findings
 

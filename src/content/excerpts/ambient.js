@@ -32,7 +32,7 @@ const ambient = {
     '}',
   ].join('\n'),
   becomes: 'the faint code drifting behind every chapter',
-  approved: null,
+  approved: { by: 'Chris', on: '2026-11-08' },
 };
 
 export default ambient;

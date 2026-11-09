@@ -40,31 +40,30 @@ test('/preview draws a non-empty field', async ({ page }) => {
   expect(litPixels(await canvas.screenshot())).toBeGreaterThan(200);
 });
 
-test('scrolling through the renderer check moves the code toward the headline', async ({ page }) => {
+test('scrolling through the gate moves the code toward the headline', async ({ page }) => {
   await page.goto('/preview');
   const canvas = page.locator('canvas[data-field="webgl"]');
   await expect(canvas).toHaveAttribute('data-ready', 'true');
-  const section = page.locator('[data-renderer-check]');
-  await section.scrollIntoViewIfNeeded();
+  const section = page.locator('[data-chapter="gate"]');
   const top = await section.evaluate((el) => el.getBoundingClientRect().top + window.scrollY);
-  await page.evaluate((y) => window.scrollTo(0, y), top);
+  const span = await section.evaluate((el) => el.getBoundingClientRect().height - window.innerHeight);
+  await page.evaluate((y) => window.scrollTo(0, y), Math.round(top + span * 0.38));
   await page.waitForTimeout(600);
   const before = await canvas.screenshot();
-  const height = await section.evaluate((el) => el.getBoundingClientRect().height);
-  await page.evaluate((y) => window.scrollTo(0, y), top + height * 0.45);
+  await page.evaluate((y) => window.scrollTo(0, y), Math.round(top + span * 0.7));
   await page.waitForTimeout(900);
   const after = await canvas.screenshot();
   expect(differingPixels(before, after)).toBeGreaterThan(2000);
 });
 
-test('the real headline takes over, on screen, at the end of the renderer check', async ({ page }) => {
+test('the real headline takes over, on screen, at the end of the gate', async ({ page }) => {
   await page.goto('/preview');
   await expect(page.locator('canvas[data-field="webgl"]')).toHaveAttribute('data-ready', 'true');
-  const section = page.locator('[data-renderer-check]');
+  const section = page.locator('[data-chapter="gate"]');
   const top = await section.evaluate((el) => el.getBoundingClientRect().top + window.scrollY);
   const span = await section.evaluate((el) => el.getBoundingClientRect().height - window.innerHeight);
   await page.evaluate((y) => window.scrollTo(0, y), Math.round(top + span));
-  const headline = section.locator('p[aria-hidden="true"]');
+  const headline = section.getByRole('heading', { level: 1 });
   await expect(headline).toHaveCSS('opacity', '1');
   const box = await headline.boundingBox();
   expect(box).not.toBeNull();

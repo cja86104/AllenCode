@@ -9,8 +9,38 @@ import { excerpts, getExcerpt } from '../content/excerpts/index.js';
 
 /** Device pixel ratio cap: sharper than this costs fill rate without a visible gain. */
 const MAX_DPR = 2;
-/** Landed characters fade out over the last 8 percent so the scene's real text takes over. */
+/**
+ * Landed characters fade out over the last 8 percent so the scene's real text takes over. At
+ * progress 0 nothing is drawn: the scene's DOM shows the code until the flight begins.
+ */
 const FADE_FROM = 0.92;
+
+/**
+ * Loads what a transformation lands on: waits for a text target's font, or decodes an image
+ * target and reads its pixels at the size it is drawn.
+ * @param {import('./types.js').TransformSpec} spec
+ * @returns {Promise<{ data: Uint8ClampedArray, width: number, height: number } | undefined>}
+ */
+async function loadTarget(spec) {
+  const { target } = spec;
+  if (target.kind === 'text') {
+    await document.fonts.load(target.font).catch(() => []);
+    return undefined;
+  }
+  const img = new Image();
+  img.decoding = 'async';
+  img.src = target.src;
+  await img.decode();
+  const width = Math.max(1, Math.round(spec.targetBox.w));
+  const height = Math.max(1, Math.round(spec.targetBox.h));
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  if (!ctx) throw new Error('Could not create a 2D canvas to read the target image.');
+  ctx.drawImage(img, 0, 0, width, height);
+  return { data: ctx.getImageData(0, 0, width, height).data, width, height };
+}
 
 /**
  * @param {number} edge0
@@ -88,18 +118,21 @@ export default function FieldStage({ capabilities, includeDrafts, onFailure }) {
           if (!spec) {
             renderer.setTransformation(null, { from: 0, to: 0 });
           } else {
-            // The landing text must be drawn in its real face, so wait for it before sampling.
-            document.fonts
-              .load(spec.font)
-              .catch(() => [])
-              .then(() => {
+            // Text lands in its real face, and images land on their real pixels, so wait for them.
+            loadTarget(spec)
+              .then((image) => {
                 if (cancelled || transformKey !== spec.key) return;
-                const { transformation, sizes } = resolveTransform(spec, { atlas, budget: transformBudget });
+                const { transformation, sizes } = resolveTransform(spec, { atlas, budget: transformBudget, image });
                 renderer.setTransformation(transformation, sizes);
+              })
+              .catch(() => {
+                // The target could not load; the scene keeps showing its DOM state.
+                if (transformKey === spec.key) renderer.setTransformation(null, { from: 0, to: 0 });
               });
           }
         }
-        renderer.setTransformState(state.transformProgress, 1 - smoothstep(FADE_FROM, 1, state.transformProgress));
+        const fade = state.transformProgress <= 0 ? 0 : 1 - smoothstep(FADE_FROM, 1, state.transformProgress);
+        renderer.setTransformState(state.transformProgress, fade);
       };
       const onContextLost = () => onFailure();
       /** @param {number} time */

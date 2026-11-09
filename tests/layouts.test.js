@@ -1,6 +1,6 @@
 // @ts-check
 import { describe, expect, it } from 'vitest';
-import { codeLayout, imageLayout, pointsFromAlpha, textLayout } from '../src/field/layouts.js';
+import { IMAGE_COLOR_FLOOR, codeLayout, imageLayout, pointsFromAlpha, textLayout } from '../src/field/layouts.js';
 import { SYNTAX_COLORS } from '../src/field/syntax.js';
 
 const box = { x: 100, y: 50, w: 400, h: 300 };
@@ -29,9 +29,20 @@ describe('imageLayout', () => {
     const data = new Uint8ClampedArray([255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255, 255, 255, 255, 255]);
     const points = imageLayout({ data, width, height }, { x: 0, y: 0, w: 45, h: 30 }, 10);
     expect(points).toHaveLength(4 * 3);
-    expect(points[0]).toEqual({ x: 5, y: 5, color: [1, 0, 0] });
+    expect(points[0]).toMatchObject({ x: 5, y: 5 });
     expect(points.at(-1)?.color).toEqual([1, 1, 1]);
     for (const p of points) for (const c of p.color) expect(c).toBeGreaterThanOrEqual(0);
+  });
+
+  it('lifts dark pixels to a visible floor so a dark screen still lands as readable characters', () => {
+    const black = imageLayout({ data: new Uint8ClampedArray([0, 0, 0, 255]), width: 1, height: 1 }, { x: 0, y: 0, w: 10, h: 10 }, 10);
+    for (const c of black[0].color) expect(c).toBeCloseTo(IMAGE_COLOR_FLOOR);
+    const red = imageLayout({ data: new Uint8ClampedArray([255, 0, 0, 255]), width: 1, height: 1 }, { x: 0, y: 0, w: 10, h: 10 }, 10);
+    expect(red[0].color[0]).toBeCloseTo(1);
+    expect(red[0].color[1]).toBeCloseTo(IMAGE_COLOR_FLOOR);
+    const gray = imageLayout({ data: new Uint8ClampedArray([64, 64, 64, 255]), width: 1, height: 1 }, { x: 0, y: 0, w: 10, h: 10 }, 10);
+    expect(gray[0].color[0]).toBeGreaterThan(black[0].color[0]);
+    expect(gray[0].color[0]).toBeLessThan(1);
   });
 });
 

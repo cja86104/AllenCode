@@ -141,3 +141,19 @@ html.lenis {
   column-width: 34em;
   column-gap: 4em;
 }
+
+/* Gate cursor (src/scenes/Gate.jsx): an orange block that blinks; reduced motion stops it. */
+.gate-cursor {
+  display: inline-block;
+  width: 0.6em;
+  height: 1.1em;
+  margin-left: 1px;
+  vertical-align: text-bottom;
+  background: #f97316;
+  animation: gate-cursor-blink 1.1s steps(1, end) infinite;
+}
+@keyframes gate-cursor-blink {
+  50% {
+    opacity: 0;
+  }
+}

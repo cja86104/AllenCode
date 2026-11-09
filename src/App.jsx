@@ -8,6 +8,7 @@ import ScrollToTop from './components/ScrollToTop';
 import Noise from './components/Noise';
 import CustomCursor from './components/CustomCursor';
 import FieldLayer, { useIsFieldRoute } from './field/FieldLayer.jsx';
+import DoorProvider from './door/DoorProvider.jsx';
 import Home from './pages/Home';
 import Products from './pages/Products';
 import ProductDetail from './pages/ProductDetail';
@@ -70,7 +71,9 @@ function AppShell() {
 export default function App() {
   return (
     <BrowserRouter>
-      <AppShell />
+      <DoorProvider>
+        <AppShell />
+      </DoorProvider>
     </BrowserRouter>
   );
 }

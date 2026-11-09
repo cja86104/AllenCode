@@ -10,15 +10,16 @@ export const CODE_LINE_HEIGHT = 19;
 export const EDITOR_PADDING = 20;
 
 /**
- * Size of the editor box that fits `code` exactly.
+ * Size of the editor box that fits `code` exactly, at `scale` (1 is full size; smaller on phones).
  * @param {string} code
+ * @param {number} [scale]
  * @returns {{ w: number, h: number }}
  */
-export function editorSize(code) {
+export function editorSize(code, scale = 1) {
   const lines = code.split('\n');
   const longest = Math.max(...lines.map((line) => line.length));
   return {
-    w: Math.ceil(longest * CODE_CHAR_WIDTH + EDITOR_PADDING * 2),
-    h: Math.ceil(lines.length * CODE_LINE_HEIGHT + EDITOR_PADDING * 2),
+    w: Math.ceil((longest * CODE_CHAR_WIDTH + EDITOR_PADDING * 2) * scale),
+    h: Math.ceil((lines.length * CODE_LINE_HEIGHT + EDITOR_PADDING * 2) * scale),
   };
 }

@@ -74,3 +74,15 @@ describe('excerpt registry', () => {
     expect(getExcerpt('missing')).toBeNull();
   });
 });
+
+describe('approved excerpts', () => {
+  it('the ambient excerpt is approved by Chris and renders without drafts', () => {
+    expect(excerpts.ambient.approved).toEqual({ by: 'Chris', on: '2026-11-08' });
+    expect(getExcerpt('ambient')?.id).toBe('ambient');
+  });
+
+  it('the gate excerpt is approved by Chris and renders without drafts', () => {
+    expect(excerpts.gate.approved).toEqual({ by: 'Chris', on: '2026-11-08' });
+    expect(getExcerpt('gate')?.id).toBe('gate');
+  });
+});

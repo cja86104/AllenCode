@@ -15,6 +15,10 @@ import { useSyncExternalStore } from 'react';
  * @property {() => FieldState} get
  * @property {(patch: Partial<FieldState>) => void} set
  * @property {(listener: () => void) => () => void} subscribe
+ * @property {(spec: import('./types.js').TransformSpec) => void} claimTransform Plays this transformation from
+ *   the start; the scene that claims it owns it until it releases it or another scene claims.
+ * @property {(key: string) => void} releaseTransform Clears the transformation only if `key` still owns it.
+ * @property {(key: string, progress: number) => void} setTransformProgress Moves the transformation only if `key` owns it.
  */
 
 /** @type {FieldState} */
@@ -29,14 +33,28 @@ export function createFieldBus() {
   /** @type {Set<() => void>} */
   const listeners = new Set();
 
+  /** @param {Partial<FieldState>} patch */
+  const set = (patch) => {
+    const keys = /** @type {(keyof FieldState)[]} */ (Object.keys(patch));
+    if (keys.every((key) => Object.is(state[key], patch[key]))) return;
+    state = { ...state, ...patch };
+    listeners.forEach((listener) => listener());
+  };
+  /** @param {string} key */
+  const owns = (key) => state.transform !== null && state.transform.key === key;
+
   return {
     get: () => state,
-    set(patch) {
-      const keys = /** @type {(keyof FieldState)[]} */ (Object.keys(patch));
-      if (keys.every((key) => Object.is(state[key], patch[key]))) return;
-      state = { ...state, ...patch };
-      listeners.forEach((listener) => listener());
+    claimTransform(spec) {
+      set({ transform: spec, transformProgress: 0 });
     },
+    releaseTransform(key) {
+      if (owns(key)) set({ transform: null, transformProgress: 0 });
+    },
+    setTransformProgress(key, progress) {
+      if (owns(key)) set({ transformProgress: progress });
+    },
+    set,
     subscribe(listener) {
       listeners.add(listener);
       return () => {

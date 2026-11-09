@@ -1,15 +1,7 @@
 // @ts-check
-import { SYNTAX_COLORS, tokenizeLine } from './syntax.js';
+import CodeLines from './CodeLines.jsx';
 
 /** @typedef {import('../content/excerpts/index.js').Excerpt} Excerpt */
-
-/**
- * @param {readonly number[]} color 0..1 RGB
- * @returns {string}
- */
-function css(color) {
-  return `rgb(${color.map((c) => Math.round(c * 255)).join(', ')})`;
-}
 
 /**
  * The static form of a transformation: the code in an editor beside what it becomes. Used for
@@ -29,16 +21,7 @@ export default function CodeBeside({ excerpt, result }) {
         </div>
         {/* Ligatures off: the page shows the literal characters of the code (=> stays =>). */}
         <pre className="mono overflow-x-auto p-5 text-[13px] leading-[19px] [font-variant-ligatures:none]">
-          {excerpt.code.split('\n').map((line, row) => (
-            <span key={row}>
-              {tokenizeLine(line).map((token, i) => (
-                <span key={i} style={{ color: css(SYNTAX_COLORS[token.kind]) }}>
-                  {token.text}
-                </span>
-              ))}
-              {row < excerpt.code.split('\n').length - 1 ? '\n' : ''}
-            </span>
-          ))}
+          <CodeLines code={excerpt.code} />
         </pre>
       </div>
       <div>{result}</div>

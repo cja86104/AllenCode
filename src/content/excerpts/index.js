@@ -1,5 +1,10 @@
 // @ts-check
 import ambient from './ambient.js';
+import gate from './gate.js';
+import serviceMvp from './service-mvp.js';
+import serviceCustom from './service-custom.js';
+import serviceAi from './service-ai.js';
+import serviceAudit from './service-audit.js';
 
 /**
  * A verbatim excerpt of real source code (spec section 5).
@@ -30,7 +35,14 @@ const SECRET_PATTERNS = [
 ];
 
 /** @type {Readonly<Record<string, Excerpt>>} */
-export const excerpts = Object.freeze({ [ambient.id]: ambient });
+export const excerpts = Object.freeze({
+  [ambient.id]: ambient,
+  [gate.id]: gate,
+  [serviceMvp.id]: serviceMvp,
+  [serviceCustom.id]: serviceCustom,
+  [serviceAi.id]: serviceAi,
+  [serviceAudit.id]: serviceAudit,
+});
 
 /**
  * Lists everything wrong with an excerpt; an empty list means it is valid.

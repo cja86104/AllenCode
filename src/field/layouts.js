@@ -36,7 +36,22 @@ export function codeLayout(code, box, { charWidth, lineHeight, padding }) {
 }
 
 /**
- * Samples an image on a grid inside the box, row by row.
+ * How far every sampled image color is lifted toward white. Product screens are mostly dark UI on a
+ * dark page; without a floor their characters land near-black and the screen never visibly forms
+ * before the real image takes over. Brighter parts stay brighter, so the screen's layout still reads.
+ */
+export const IMAGE_COLOR_FLOOR = 0.3;
+
+/**
+ * @param {number} byte 0..255
+ * @returns {number} 0..1, lifted to at least IMAGE_COLOR_FLOOR
+ */
+function lift(byte) {
+  return IMAGE_COLOR_FLOOR + (1 - IMAGE_COLOR_FLOOR) * (byte / 255);
+}
+
+/**
+ * Samples an image on a grid inside the box, row by row, with colors lifted to IMAGE_COLOR_FLOOR.
  *
  * @param {{ data: Uint8ClampedArray, width: number, height: number }} image RGBA pixels.
  * @param {Box} box
@@ -56,7 +71,7 @@ export function imageLayout(image, box, step) {
       points.push({
         x: box.x + (c + 0.5) * step,
         y: box.y + (r + 0.5) * step,
-        color: [image.data[o] / 255, image.data[o + 1] / 255, image.data[o + 2] / 255],
+        color: [lift(image.data[o]), lift(image.data[o + 1]), lift(image.data[o + 2])],
       });
     }
   }
