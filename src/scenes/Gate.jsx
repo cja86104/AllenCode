@@ -78,7 +78,7 @@ function Headline({ opacity, sized }) {
  * types this site's entry point into the file, then its characters lift and land as the headline,
  * and the real h1 takes over. Static (reduced motion, no WebGL): the code beside the headline.
  *
- * @param {{ includeDrafts: boolean }} props Drafts only on the `/preview` route.
+ * @param {{ includeDrafts: boolean }} props Whether unapproved excerpts may show (the public site passes false).
  */
 export default function Gate({ includeDrafts }) {
   const excerpt = getExcerpt('gate', { includeDrafts });

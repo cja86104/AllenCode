@@ -100,3 +100,6 @@ export const ATLAS_CELL = 48;
 export const ATLAS_FONT_SIZE = 32;
 export const ATLAS_FONT_FAMILY = 'JetBrains Mono';
 export const ATLAS_FONT = `500 ${ATLAS_FONT_SIZE}px "${ATLAS_FONT_FAMILY}"`;
+
+/** Every printable ASCII character, space excluded (U+0021 to U+007E). */
+export const PRINTABLE_ASCII = Array.from({ length: 0x7e - 0x21 + 1 }, (_, i) => String.fromCharCode(0x21 + i)).join('');

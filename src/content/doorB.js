@@ -32,3 +32,11 @@ export const TEMPLATE_STORIES = Object.freeze(
     folio: 'Show your work, tell your story, and take commissions or bookings.',
   }),
 );
+
+/** Done for you (spec section 4, step 6B): a custom site, routed to the same project brief. */
+export const DONE_FOR_YOU = Object.freeze({
+  eyebrow: 'Done for you',
+  title: 'Rather not pick a template?',
+  body: "Tell me what you need and I'll design it from scratch, with your words, your photos and your colors. It starts with the same short brief.",
+  link: 'Start with the brief',
+});

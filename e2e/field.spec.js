@@ -1,10 +1,10 @@
 // @ts-check
 import { expect, test } from '@playwright/test';
 
-const PREVIEW = '/preview';
+const HOME = '/';
 
-test('/preview shows a canvas when WebGL2 is available', async ({ page }) => {
-  await page.goto(PREVIEW);
+test('/ shows a canvas when WebGL2 is available', async ({ page }) => {
+  await page.goto(HOME);
   await expect(page.locator('canvas[data-field="webgl"]')).toHaveCount(1);
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 });
@@ -20,20 +20,20 @@ test('with getContext patched to return null the CSS field renders and the page 
       },
     });
   });
-  await page.goto(PREVIEW);
+  await page.goto(HOME);
   await expect(page.locator('[data-field="css"]')).toHaveCount(1);
   await expect(page.locator('canvas[data-field="webgl"]')).toHaveCount(0);
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 });
 
 test('the scroll engine is on with normal motion', async ({ page }) => {
-  await page.goto(PREVIEW);
+  await page.goto(HOME);
   await expect(page.locator('html')).toHaveAttribute('data-scroll-engine', 'on');
 });
 
 test('with reduced motion data-scroll-engine is off', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  await page.goto(PREVIEW);
+  await page.goto(HOME);
   await expect(page.locator('html')).toHaveAttribute('data-scroll-engine', 'off');
 });
 
@@ -62,7 +62,7 @@ async function restoreFieldContext(page) {
 const freshCanvas = '[data-field="webgl"][data-ready="true"]:not([data-before-loss])';
 
 test('a lost WebGL context that the browser restores comes back on a fresh canvas', async ({ page }) => {
-  await page.goto(PREVIEW);
+  await page.goto(HOME);
   await loseFieldContext(page);
   await restoreFieldContext(page);
   await expect(page.locator(freshCanvas)).toHaveCount(1);
@@ -71,14 +71,14 @@ test('a lost WebGL context that the browser restores comes back on a fresh canva
 });
 
 test('a lost WebGL context that never comes back restarts on a fresh canvas after the wait', async ({ page }) => {
-  await page.goto(PREVIEW);
+  await page.goto(HOME);
   await loseFieldContext(page);
   await expect(page.locator(freshCanvas)).toHaveCount(1, { timeout: 6000 });
   await expect(page.locator('[data-field="css"]')).toHaveCount(0);
 });
 
 test('when the GPU cannot give a new context, the page falls back to the static field', async ({ page }) => {
-  await page.goto(PREVIEW);
+  await page.goto(HOME);
   await expect(page.locator('canvas[data-field="webgl"][data-ready="true"]')).toHaveCount(1);
   await page.evaluate(() => {
     const original = HTMLCanvasElement.prototype.getContext;
@@ -97,7 +97,7 @@ test('when the GPU cannot give a new context, the page falls back to the static 
 });
 
 test('after three restarts in one visit the page settles on the static field', async ({ page }) => {
-  await page.goto(PREVIEW);
+  await page.goto(HOME);
   for (let i = 0; i < 3; i += 1) {
     await loseFieldContext(page);
     await restoreFieldContext(page);
@@ -110,35 +110,36 @@ test('after three restarts in one visit the page settles on the static field', a
 });
 
 test('navigating away and back leaves exactly one canvas', async ({ page }) => {
-  await page.goto(PREVIEW);
+  await page.goto(HOME);
   await expect(page.locator('canvas[data-field="webgl"]')).toHaveCount(1);
-  await page.getByRole('link', { name: 'Back to the site' }).click();
-  await expect(page).toHaveURL(/\/$/);
+  await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'About' }).click();
+  await expect(page).toHaveURL(/\/about$/);
   await expect(page.locator('canvas')).toHaveCount(0);
   await page.goBack();
-  await expect(page).toHaveURL(/\/preview$/);
+  await expect(page).toHaveURL(/\/$/);
   await expect(page.locator('canvas[data-field="webgl"]')).toHaveCount(1);
   await expect(page.locator('canvas')).toHaveCount(1);
 });
 
-test('home page (/) is unchanged: no canvas', async ({ page }) => {
-  await page.goto('/');
+test('a regular route (/about) has no canvas and no scroll engine', async ({ page }) => {
+  await page.goto('/about');
   await expect(page.locator('canvas')).toHaveCount(0);
   await expect(page.locator('html')).not.toHaveAttribute('data-scroll-engine', /.*/);
 });
 
-test('/preview is marked noindex', async ({ page }) => {
-  await page.goto(PREVIEW);
-  await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex, nofollow');
+test('the home page is indexable', async ({ page }) => {
+  await page.goto(HOME);
+  await expect(page).toHaveTitle(/Allen Code Co/);
+  await expect(page.locator('meta[name="robots"][content*="noindex"]')).toHaveCount(0);
 });
 
-test('the home page does not download the scroll engine or the glyph renderer', async ({ page }) => {
+test('a regular route does not download the scroll engine or the glyph renderer', async ({ page }) => {
   /** @type {string[]} */
   const scripts = [];
   page.on('response', async (response) => {
     if (response.url().endsWith('.js')) scripts.push(await response.text());
   });
-  await page.goto('/');
+  await page.goto('/about');
   await page.waitForLoadState('networkidle');
   expect(scripts.length).toBeGreaterThan(0);
   const markers = ['lenis-smooth', 'ScrollTrigger', 'aGlyph'];
@@ -149,15 +150,15 @@ test('the home page does not download the scroll engine or the glyph renderer', 
 test('the page shell stays opaque on regular routes and clears only on field routes', async ({ page }) => {
   const shellBackground = () =>
     page.locator('main').evaluate((main) => getComputedStyle(/** @type {HTMLElement} */ (main.parentElement)).backgroundColor);
-  await page.goto('/');
+  await page.goto('/about');
   expect(await shellBackground()).toBe('rgb(10, 10, 10)');
-  await page.goto(PREVIEW);
+  await page.goto(HOME);
   expect(await shellBackground()).toBe('rgba(0, 0, 0, 0)');
 });
 
-test('with reduced motion /preview shows the code beside its result and no canvas', async ({ page }) => {
+test('with reduced motion / shows the code beside its result and no canvas', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  await page.goto(PREVIEW);
+  await page.goto(HOME);
   await expect(page.locator('[data-code-beside]')).toBeVisible();
   await expect(page.locator('[data-code-beside] pre')).toContainText('ReactDOM.createRoot');
   await expect(page.locator('[data-code-beside]')).toContainText('Welcome to Allen Code Co.');
@@ -176,7 +177,7 @@ test('with WebGL2 unavailable the CSS field shows real code and the chapter show
       },
     });
   });
-  await page.goto(PREVIEW);
+  await page.goto(HOME);
   await expect(page.locator('[data-field="css"] pre')).toContainText('usePageMeta');
   await expect(page.locator('[data-code-beside]')).toBeVisible();
 });

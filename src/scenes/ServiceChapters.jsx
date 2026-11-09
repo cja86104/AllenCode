@@ -197,7 +197,7 @@ function AuditChapter({ service, excerpt, animate }) {
 /**
  * Door A's service chapters. Each shows the service's own copy and real code; a chapter with a
  * screen flies its code onto that screen when the renderer is running.
- * @param {{ includeDrafts: boolean }} props Drafts only on the `/preview` route.
+ * @param {{ includeDrafts: boolean }} props Whether unapproved excerpts may show (the public site passes false).
  */
 export default function ServiceChapters({ includeDrafts }) {
   const reducedMotion = usePrefersReducedMotion();

@@ -5,10 +5,9 @@
 # the site. Two rule blocks below:
 #
 #   1. Wildcard (*) — applies to every crawler that does not have its
-#      own block. The site is fully crawlable except /preview, an
-#      unlinked development route for the redesign (removed in its Phase 5). This
-#      is correct because Allen Code Co is a public marketing site with
-#      zero authenticated surface, no per-user pages, and no API routes.
+#      own block. The site is fully crawlable. This is correct because
+#      Allen Code Co is a public marketing site with zero authenticated
+#      surface, no per-user pages, and no API routes.
 #
 #   2. Bingbot — explicit duplicate of the wildcard rules. Bing's
 #      diagnostic tools have historically flagged sites that lack a
@@ -24,11 +23,9 @@
 
 User-agent: *
 Allow: /
-Disallow: /preview
 
 User-agent: bingbot
 Allow: /
-Disallow: /preview
 
 Sitemap: https://www.allencodeco.com/sitemap.xml
 Host: https://www.allencodeco.com

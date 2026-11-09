@@ -1,6 +1,6 @@
 // @ts-check
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { collectGlyphs, createGlyphAtlas, loadAtlasFont } from '../src/field/glyphAtlas.js';
+import { PRINTABLE_ASCII, collectGlyphs, createGlyphAtlas, loadAtlasFont } from '../src/field/glyphAtlas.js';
 
 /** A canvas stand-in that records what is drawn (jsdom has no 2D canvas). */
 function fakeCanvasFactory() {
@@ -81,5 +81,15 @@ describe('loadAtlasFont', () => {
   it('resolves false when loading fails', async () => {
     vi.stubGlobal('document', { fonts: { load: () => Promise.reject(new Error('blocked')) } });
     await expect(loadAtlasFont('JetBrains Mono')).resolves.toBe(false);
+  });
+});
+
+describe('PRINTABLE_ASCII', () => {
+  it('holds the 94 printable ASCII characters, so any letter a visitor types can fly', () => {
+    expect(PRINTABLE_ASCII).toHaveLength(94);
+    expect(PRINTABLE_ASCII[0]).toBe('!');
+    expect(PRINTABLE_ASCII.at(-1)).toBe('~');
+    expect(PRINTABLE_ASCII).toContain('q');
+    expect(PRINTABLE_ASCII).not.toContain(' ');
   });
 });

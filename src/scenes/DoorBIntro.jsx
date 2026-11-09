@@ -82,7 +82,7 @@ function FlightIntro({ excerpt, loop }) {
  * Door B's first chapter, "What I can make you" (spec section 4, step 4B): plain words beside real
  * code that becomes a family's home page. Without the renderer or with reduced motion, the code sits
  * beside the page it becomes.
- * @param {{ includeDrafts: boolean }} props Drafts only on the `/preview` route.
+ * @param {{ includeDrafts: boolean }} props Whether unapproved excerpts may show (the public site passes false).
  */
 export default function DoorBIntro({ includeDrafts }) {
   const reducedMotion = usePrefersReducedMotion();

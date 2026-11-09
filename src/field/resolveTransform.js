@@ -1,5 +1,5 @@
 // @ts-check
-import { codeLayout, imageLayout, textLayout } from './layouts.js';
+import { codeLayout, imageLayout, sketchLayout, textLayout } from './layouts.js';
 import { createTransformation } from './transformation.js';
 import { CODE_CHAR_WIDTH, CODE_FONT_SIZE, CODE_LINE_HEIGHT, EDITOR_PADDING } from './editorMetrics.js';
 
@@ -51,7 +51,7 @@ function textMask(width, height, target, createCanvas) {
 
 /**
  * Turns a scene's request into GPU-ready buffers: the code laid out as an editor in its box, and
- * landing places on the target (text drawn in the target box, or the image's pixels). `spec.step`
+ * landing places on the target (text drawn in the target box, the image's pixels, or a sketch). `spec.step`
  * is the coarsest spacing; a sparse target is sampled more finely until there are twice as many
  * places as code characters. Image targets need their pixels in `opts.image` (FieldStage loads them).
  *
@@ -73,6 +73,9 @@ export function resolveTransform(spec, { atlas, budget, image, createCanvas = de
   if (target.kind === 'image') {
     if (!image) throw new Error(`resolveTransform needs the image pixels for ${target.src}.`);
     sample = (step) => imageLayout(image, spec.targetBox, step);
+  } else if (target.kind === 'sketch') {
+    const { blocks } = target;
+    sample = (step) => sketchLayout(blocks, spec.targetBox, step);
   } else {
     const width = Math.max(1, Math.round(spec.targetBox.w));
     const height = Math.max(1, Math.round(spec.targetBox.h));

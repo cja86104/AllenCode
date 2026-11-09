@@ -172,7 +172,7 @@ function FlightTemplateChapter({ items }) {
 /**
  * Door B's template chapter. Without the renderer or with reduced motion, each template's code sits
  * beside its preview.
- * @param {{ includeDrafts: boolean }} props Drafts only on the `/preview` route.
+ * @param {{ includeDrafts: boolean }} props Whether unapproved excerpts may show (the public site passes false).
  */
 export default function TemplateChapter({ includeDrafts }) {
   const reducedMotion = usePrefersReducedMotion();

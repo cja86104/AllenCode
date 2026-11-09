@@ -1,6 +1,14 @@
 // @ts-check
 import { useEffect, useRef } from 'react';
-import { ATLAS_CELL, ATLAS_FONT, ATLAS_FONT_FAMILY, collectGlyphs, createGlyphAtlas, loadAtlasFont } from './glyphAtlas.js';
+import {
+  ATLAS_CELL,
+  ATLAS_FONT,
+  ATLAS_FONT_FAMILY,
+  PRINTABLE_ASCII,
+  collectGlyphs,
+  createGlyphAtlas,
+  loadAtlasFont,
+} from './glyphAtlas.js';
 import { createGlyphRenderer } from './glyphRenderer.js';
 import { resolveTransform } from './resolveTransform.js';
 import { createGovernor } from './governor.js';
@@ -18,12 +26,13 @@ const FADE_FROM = 0.92;
 
 /**
  * Loads what a transformation lands on: waits for a text target's font, or decodes an image
- * target and reads its pixels at the size it is drawn.
+ * target and reads its pixels at the size it is drawn. A sketch needs nothing loaded.
  * @param {import('./types.js').TransformSpec} spec
  * @returns {Promise<{ data: Uint8ClampedArray, width: number, height: number } | undefined>}
  */
 async function loadTarget(spec) {
   const { target } = spec;
+  if (target.kind === 'sketch') return undefined;
   if (target.kind === 'text') {
     await document.fonts.load(target.font).catch(() => []);
     return undefined;
@@ -86,7 +95,8 @@ export default function FieldStage({ capabilities, includeDrafts, onFailure, onR
       /** @type {import('./glyphRenderer.js').GlyphRenderer} */
       let renderer;
       try {
-        atlas = createGlyphAtlas(collectGlyphs(Object.values(excerpts).map((e) => e.code)), {
+        // Printable ASCII too, so any letter a visitor types into their idea can fly.
+        atlas = createGlyphAtlas(collectGlyphs([...Object.values(excerpts).map((e) => e.code), PRINTABLE_ASCII]), {
           cell: ATLAS_CELL,
           font: ATLAS_FONT,
         });

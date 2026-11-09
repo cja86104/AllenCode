@@ -32,8 +32,8 @@ function differingPixels(a, b) {
 
 test.use({ viewport: { width: 1280, height: 800 } });
 
-test('/preview draws a non-empty field', async ({ page }) => {
-  await page.goto('/preview');
+test('/ draws a non-empty field', async ({ page }) => {
+  await page.goto('/');
   const canvas = page.locator('canvas[data-field="webgl"]');
   await expect(canvas).toHaveAttribute('data-ready', 'true');
   await page.waitForTimeout(300);
@@ -41,7 +41,7 @@ test('/preview draws a non-empty field', async ({ page }) => {
 });
 
 test('scrolling through the gate moves the code toward the headline', async ({ page }) => {
-  await page.goto('/preview');
+  await page.goto('/');
   const canvas = page.locator('canvas[data-field="webgl"]');
   await expect(canvas).toHaveAttribute('data-ready', 'true');
   const section = page.locator('[data-chapter="gate"]');
@@ -57,7 +57,7 @@ test('scrolling through the gate moves the code toward the headline', async ({ p
 });
 
 test('the real headline takes over, on screen, at the end of the gate', async ({ page }) => {
-  await page.goto('/preview');
+  await page.goto('/');
   await expect(page.locator('canvas[data-field="webgl"]')).toHaveAttribute('data-ready', 'true');
   const section = page.locator('[data-chapter="gate"]');
   const top = await section.evaluate((el) => el.getBoundingClientRect().top + window.scrollY);

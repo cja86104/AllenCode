@@ -2,7 +2,7 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import Preview from '../src/pages/Preview.jsx';
+import Home from '../src/pages/Home.jsx';
 import DoorProvider from '../src/door/DoorProvider.jsx';
 import DoorBIntro from '../src/scenes/DoorBIntro.jsx';
 import TemplateChapter, { DOOR_B_TEMPLATES, segmentTimeline } from '../src/scenes/TemplateChapter.jsx';
@@ -25,18 +25,18 @@ beforeEach(() => {
 
 afterEach(() => vi.unstubAllGlobals());
 
-const renderPreview = () =>
+const renderHome = () =>
   render(
-    <MemoryRouter initialEntries={['/preview']}>
+    <MemoryRouter initialEntries={['/']}>
       <DoorProvider>
-        <Preview />
+        <Home />
       </DoorProvider>
     </MemoryRouter>,
   );
 
 describe('Door B', () => {
   it('door b shows the template chapter and door a does not', () => {
-    renderPreview();
+    renderHome();
     fireEvent.click(screen.getByRole('button', { name: 'I want a site for me or my family' }));
     expect(document.querySelector('[data-door-b-intro]')).not.toBeNull();
     expect(document.querySelector('[data-template-chapter]')).not.toBeNull();

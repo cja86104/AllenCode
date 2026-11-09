@@ -217,7 +217,7 @@ function ComingSoonChapter({ product, excerpt, animate }) {
 
 /**
  * Door A's product chapters, one per product in products.js (spec section 4, step 5).
- * @param {{ includeDrafts: boolean }} props Drafts only on the `/preview` route.
+ * @param {{ includeDrafts: boolean }} props Whether unapproved excerpts may show (the public site passes false).
  */
 export default function ProductChapters({ includeDrafts }) {
   const reducedMotion = usePrefersReducedMotion();

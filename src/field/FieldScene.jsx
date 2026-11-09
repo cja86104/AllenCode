@@ -22,7 +22,7 @@ export const MAX_FIELD_RESTARTS = 3;
  * The field and its scroll engine for one field route. Loaded lazily by FieldLayer so GSAP, Lenis
  * and the WebGL code never reach pages without the field.
  *
- * @param {{ includeDrafts: boolean }} props Drafts are shown only on the `/preview` route.
+ * @param {{ includeDrafts: boolean }} props Whether unapproved excerpts may be drawn (the public site passes false).
  */
 export default function FieldScene({ includeDrafts }) {
   const reducedMotion = usePrefersReducedMotion();

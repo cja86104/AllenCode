@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 import { visibleCodePixels } from './pixels.js';
 import crewExcerpt from '../src/content/excerpts/product-crew-advisors.js';
 
-const PREVIEW = '/preview';
+const HOME = '/';
 
 /**
  * Scrolls a pinned chapter to a share of its scroll.
@@ -19,7 +19,7 @@ async function scrollChapter(page, chapter, share) {
 
 /** @param {import('@playwright/test').Page} page */
 async function openDoorA(page) {
-  await page.goto(PREVIEW);
+  await page.goto(HOME);
   await expect(page.locator('canvas[data-field="webgl"]')).toHaveAttribute('data-ready', 'true');
   await page.getByRole('button', { name: "I'm building a product or business" }).click();
 }
@@ -95,7 +95,7 @@ test('Crew Advisors types as the visitor scrolls, never finishes, and has no lin
 
 test('with reduced motion the product chapters show their code beside the poster and nothing plays', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  await page.goto(PREVIEW);
+  await page.goto(HOME);
   await page.getByRole('button', { name: "I'm building a product or business" }).click();
   const chapter = page.locator('[data-product="founders-helm"]');
   await chapter.scrollIntoViewIfNeeded();

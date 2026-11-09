@@ -107,7 +107,7 @@ export function validateExcerpt(excerpt) {
 
 /**
  * Returns a valid excerpt by id. Drafts (not yet approved by Chris) are returned only when
- * `includeDrafts` is true, which only the unlinked, noindex `/preview` route does.
+ * `includeDrafts` is true; the public site never passes it, so a draft is never shown to visitors.
  *
  * @param {string} id
  * @param {{ includeDrafts?: boolean, registry?: Readonly<Record<string, Excerpt>> }} [opts]

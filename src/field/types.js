@@ -40,7 +40,7 @@
  * @property {string} code The excerpt's code, laid out as an editor in `sourceBox`.
  * @property {Box} sourceBox Viewport box of the editor, in CSS pixels.
  * @property {number} [codeScale] Editor scale (1 is full size); the scene uses the same scale for its DOM editor.
- * @property {TextTarget | ImageTarget} target What the characters land on, drawn inside `targetBox`.
+ * @property {TextTarget | ImageTarget | SketchTarget} target What the characters land on, drawn inside `targetBox`.
  * @property {Box} targetBox Viewport box of the target, in CSS pixels.
  * @property {number} step Coarsest spacing of landing places, in CSS pixels.
  *
@@ -54,6 +54,10 @@
  * @property {'image'} kind
  * @property {string} src Same-origin image URL.
  * @property {string} alt What the picture shows.
+ *
+ * @typedef {object} SketchTarget Land on a wireframe of the visitor's idea.
+ * @property {'sketch'} kind
+ * @property {ReadonlyArray<import('../scenes/sketchBlocks.js').SketchBlock>} blocks Top to bottom.
  *
  * @typedef {object} Governor
  * @property {(frameMs: number) => number} sample Records one frame time in milliseconds and returns the current count.
