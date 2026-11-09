@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Mail, Calendar, CheckCircle2, ArrowUpRight } from 'lucide-react';
 import Reveal from '../components/Reveal';
 import Magnetic from '../components/Magnetic';
 import usePageMeta from '../hooks/usePageMeta';
+import { templates } from '../data/templates';
 
 const PROJECT_TYPES = [
   'Custom SaaS Build',
@@ -10,8 +12,21 @@ const PROJECT_TYPES = [
   'AI Integration',
   'Technical Audit',
   'Acquisition Readiness',
+  'Website from a template',
   'Something else',
 ];
+
+// /contact?template=<id> (from the Templates page) starts the message from that template.
+function initialForm(templateId) {
+  const template = templates.find((t) => t.id === templateId);
+  if (!template) return { name: '', email: '', projectType: PROJECT_TYPES[0], message: '' };
+  return {
+    name: '',
+    email: '',
+    projectType: 'Website from a template',
+    message: `I'd like to talk about the ${template.name} template.`,
+  };
+}
 
 export default function Contact() {
   usePageMeta(
@@ -19,7 +34,8 @@ export default function Contact() {
     'Get in touch with Chris Allen at Allen Code Co. to start a custom software project, book a technical audit, or ask a question.'
   );
 
-  const [form, setForm] = useState({ name: '', email: '', projectType: PROJECT_TYPES[0], message: '' });
+  const [searchParams] = useSearchParams();
+  const [form, setForm] = useState(() => initialForm(searchParams.get('template')));
   const [errors, setErrors] = useState({});
   const [status, setStatus] = useState('idle');
   const [errorMessage, setErrorMessage] = useState('');
@@ -128,8 +144,9 @@ export default function Contact() {
             <form onSubmit={handleSubmit} className="rounded-2xl border border-white/10 bg-white/[0.02] p-8 sm:p-10">
               <div className="grid gap-5 sm:grid-cols-2">
                 <div>
-                  <label className="mono text-[11px] uppercase tracking-widest text-white/40">Name</label>
+                  <label htmlFor="contact-name" className="mono text-[11px] uppercase tracking-widest text-white/40">Name</label>
                   <input
+                    id="contact-name"
                     value={form.name}
                     onChange={(e) => update('name', e.target.value)}
                     className="input mt-2"
@@ -138,8 +155,9 @@ export default function Contact() {
                   {errors.name && <p className="mt-1.5 text-xs text-orange-500">{errors.name}</p>}
                 </div>
                 <div>
-                  <label className="mono text-[11px] uppercase tracking-widest text-white/40">Email</label>
+                  <label htmlFor="contact-email" className="mono text-[11px] uppercase tracking-widest text-white/40">Email</label>
                   <input
+                    id="contact-email"
                     value={form.email}
                     onChange={(e) => update('email', e.target.value)}
                     type="email"
@@ -150,8 +168,9 @@ export default function Contact() {
                 </div>
               </div>
               <div className="mt-5">
-                <label className="mono text-[11px] uppercase tracking-widest text-white/40">Project type</label>
+                <label htmlFor="contact-type" className="mono text-[11px] uppercase tracking-widest text-white/40">Project type</label>
                 <select
+                  id="contact-type"
                   value={form.projectType}
                   onChange={(e) => update('projectType', e.target.value)}
                   className="input mt-2"
@@ -164,8 +183,9 @@ export default function Contact() {
                 </select>
               </div>
               <div className="mt-5">
-                <label className="mono text-[11px] uppercase tracking-widest text-white/40">What are you building?</label>
+                <label htmlFor="contact-message" className="mono text-[11px] uppercase tracking-widest text-white/40">What are you building?</label>
                 <textarea
+                  id="contact-message"
                   value={form.message}
                   onChange={(e) => update('message', e.target.value)}
                   rows={5}

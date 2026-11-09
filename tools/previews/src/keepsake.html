@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Baby June (concept preview)</title>
+  <style>
+    @font-face { font-family: 'Instrument Serif'; src: url('../../../node_modules/@fontsource/instrument-serif/files/instrument-serif-latin-400-normal.woff2') format('woff2'); }
+    @font-face { font-family: 'Instrument Serif'; font-style: italic; src: url('../../../node_modules/@fontsource/instrument-serif/files/instrument-serif-latin-400-italic.woff2') format('woff2'); }
+    @font-face { font-family: 'JetBrains Mono'; src: url('../../../node_modules/@fontsource/jetbrains-mono/files/jetbrains-mono-latin-400-normal.woff2') format('woff2'); }
+    @font-face { font-family: 'JetBrains Mono'; font-weight: 500; src: url('../../../node_modules/@fontsource/jetbrains-mono/files/jetbrains-mono-latin-500-normal.woff2') format('woff2'); }
+    :root { --bg: #fdf8f5; --fg: #3a2c35; --muted: #8a7682; --accent: #d27d9b; --card: #f6ebee; --line: #ecdce2; --display: 'Instrument Serif', Georgia, serif; --body: Inter, 'Segoe UI', system-ui, sans-serif; --mono: 'JetBrains Mono', ui-monospace, monospace; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 17px; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+    a { color: inherit; text-decoration: none; }
+    .wrap { max-width: 1120px; margin: 0 auto; padding-left: 48px; padding-right: 48px; }
+    .top { display: flex; align-items: center; justify-content: space-between; padding-top: 28px; padding-bottom: 28px; }
+    .brand { font-family: var(--display); font-size: 24px; letter-spacing: -0.01em; }
+    .top nav a { margin-left: 28px; font-size: 14px; color: var(--muted); }
+    .eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--accent); }
+    .button { display: inline-block; padding: 14px 26px; border-radius: 999px; background: var(--accent); color: var(--bg); font-weight: 600; font-size: 15px; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; }
+    .muted { color: var(--muted); }
+    .art { display: block; width: 100%; height: auto; border-radius: 16px; }
+    h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: -0.02em; }
+    section { padding-top: 56px; padding-bottom: 56px; }
+    .concept { position: fixed; right: 20px; bottom: 20px; z-index: 10; padding: 10px 14px; border-radius: 999px; background: rgba(0, 0, 0, 0.78); color: #fff; font: 500 11px/1 var(--mono); letter-spacing: 0.2em; text-transform: uppercase; }
+    .hero { text-align: center; padding-top: 40px; padding-bottom: 24px; }
+    .hero h1 { font-size: 96px; line-height: 0.95; }
+    .hero .lede { font-size: 22px; color: var(--muted); margin: 18px auto 36px; max-width: 26em; }
+    .hero .art { max-width: 880px; margin: 0 auto; }
+    .story h2, .gallery h2 { font-size: 44px; margin-bottom: 26px; }
+    .entries { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .entries .card { padding: 26px; }
+    .entries .date { font-family: var(--mono); font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); }
+    .entries h3 { font-size: 28px; margin: 10px 0 8px; }
+    .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    .tiles p { font-size: 14px; color: var(--muted); margin-top: 8px; }
+    .note { text-align: center; padding: 40px; margin: 24px 0 96px; }
+    .note h2 { font-size: 40px; margin-bottom: 10px; }
+    .note p { font-size: 20px; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <header class="top wrap">
+    <a class="brand" href="#">Baby June</a>
+    <nav><a href="#">Milestones</a><a href="#">Photo journal</a><a href="#">Next up</a></nav>
+  </header>
+  <section class="hero wrap">
+    <h1>Baby June</h1>
+    <p class="lede">Born April 3, 2026. Every little first, in one place.</p>
+    <svg class="art" viewBox="0 0 400 260" role="img" aria-label="A drawn landscape for Baby June">
+      <defs>
+        <linearGradient id="sky-330" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="hsl(330 70% 82%)"/>
+          <stop offset="1" stop-color="hsl(0 60% 66%)"/>
+        </linearGradient>
+      </defs>
+      <rect width="400" height="260" fill="url(#sky-330)"/>
+      <circle cx="300" cy="86" r="34" fill="hsl(20 90% 92%)"/>
+      <path d="M0 190 Q100 120 210 176 T400 160 V260 H0Z" fill="hsl(330 35% 42%)"/>
+      <path d="M0 220 Q140 170 260 214 T400 206 V260 H0Z" fill="hsl(330 40% 30%)"/>
+    </svg>
+  </section>
+  <section class="story wrap">
+    <h2>Milestones</h2>
+    <div class="entries">
+      <article class="card">
+        <p class="date">May 10</p>
+        <h3>First real smile</h3>
+        <p class="muted">Right at Grandpa, who has not stopped talking about it.</p>
+      </article>
+      <article class="card">
+        <p class="date">July 22</p>
+        <h3>Rolled over</h3>
+        <p class="muted">Once by accident, then twenty times on purpose.</p>
+      </article>
+      <article class="card">
+        <p class="date">September 6</p>
+        <h3>First tooth</h3>
+        <p class="muted">Bottom left. Teething biscuits are now a food group.</p>
+      </article>
+    </div>
+  </section>
+  <section class="gallery wrap">
+    <h2>Photo journal</h2>
+    <div class="tiles">
+      <figure>
+        <svg class="art" viewBox="0 0 400 260" role="img" aria-label="Day one">
+          <defs>
+            <linearGradient id="sky-20" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="hsl(20 70% 82%)"/>
+              <stop offset="1" stop-color="hsl(50 60% 66%)"/>
+            </linearGradient>
+          </defs>
+          <rect width="400" height="260" fill="url(#sky-20)"/>
+          <circle cx="300" cy="86" r="34" fill="hsl(70 90% 92%)"/>
+          <path d="M0 190 Q100 120 210 176 T400 160 V260 H0Z" fill="hsl(20 35% 42%)"/>
+          <path d="M0 220 Q140 170 260 214 T400 206 V260 H0Z" fill="hsl(20 40% 30%)"/>
+        </svg>
+        <p>Day one</p>
+      </figure>
+      <figure>
+        <svg class="art" viewBox="0 0 400 260" role="img" aria-label="First bath">
+          <defs>
+            <linearGradient id="sky-195" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="hsl(195 70% 82%)"/>
+              <stop offset="1" stop-color="hsl(225 60% 66%)"/>
+            </linearGradient>
+          </defs>
+          <rect width="400" height="260" fill="url(#sky-195)"/>
+          <circle cx="300" cy="86" r="34" fill="hsl(245 90% 92%)"/>
+          <path d="M0 190 Q100 120 210 176 T400 160 V260 H0Z" fill="hsl(195 35% 42%)"/>
+          <path d="M0 220 Q140 170 260 214 T400 206 V260 H0Z" fill="hsl(195 40% 30%)"/>
+        </svg>
+        <p>First bath</p>
+      </figure>
+      <figure>
+        <svg class="art" viewBox="0 0 400 260" role="img" aria-label="Meeting the dog">
+          <defs>
+            <linearGradient id="sky-40" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="hsl(40 70% 82%)"/>
+              <stop offset="1" stop-color="hsl(70 60% 66%)"/>
+            </linearGradient>
+          </defs>
+          <rect width="400" height="260" fill="url(#sky-40)"/>
+          <circle cx="300" cy="86" r="34" fill="hsl(90 90% 92%)"/>
+          <path d="M0 190 Q100 120 210 176 T400 160 V260 H0Z" fill="hsl(40 35% 42%)"/>
+          <path d="M0 220 Q140 170 260 214 T400 206 V260 H0Z" fill="hsl(40 40% 30%)"/>
+        </svg>
+        <p>Meeting the dog</p>
+      </figure>
+      <figure>
+        <svg class="art" viewBox="0 0 400 260" role="img" aria-label="Park picnic">
+          <defs>
+            <linearGradient id="sky-110" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="hsl(110 70% 82%)"/>
+              <stop offset="1" stop-color="hsl(140 60% 66%)"/>
+            </linearGradient>
+          </defs>
+          <rect width="400" height="260" fill="url(#sky-110)"/>
+          <circle cx="300" cy="86" r="34" fill="hsl(160 90% 92%)"/>
+          <path d="M0 190 Q100 120 210 176 T400 160 V260 H0Z" fill="hsl(110 35% 42%)"/>
+          <path d="M0 220 Q140 170 260 214 T400 206 V260 H0Z" fill="hsl(110 40% 30%)"/>
+        </svg>
+        <p>Park picnic</p>
+      </figure>
+      <figure>
+        <svg class="art" viewBox="0 0 400 260" role="img" aria-label="Big yawn">
+          <defs>
+            <linearGradient id="sky-300" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="hsl(300 70% 82%)"/>
+              <stop offset="1" stop-color="hsl(330 60% 66%)"/>
+            </linearGradient>
+          </defs>
+          <rect width="400" height="260" fill="url(#sky-300)"/>
+          <circle cx="300" cy="86" r="34" fill="hsl(350 90% 92%)"/>
+          <path d="M0 190 Q100 120 210 176 T400 160 V260 H0Z" fill="hsl(300 35% 42%)"/>
+          <path d="M0 220 Q140 170 260 214 T400 206 V260 H0Z" fill="hsl(300 40% 30%)"/>
+        </svg>
+        <p>Big yawn</p>
+      </figure>
+      <figure>
+        <svg class="art" viewBox="0 0 400 260" role="img" aria-label="Six months">
+          <defs>
+            <linearGradient id="sky-340" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="hsl(340 70% 82%)"/>
+              <stop offset="1" stop-color="hsl(10 60% 66%)"/>
+            </linearGradient>
+          </defs>
+          <rect width="400" height="260" fill="url(#sky-340)"/>
+          <circle cx="300" cy="86" r="34" fill="hsl(30 90% 92%)"/>
+          <path d="M0 190 Q100 120 210 176 T400 160 V260 H0Z" fill="hsl(340 35% 42%)"/>
+          <path d="M0 220 Q140 170 260 214 T400 206 V260 H0Z" fill="hsl(340 40% 30%)"/>
+        </svg>
+        <p>Six months</p>
+      </figure>
+    </div>
+  </section>
+  <section class="wrap">
+    <div class="note card">
+      <h2>Next up</h2>
+      <p>Her first birthday party is on April 3. Watch this page for the details.</p>
+    </div>
+  </section>
+  <p class="concept">Concept preview</p>
+</body>
+</html>

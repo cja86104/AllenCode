@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fernly (concept preview)</title>
+  <style>
+    @font-face { font-family: 'Instrument Serif'; src: url('../../../node_modules/@fontsource/instrument-serif/files/instrument-serif-latin-400-normal.woff2') format('woff2'); }
+    @font-face { font-family: 'Instrument Serif'; font-style: italic; src: url('../../../node_modules/@fontsource/instrument-serif/files/instrument-serif-latin-400-italic.woff2') format('woff2'); }
+    @font-face { font-family: 'JetBrains Mono'; src: url('../../../node_modules/@fontsource/jetbrains-mono/files/jetbrains-mono-latin-400-normal.woff2') format('woff2'); }
+    @font-face { font-family: 'JetBrains Mono'; font-weight: 500; src: url('../../../node_modules/@fontsource/jetbrains-mono/files/jetbrains-mono-latin-500-normal.woff2') format('woff2'); }
+    :root { --bg: #0d0b0a; --fg: #f6efe9; --muted: #a8998c; --accent: #ff5a1f; --card: #1a1513; --line: #2b2320; --display: Inter, 'Segoe UI', system-ui, sans-serif; --body: Inter, 'Segoe UI', system-ui, sans-serif; --mono: 'JetBrains Mono', ui-monospace, monospace; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 17px; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+    a { color: inherit; text-decoration: none; }
+    .wrap { max-width: 1120px; margin: 0 auto; padding-left: 48px; padding-right: 48px; }
+    .top { display: flex; align-items: center; justify-content: space-between; padding-top: 28px; padding-bottom: 28px; }
+    .brand { font-family: var(--display); font-size: 24px; letter-spacing: -0.01em; }
+    .top nav a { margin-left: 28px; font-size: 14px; color: var(--muted); }
+    .eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--accent); }
+    .button { display: inline-block; padding: 14px 26px; border-radius: 999px; background: var(--accent); color: var(--bg); font-weight: 600; font-size: 15px; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; }
+    .muted { color: var(--muted); }
+    .art { display: block; width: 100%; height: auto; border-radius: 16px; }
+    h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: -0.02em; }
+    section { padding-top: 56px; padding-bottom: 56px; }
+    .concept { position: fixed; right: 20px; bottom: 20px; z-index: 10; padding: 10px 14px; border-radius: 999px; background: rgba(0, 0, 0, 0.78); color: #fff; font: 500 11px/1 var(--mono); letter-spacing: 0.2em; text-transform: uppercase; }
+    .hero { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 56px; align-items: center; padding-top: 48px; }
+    .hero h1 { font-size: 64px; line-height: 1.02; margin: 18px 0 20px; }
+    .hero .lede { font-size: 19px; color: var(--muted); max-width: 30em; margin-bottom: 32px; }
+    .window { padding: 18px; }
+    .window .dots { display: flex; gap: 6px; margin-bottom: 16px; }
+    .window .dots i { width: 10px; height: 10px; border-radius: 50%; background: var(--line); }
+    .window .rows { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .window .rows b { height: 64px; border-radius: 10px; background: var(--line); }
+    .window .rows b:nth-child(1) { grid-column: span 2; background: var(--accent); opacity: 0.85; }
+    .window .rows b:nth-child(5) { grid-column: span 2; height: 110px; }
+    .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .features .card { padding: 28px; }
+    .features h3 { font-size: 26px; margin-bottom: 8px; }
+    .steps ol { list-style: none; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; counter-reset: step; }
+    .steps li { counter-increment: step; padding-top: 18px; border-top: 2px solid var(--accent); font-size: 18px; }
+    .steps li::before { content: '0' counter(step); display: block; font-family: var(--mono); font-size: 13px; color: var(--accent); margin-bottom: 8px; }
+    .closing { text-align: center; padding-top: 96px; padding-bottom: 120px; }
+    .closing h2 { font-size: 52px; margin-bottom: 28px; }
+  </style>
+</head>
+<body>
+  <header class="top wrap">
+    <a class="brand" href="#">Fernly</a>
+    <nav><a href="#">Product</a><a href="#">How it works</a><a href="#">Sign in</a></nav>
+  </header>
+  <section class="hero wrap">
+    <div>
+      <p class="eyebrow">Scheduling for small teams</p>
+      <h1>Your week, planned in one place.</h1>
+      <p class="lede">Fernly turns scattered calendars into one shared plan the whole team can see.</p>
+      <a class="button" href="#start">Start planning</a>
+    </div>
+    <div class="window card" aria-hidden="true">
+      <div class="dots"><i></i><i></i><i></i></div>
+      <div class="rows"><b></b><b></b><b></b><b></b><b></b><b></b></div>
+    </div>
+  </section>
+  <section class="features wrap">
+    <div class="card">
+      <h3>Shared calendars</h3>
+      <p class="muted">Every teammate's week, side by side.</p>
+    </div>
+    <div class="card">
+      <h3>Gentle reminders</h3>
+      <p class="muted">A nudge before anything slips.</p>
+    </div>
+    <div class="card">
+      <h3>One-link invites</h3>
+      <p class="muted">Bring the team in with a single link.</p>
+    </div>
+  </section>
+  <section class="steps wrap">
+    <ol>
+      <li>Connect your calendars</li>
+      <li>Invite your team</li>
+      <li>Plan the week together</li>
+    </ol>
+  </section>
+  <section class="closing wrap">
+    <h2>Ready when your team is.</h2>
+    <a class="button" href="#start">Start planning</a>
+  </section>
+  <p class="concept">Concept preview</p>
+</body>
+</html>
