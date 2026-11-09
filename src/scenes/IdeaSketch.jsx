@@ -5,7 +5,6 @@ import { fieldBus, useField } from '../field/fieldBus.js';
 import { usePrefersReducedMotion } from '../field/environment.js';
 import { CODE_CHAR_WIDTH, CODE_FONT_SIZE, CODE_LINE_HEIGHT, EDITOR_PADDING } from '../field/editorMetrics.js';
 import { sketchShapes } from '../field/layouts.js';
-import CodeLines from '../field/CodeLines.jsx';
 import { IDEA_CHAPTER } from '../content/visitorTurn.js';
 import { IDEA_MAX_LENGTH, capIdea, sketchBlocks, wrapIdea } from './sketchBlocks.js';
 
@@ -88,39 +87,27 @@ export default function IdeaSketch() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [draft, setDraft] = useState(() => capIdea(searchParams.get(IDEA_PARAM) ?? ''));
   const [idea, setIdea] = useState(() => capIdea(searchParams.get(IDEA_PARAM) ?? ''));
-  const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [flight, setFlight] = useState(1);
   // Each submission's line and blocks, captured together so its flight plays exactly what was submitted.
   const [launch, setLaunch] = useState(/** @type {{ id: number, code: string, blocks: SketchBlock[] } | null} */ (null));
-  const codeRef = useRef(/** @type {HTMLPreElement | null} */ (null));
+  const fileRef = useRef(/** @type {HTMLTextAreaElement | null} */ (null));
   const sketchRef = useRef(/** @type {HTMLDivElement | null} */ (null));
 
   const blocks = sketchBlocks(idea);
-
-  // The editor shows the line wrapped to its width; rewrap when the width changes.
-  useEffect(() => {
-    const rewrap = () => setCode(idea ? wrapIdea(idea, columnsIn(codeRef.current)) : '');
-    const frame = requestAnimationFrame(rewrap);
-    window.addEventListener('resize', rewrap);
-    return () => {
-      cancelAnimationFrame(frame);
-      window.removeEventListener('resize', rewrap);
-    };
-  }, [idea]);
 
   // One flight per submission: the line's characters lift off the editor and land on the sketch.
   // Scrolling during the flight finishes it, so the characters never land somewhere the sketch is not.
   useEffect(() => {
     if (!launch || !animate || !launch.code) return undefined;
-    const pre = codeRef.current;
+    const file = fileRef.current;
     const sketch = sketchRef.current;
-    if (!pre || !sketch) return undefined;
+    if (!file || !sketch) return undefined;
     const key = `idea:${launch.id}`;
     fieldBus.claimTransform({
       key,
       code: launch.code,
-      sourceBox: boxOf(pre.getBoundingClientRect()),
+      sourceBox: boxOf(file.getBoundingClientRect()),
       codeScale: 1,
       target: { kind: 'sketch', blocks: launch.blocks },
       targetBox: boxOf(sketch.getBoundingClientRect()),
@@ -156,11 +143,11 @@ export default function IdeaSketch() {
         setError(IDEA_CHAPTER.empty);
         return;
       }
-      const wrapped = wrapIdea(next, columnsIn(codeRef.current));
+      // The file wraps at spaces like the browser wraps the field, so the characters lift from where they are.
+      const wrapped = wrapIdea(next, columnsIn(fileRef.current));
       setError('');
       setDraft(next);
       setIdea(next);
-      setCode(wrapped);
       setSearchParams(
         (current) => {
           const params = new URLSearchParams(current);
@@ -176,7 +163,8 @@ export default function IdeaSketch() {
   );
 
   const flying = flight < 1;
-  const codeOpacity = flying && flight > 0 ? 0 : 1;
+  // While the characters are in the air the file's own text steps aside.
+  const textHidden = flying && flight > 0;
   // The sketch resolves through the landed characters over the last 12 percent of the flight.
   const sketchOpacity = !idea ? 0.25 : flying ? Math.max(0, (flight - 0.88) / 0.12) : 1;
 
@@ -188,85 +176,86 @@ export default function IdeaSketch() {
       </h2>
       <p className="mt-5 max-w-2xl text-white/70">{IDEA_CHAPTER.body}</p>
 
-      <form onSubmit={submit} noValidate className="mt-8 max-w-2xl">
-        <label htmlFor="idea-input" className="mono text-[11px] uppercase tracking-widest text-white/60">
-          {IDEA_CHAPTER.label}
-        </label>
-        <div className="mt-2 flex flex-col gap-3 sm:flex-row">
-          <input
-            id="idea-input"
-            name={IDEA_PARAM}
-            value={draft}
-            maxLength={IDEA_MAX_LENGTH}
-            onChange={(event) => setDraft(event.target.value)}
-            placeholder={IDEA_CHAPTER.placeholder}
-            autoComplete="off"
-            aria-describedby={error ? 'idea-count idea-error' : 'idea-count'}
-            aria-invalid={error ? true : undefined}
-            className="input flex-1 !bg-night/95"
-          />
-          <button
-            type="submit"
-            className="mono rounded-full bg-ember px-6 py-3 text-xs uppercase tracking-widest text-night hover:bg-orange-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember"
-          >
-            {IDEA_CHAPTER.submit}
-          </button>
-        </div>
-        <p id="idea-count" className="mono mt-2 text-[11px] text-white/45">
-          {draft.length} / {IDEA_MAX_LENGTH}
-        </p>
-        {error && (
-          <p id="idea-error" role="alert" className="mt-1 text-sm text-ember">
-            {error}
-          </p>
-        )}
-      </form>
-
-      <div className="mt-10 grid gap-8 lg:grid-cols-[2fr_3fr] lg:items-start">
-        <div className="overflow-hidden rounded-xl border border-white/10 bg-night/80">
-          <div className="mono border-b border-white/10 px-4 py-2 text-[11px] tracking-widest text-white/45">
-            {IDEA_CHAPTER.file}
+      <form onSubmit={submit} noValidate className="mt-10 grid gap-8 lg:grid-cols-[2fr_3fr] lg:items-start">
+        <div>
+          <label htmlFor="idea-input" className="mono text-[11px] uppercase tracking-widest text-white/60">
+            {IDEA_CHAPTER.label}
+          </label>
+          <div className="mt-2 overflow-hidden rounded-xl border border-white/15 bg-night/95 transition-colors focus-within:border-ember">
+            <div className="mono flex items-center justify-between border-b border-white/10 px-4 py-2 text-[11px] tracking-widest text-white/45">
+              <span>{IDEA_CHAPTER.file}</span>
+              <span aria-hidden="true" className="text-ember/80">
+                {IDEA_CHAPTER.typeHere}
+              </span>
+            </div>
+            <textarea
+              ref={fileRef}
+              id="idea-input"
+              name={IDEA_PARAM}
+              value={draft}
+              rows={4}
+              maxLength={IDEA_MAX_LENGTH}
+              onChange={(event) => setDraft(event.target.value.replace(/[\r\n]+/g, ' '))}
+              onKeyDown={(event) => {
+                // One line: Enter sketches it instead of starting a new line.
+                if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
+                  event.preventDefault();
+                  event.currentTarget.form?.requestSubmit();
+                }
+              }}
+              placeholder={IDEA_CHAPTER.placeholder}
+              autoComplete="off"
+              spellCheck={false}
+              aria-describedby={error ? 'idea-count idea-error' : 'idea-count'}
+              aria-invalid={error ? true : undefined}
+              data-idea-code
+              style={{
+                padding: EDITOR_PADDING,
+                fontSize: CODE_FONT_SIZE,
+                lineHeight: `${CODE_LINE_HEIGHT}px`,
+                color: textHidden ? 'transparent' : undefined,
+              }}
+              className="mono block w-full resize-none overflow-hidden whitespace-pre-wrap bg-transparent text-white caret-ember outline-none [font-variant-ligatures:none] [overflow-wrap:anywhere] placeholder:text-white/35"
+            />
           </div>
-          <pre
-            ref={codeRef}
-            data-idea-code
-            style={{
-              padding: EDITOR_PADDING,
-              fontSize: CODE_FONT_SIZE,
-              lineHeight: `${CODE_LINE_HEIGHT}px`,
-              minHeight: CODE_LINE_HEIGHT + EDITOR_PADDING * 2,
-            }}
-            className="mono m-0 whitespace-pre [font-variant-ligatures:none]"
-          >
-            <span style={{ opacity: codeOpacity }}>
-              <CodeLines code={code} />
-            </span>
-            {!idea && <span aria-hidden="true" className="gate-cursor" />}
-          </pre>
+          <div className="mt-3 flex items-center justify-between gap-4">
+            <p id="idea-count" className="mono text-[11px] text-white/45">
+              {draft.length} / {IDEA_MAX_LENGTH}
+            </p>
+            <button
+              type="submit"
+              className="mono rounded-full bg-ember px-6 py-3 text-xs uppercase tracking-widest text-night hover:bg-orange-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember"
+            >
+              {IDEA_CHAPTER.submit}
+            </button>
+          </div>
+          {error && (
+            <p id="idea-error" role="alert" className="mt-2 text-sm text-ember">
+              {error}
+            </p>
+          )}
         </div>
 
-        <figure className="rounded-xl border border-white/10 bg-night/60 p-4">
+        <figure className="m-0 rounded-xl border border-white/10 bg-night/60 p-4">
           <Sketch blocks={blocks} opacity={sketchOpacity} sketchRef={sketchRef} />
           <figcaption className="mt-4">
             {idea ? (
-              <>
-                <ul aria-label={IDEA_CHAPTER.sketchCaption} data-sketch-blocks className="flex flex-wrap gap-2">
-                  {blocks.map((block) => (
-                    <li
-                      key={block.kind}
-                      className="mono rounded-full border border-white/15 px-3 py-1 text-[11px] uppercase tracking-widest text-white/70"
-                    >
-                      {block.label}
-                    </li>
-                  ))}
-                </ul>
-              </>
+              <ul aria-label={IDEA_CHAPTER.sketchCaption} data-sketch-blocks className="flex flex-wrap gap-2">
+                {blocks.map((block) => (
+                  <li
+                    key={block.kind}
+                    className="mono rounded-full border border-white/15 px-3 py-1 text-[11px] uppercase tracking-widest text-white/70"
+                  >
+                    {block.label}
+                  </li>
+                ))}
+              </ul>
             ) : (
               <span className="mono text-[11px] uppercase tracking-widest text-white/45">{IDEA_CHAPTER.waiting}</span>
             )}
           </figcaption>
         </figure>
-      </div>
+      </form>
 
       {idea && (
         <p className="mt-8 text-white/70">

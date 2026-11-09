@@ -26,7 +26,8 @@ function submitIdea(text) {
   fireEvent.submit(input.closest('form') ?? input);
 }
 
-const editorText = () => document.querySelector('[data-idea-code]')?.textContent ?? '';
+/** What the visitor's file holds: the field itself is the editor. */
+const editorText = () => /** @type {HTMLTextAreaElement} */ (screen.getByLabelText(IDEA_CHAPTER.label)).value;
 
 describe('IdeaSketch', () => {
   it('is a labeled form field that caps input at 120 characters', () => {
@@ -34,6 +35,26 @@ describe('IdeaSketch', () => {
     const input = screen.getByLabelText(IDEA_CHAPTER.label);
     expect(input).toHaveAttribute('maxLength', '120');
     expect(screen.getByRole('button', { name: IDEA_CHAPTER.submit })).toHaveAttribute('type', 'submit');
+  });
+
+  it('the file itself is the field: typing goes into your-idea.txt', () => {
+    renderIdea();
+    const file = screen.getByLabelText(IDEA_CHAPTER.label);
+    expect(file.tagName).toBe('TEXTAREA');
+    expect(file.closest('div')?.parentElement).toHaveTextContent(IDEA_CHAPTER.file);
+    fireEvent.change(file, { target: { value: 'a shop\nfor candles' } });
+    expect(file).toHaveValue('a shop for candles');
+  });
+
+  it('Enter sketches the idea instead of starting a new line', () => {
+    renderIdea();
+    const file = screen.getByLabelText(IDEA_CHAPTER.label);
+    fireEvent.change(file, { target: { value: 'wedding photos' } });
+    const form = /** @type {HTMLFormElement} */ (file.closest('form'));
+    form.requestSubmit = () => fireEvent.submit(form);
+    const event = fireEvent.keyDown(file, { key: 'Enter' });
+    expect(event).toBe(false);
+    expect(screen.getByRole('list', { name: IDEA_CHAPTER.sketchCaption })).toHaveTextContent('Photo gallery');
   });
 
   it('works with no animation: submitting shows the line and lists the blocks it asked for', () => {

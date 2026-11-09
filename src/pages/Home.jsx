@@ -14,9 +14,10 @@ import IdeaSketch from '../scenes/IdeaSketch.jsx';
 import BriefChapter from '../scenes/BriefChapter.jsx';
 
 /**
- * The home page: the Source to Screen experience (spec section 4). The shared opening, then the
- * chapters for the chosen door, then the builder, the visitor's idea and the brief, which both doors
- * share and which are shown before a door is chosen too. Only approved excerpts are shown here.
+ * The home page: the Source to Screen experience (spec section 4). The shared opening and the fork;
+ * once a door is chosen, its chapters, then the builder, the visitor's idea and the brief, which both
+ * doors share. Before a choice the page ends at the fork (Chris, 2026-11-09), so the opening stays
+ * focused. Only approved excerpts are shown here.
  */
 export default function Home() {
   usePageMeta(
@@ -29,7 +30,8 @@ export default function Home() {
     <>
       <Gate includeDrafts={false} />
 
-      <section className="relative z-10 mx-auto flex max-w-4xl flex-col items-center justify-center px-6 py-16 lg:px-10 lg:py-20">
+      <section className="relative z-10 mx-auto flex max-w-5xl flex-col items-center justify-center px-6 py-16 lg:px-10 lg:py-20">
+        <p className="mono mb-6 self-start text-xs uppercase tracking-[0.3em] text-ember">Pick a file to open</p>
         <Fork />
       </section>
 
@@ -48,9 +50,13 @@ export default function Home() {
         </>
       )}
 
-      <Builder />
-      <IdeaSketch />
-      <BriefChapter />
+      {door && (
+        <>
+          <Builder />
+          <IdeaSketch />
+          <BriefChapter />
+        </>
+      )}
     </>
   );
 }

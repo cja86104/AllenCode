@@ -23,6 +23,7 @@ import templateMonoline from './template-monoline.js';
 import templateStudio from './template-studio.js';
 import templateTerminal from './template-terminal.js';
 import templateVow from './template-vow.js';
+import builder from './builder.js';
 
 /**
  * A verbatim excerpt of real source code (spec section 5).
@@ -78,6 +79,7 @@ export const excerpts = Object.freeze({
   [templateStudio.id]: templateStudio,
   [templateTerminal.id]: templateTerminal,
   [templateVow.id]: templateVow,
+  [builder.id]: builder,
 });
 
 /**

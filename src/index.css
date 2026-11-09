@@ -166,3 +166,30 @@ html.lenis {
     opacity: 0;
   }
 }
+
+/* Fork promise lines (src/door/Fork.jsx): typed out one character at a time on hover or focus.
+   Touch screens have no hover, and reduced motion skips the typing, so both show the line at once. */
+.fork-type {
+  display: inline-block;
+  max-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  vertical-align: bottom;
+  transition: max-width 0.9s steps(36, end);
+}
+.group:hover .fork-type,
+.group:focus-visible .fork-type,
+.fork-type[data-shown='true'] {
+  max-width: 36ch;
+}
+@media (hover: none) {
+  .fork-type {
+    max-width: 36ch;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fork-type {
+    max-width: 36ch;
+    transition: none;
+  }
+}

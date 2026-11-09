@@ -1,8 +1,8 @@
 // @ts-check
 import { expect, test } from '@playwright/test';
 import { visibleCodePixels } from './pixels.js';
+import { openWithDoor } from './door.js';
 
-const HOME = '/';
 
 /**
  * Scrolls a pinned section to a share of its scroll.
@@ -28,9 +28,8 @@ const playing = (video) => video.evaluate((el) => !(/** @type {HTMLVideoElement}
 
 /** @param {import('@playwright/test').Page} page */
 async function openDoorB(page) {
-  await page.goto(HOME);
+  await openWithDoor(page, 'b');
   await expect(page.locator('canvas[data-field="webgl"]')).toHaveAttribute('data-ready', 'true');
-  await page.getByRole('button', { name: 'I want a site for me or my family' }).click();
 }
 
 test('choosing door b then scrolling reaches the family-site transformation', async ({ page }) => {
@@ -79,8 +78,7 @@ test('the template chapter compiles each template in turn, then plays its loop',
 
 test('with reduced motion door b shows each template’s code beside its poster and nothing plays', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  await page.goto(HOME);
-  await page.getByRole('button', { name: 'I want a site for me or my family' }).click();
+  await openWithDoor(page, 'b');
   await expect(page.locator('canvas')).toHaveCount(0);
   const items = page.locator('[data-door-b-template]');
   await expect(items).toHaveCount(5);
@@ -94,16 +92,15 @@ test('with reduced motion door b shows each template’s code beside its poster 
 
 test('no price appears anywhere on door b', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  await page.goto(HOME);
-  await page.getByRole('button', { name: 'I want a site for me or my family' }).click();
+  await openWithDoor(page, 'b');
   const text = await page.locator('body').innerText();
   expect(text).not.toMatch(/\$\s?\d/);
   expect(text).not.toMatch(/\bbuy\b/i);
 });
 
 test('door b ends with done-for-you, the builder, the idea and the brief, and its nav offers templates', async ({ page }) => {
-  await page.goto(HOME);
-  await page.getByRole('button', { name: 'I want a site for me or my family' }).click();
+  await openWithDoor(page, 'b');
+  await expect(page.locator('#brief')).toBeAttached();
   const order = await page.locator('[data-chapter]').evaluateAll((els) => els.map((el) => el.getAttribute('data-chapter')));
   expect(order.slice(-4)).toEqual(['done-for-you', 'builder', 'idea', 'brief']);
   expect(order).not.toContain('how-i-work');
