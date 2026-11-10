@@ -26,7 +26,7 @@ export const products = [
       { label: 'Grade levels covered', value: 'K–5' },
     ],
     image: '/images/products/product-my-teachers-toolbox.jpg',
-    // Scroll loop and its poster for the redesigned home (tools/media). Not read by the current pages.
+    // Real-screen loop and its poster (tools/media): the home chapter, the products grid and the showcase hero.
     previewVideo: '/media/products/my-teachers-toolbox.mp4',
     poster: '/media/products/my-teachers-toolbox.jpg',
     // 4:3 source — the detail hero renders at 4:3 so the logo and the desk
@@ -214,7 +214,7 @@ export const products = [
       { label: 'Time to first session', value: '<90 sec' },
     ],
     image: '/images/products/product-underfire-ai.jpg',
-    // Scroll loop and its poster for the redesigned home (tools/media). Not read by the current pages.
+    // Real-screen loop and its poster (tools/media): the home chapter, the products grid and the showcase hero.
     previewVideo: '/media/products/underfire-ai.mp4',
     poster: '/media/products/underfire-ai.jpg',
 
@@ -421,7 +421,7 @@ export const products = [
       { label: 'TypeScript errors', value: '0' },
     ],
     image: '/images/products/product-founders-helm.jpg',
-    // Scroll loop and its poster for the redesigned home (tools/media). Not read by the current pages.
+    // Real-screen loop and its poster (tools/media): the home chapter, the products grid and the showcase hero.
     previewVideo: '/media/products/founders-helm.mp4',
     poster: '/media/products/founders-helm.jpg',
 

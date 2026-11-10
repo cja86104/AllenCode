@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowUpRight, ExternalLink, Lock } from 'lucide-react';
 import { catalog } from '../data/catalog.js';
 import Reveal from '../components/Reveal';
 import Magnetic from '../components/Magnetic';
+import MediaLoop from '../components/MediaLoop.jsx';
 import { BUTTON, DISPLAY, PANEL } from '../components/PageHeader.jsx';
 import usePageMeta from '../hooks/usePageMeta.js';
 
@@ -84,11 +85,21 @@ export default function ProductDetail() {
             <p aria-hidden="true" className="mono border-b border-white/10 px-5 py-2.5 text-[11px] tracking-widest text-white/55">
               {product.slug}/screen
             </p>
-            <img
-              src={product.showcaseImage || product.image}
-              alt={`${product.name} product preview`}
-              className={`block w-full object-cover ${product.heroAspect === '4/3' ? 'aspect-[4/3]' : 'aspect-[16/10]'}`}
-            />
+            {/* A live product's real screens, playing; otherwise its image (docs/PRODUCT-IMAGES.md). */}
+            {product.previewVideo && product.poster ? (
+              <MediaLoop
+                src={product.previewVideo}
+                poster={product.poster}
+                alt={`${product.name} product preview`}
+                className="aspect-[16/10] bg-black"
+              />
+            ) : (
+              <img
+                src={product.showcaseImage || product.image}
+                alt={`${product.name} product preview`}
+                className={`block w-full object-cover ${product.heroAspect === '4/3' ? 'aspect-[4/3]' : 'aspect-[16/10]'}`}
+              />
+            )}
           </div>
         </Reveal>
 

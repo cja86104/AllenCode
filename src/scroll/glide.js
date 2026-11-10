@@ -22,9 +22,13 @@ export function setGlider(next) {
  * @param {{ instant?: boolean }} [opts] `instant` jumps without animation (reduced motion).
  */
 export function glideTo(y, { instant = false } = {}) {
-  if (glider) {
-    glider(y, instant);
+  if (glider) glider(y, instant);
+  if (instant) {
+    // 'instant', not 'auto': the stylesheet sets `scroll-behavior: smooth`, which 'auto' follows. A
+    // smooth jump to the top of a new page is cut short on phones as the page lays out, and left
+    // visitors at the bottom (Chris, 2026-11-09).
+    window.scrollTo({ top: y, left: 0, behavior: 'instant' });
     return;
   }
-  window.scrollTo({ top: y, behavior: instant ? 'auto' : 'smooth' });
+  if (!glider) window.scrollTo({ top: y, behavior: 'smooth' });
 }

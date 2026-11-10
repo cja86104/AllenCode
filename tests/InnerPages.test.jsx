@@ -59,7 +59,7 @@ describe('Products and product detail', () => {
     expect(screen.getByText('Products list')).toBeInTheDocument();
   });
 
-  it('the products page lists every product, its picture from the image field, without data-aiwp-slot', () => {
+  it('the products page shows live products playing their real screens and Crew Advisors typing its code', () => {
     const { container } = render(
       <MemoryRouter>
         <Products />
@@ -67,8 +67,16 @@ describe('Products and product detail', () => {
     );
     for (const product of catalog) {
       const card = /** @type {HTMLElement} */ (container.querySelector(`[data-product-card="${product.slug}"]`));
-      expect(card.querySelector('img')).toHaveAttribute('src', product.image);
+      if (product.previewVideo) {
+        expect(card.querySelector('video')).toHaveAttribute('src', product.previewVideo);
+        expect(card.querySelector('img')).toHaveAttribute('src', product.poster);
+      } else {
+        expect(card.querySelector('video')).toBeNull();
+      }
     }
+    const crew = /** @type {HTMLElement} */ (container.querySelector('[data-product-card="crew-advisors"]'));
+    expect(crew.querySelector('[data-typing-file="product-crew-advisors"] [data-cursor]')).not.toBeNull();
+    expect(crew).toHaveTextContent('still being written');
     expect(container.querySelector('[data-aiwp-slot]')).toBeNull();
   });
 });

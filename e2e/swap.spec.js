@@ -42,9 +42,9 @@ test('opening a file flares the field, folds the other file away and glides into
 
 test('/preview no longer exists', async ({ page }) => {
   await page.goto('/preview');
-  await expect(page.locator('canvas')).toHaveCount(0);
+  await expect(page.getByRole('heading', { level: 1, name: 'Nothing to see here.' })).toBeVisible();
   await expect(page.getByRole('heading', { level: 1, name: HEADLINE })).toHaveCount(0);
-  await expect(page.getByText(/not found|404|doesn.t exist/i).first()).toBeVisible();
+  await expect(page).toHaveTitle(/Page not found/);
 });
 
 test('robots.txt no longer mentions /preview', async ({ request }) => {

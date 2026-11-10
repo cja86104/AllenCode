@@ -7,18 +7,20 @@ and it works the first time. Do not improvise — the two gotchas in §3 are wha
 
 ---
 
-## 1. The one field that controls everything
+## 1. Which field shows where (updated 2026-11-09, Source to Screen redesign)
 
-Every product is a single object in **`src/data/products.js`**. One field, `image`, drives **all
-three** places that product's picture appears:
+Every product is a single object in **`src/data/products.js`**. Since the redesign, a product that
+has a real-screen loop shows the loop, and `image` is the fallback:
 
-| Surface | File that renders it | Aspect | CSS |
+| Surface | File that renders it | Shows | Aspect |
 |---|---|---|---|
-| Home page product grid | `src/pages/Home.jsx` → `ProductCard` | `aspect-[4/3]` | `object-cover` |
-| `/products` grid | `src/pages/Products.jsx` → `ProductCard` | `aspect-[4/3]` | `object-cover` |
-| `/products/<slug>` hero | `src/pages/ProductDetail.jsx` | `aspect-[16/10]` | `object-cover` |
+| Home page product chapter | `src/scenes/ProductChapter.jsx` | `previewVideo` + `poster` | 16:10 |
+| `/products` grid | `src/pages/Products.jsx` → `ProductCard` | `previewVideo` + `poster`; a coming-soon product with an approved excerpt types its code; otherwise `image` | `aspect-[16/10]` |
+| `/products/<slug>` hero | `src/pages/ProductDetail.jsx` | `previewVideo` + `poster`; otherwise `showcaseImage` or `image` | `aspect-[16/10]` (or `heroAspect: '4/3'`) |
 
-Set `image` once → all three update. There is **no** per-page image field to hunt down.
+`previewVideo` and `poster` come from `npm run media:capture` then `npm run media:loops`
+(`tools/media/`), 1280x800, poster at most 150 KB, loop at most 2 MB. `image` still follows the
+procedure below and is what a product without a loop shows.
 
 ---
 
@@ -118,6 +120,9 @@ Rule of thumb: **a product should have `image` and nothing else** unless there's
 Beyond the image, two things are positional and easy to get wrong.
 
 ### `data-aiwp-slot` numbering
+
+**Retired (2026-11-09).** The redesign removed every `data-aiwp-slot` attribute (spec decision 3), so
+the numbering below no longer applies; it is kept only as history.
 
 Every image carries a `data-aiwp-slot` attribute used by the AI Website Powerhouse tooling. The
 numbering is **derived from array position**, so inserting a product mid-array renumbers everything

@@ -2,11 +2,53 @@
 import { Link } from 'react-router-dom';
 import { ArrowUpRight, ExternalLink, Lock } from 'lucide-react';
 import Reveal from './Reveal';
+import MediaLoop from './MediaLoop.jsx';
+import TypingFile from './TypingFile.jsx';
 import { DISPLAY, PANEL_HOVER } from './PageHeader.jsx';
+import crewAdvisorsExcerpt from '../content/excerpts/product-crew-advisors.js';
 
 /**
- * One product on the products page, as a file: its folder in the title bar, its `image` (the one
- * field that drives every product picture, docs/PRODUCT-IMAGES.md), and its status.
+ * Products still being built show their real code typing itself, unfinished. Only an excerpt Chris
+ * approved is shown; without one the card falls back to the product's image.
+ * @type {Readonly<Record<string, import('../content/excerpts/index.js').Excerpt>>}
+ */
+const UNFINISHED_FILES = Object.freeze({ 'crew-advisors': crewAdvisorsExcerpt });
+
+/**
+ * What the card shows, in motion like the rest of the site (Chris, 2026-11-09: "not that boring
+ * stale photo"): a live product's real screens, playing by themselves whenever the card is on
+ * screen; a product still being built, its code typing itself; otherwise its `image`.
+ * @param {{ product: import('../data/catalog.js').Product, index: number }} props
+ */
+function CardMedia({ product, index }) {
+  const frame = 'aspect-[16/10] border-b border-white/10 bg-black';
+  if (product.previewVideo && product.poster) {
+    return (
+      <MediaLoop
+        src={product.previewVideo}
+        poster={product.poster}
+        alt={`${product.name}: its real screens`}
+        className={frame}
+      />
+    );
+  }
+  const unfinished = product.status === 'coming-soon' ? UNFINISHED_FILES[product.slug] : undefined;
+  if (unfinished && unfinished.approved) return <TypingFile excerpt={unfinished} className={frame} />;
+  return (
+    <div className={`overflow-hidden ${frame}`}>
+      <img
+        src={product.image}
+        alt=""
+        loading={index > 1 ? 'lazy' : undefined}
+        className="h-full w-full object-cover opacity-90 transition duration-700 group-hover:scale-[1.03] group-hover:opacity-100"
+      />
+    </div>
+  );
+}
+
+/**
+ * One product on the products page, as a file: its folder and status in the title bar, its screens
+ * or code in motion, and the way to its showcase.
  *
  * @param {{ product: import('../data/catalog.js').Product, index: number }} props
  */
@@ -32,20 +74,7 @@ export default function ProductCard({ product, index }) {
             </span>
           )}
         </div>
-        <Link
-          to={`/products/${product.slug}`}
-          viewTransition
-          tabIndex={-1}
-          aria-hidden="true"
-          className="relative block aspect-[4/3] overflow-hidden border-b border-white/10 bg-black"
-        >
-          <img
-            src={product.image}
-            alt=""
-            loading={index > 1 ? 'lazy' : undefined}
-            className="h-full w-full object-cover opacity-85 transition duration-700 group-hover:scale-[1.03] group-hover:opacity-100"
-          />
-        </Link>
+        <CardMedia product={product} index={index} />
         <div className="flex flex-1 flex-col p-7">
           <p className="mono text-[10px] uppercase tracking-[0.25em] text-ember">{product.category}</p>
           <h2 className={`${DISPLAY} mt-3 text-3xl sm:text-4xl`}>{product.name}</h2>

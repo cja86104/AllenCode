@@ -87,3 +87,33 @@ test('a page whose code cannot load shows a way to reload, not a crash screen', 
   await expect(page.getByRole('button', { name: 'Reload the page' })).toBeVisible();
   await expect(page.getByText('Unexpected Application Error')).toHaveCount(0);
 });
+
+test.describe('on a phone', () => {
+  test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+
+  test('asking about a template far down the page opens the brief at the top, filled in', async ({ page }) => {
+    await page.goto('/templates');
+    const last = page.locator('[data-template]').last();
+    await last.scrollIntoViewIfNeeded();
+    expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(2000);
+    const id = await last.getAttribute('data-template');
+    await last.getByRole('link', { name: /Ask about this template/ }).tap();
+    await expect(page).toHaveURL(new RegExp(`/contact\\?template=${id}$`));
+    // At the top at once: a smooth scroll that a phone cuts short is what left visitors at the bottom.
+    await expect.poll(() => page.evaluate(() => window.scrollY), { timeout: 300 }).toBeLessThan(5);
+    await expect(page.getByRole('heading', { level: 1, name: /Tell me what you're building/ })).toBeInViewport();
+    await expect(page.getByLabel('What are you building?')).toHaveValue(/template\.$/);
+  });
+
+  test('every template preview on the page plays by itself as it comes on screen', async ({ page }) => {
+    await page.goto('/templates');
+    const videos = page.locator('[data-template] video');
+    const count = await videos.count();
+    expect(count).toBeGreaterThan(10);
+    for (let i = 0; i < count; i += 1) {
+      const video = videos.nth(i);
+      await video.scrollIntoViewIfNeeded();
+      await expect.poll(() => video.evaluate((el) => /** @type {HTMLVideoElement} */ (el).paused), { timeout: 6000 }).toBe(false);
+    }
+  });
+});
