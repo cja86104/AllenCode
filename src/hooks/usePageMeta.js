@@ -1,6 +1,7 @@
 // @ts-check
-import { useEffect } from 'react';
+import { useContext, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { PageMetaContext } from './pageMetaContext.js';
 
 const SITE_URL = 'https://www.allencodeco.com';
 
@@ -34,11 +35,10 @@ function upsertCanonical(href) {
 // also keeps the canonical link and Open Graph/Twitter title+description in
 // sync with the current route.
 //
-// This only helps crawlers that execute JavaScript (Google does). Facebook,
-// LinkedIn, and Slack's link-preview bots read raw HTML only and never run
-// this code, so a shared deep link (e.g. /products/underfire-ai) still
-// falls back to the static tags in index.html — see the comment block in
-// public/sitemap.xml for the full explanation of that limitation.
+// The build also writes each page's values into that page's own prebuilt
+// HTML (Phase 9, tools/prerender), so link-preview bots that never run
+// JavaScript read the right page; these effects keep the head right as the
+// visitor moves between pages.
 //
 // Pass `{ noindex: true }` for routes that must stay out of search results; the robots
 // tag is removed again when the page unmounts.
@@ -50,6 +50,11 @@ function upsertCanonical(href) {
 export default function usePageMeta(title, description, options = {}) {
   const location = useLocation();
   const noindex = options.noindex === true;
+
+  // During the build's server render the page's head is collected here and written into its HTML
+  // (Phase 9); in the browser there is no collector and the effects below keep the head in sync.
+  const report = useContext(PageMetaContext);
+  if (report) report({ title, description, noindex });
 
   useEffect(() => {
     const url = `${SITE_URL}${location.pathname}`;

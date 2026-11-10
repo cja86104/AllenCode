@@ -6,6 +6,7 @@ import ContactForm from '../components/ContactForm.jsx';
 import PageHeader, { DISPLAY, PANEL } from '../components/PageHeader.jsx';
 import usePageMeta from '../hooks/usePageMeta.js';
 import { briefPrefill } from '../components/briefPrefill.js';
+import { useHydrated } from '../ssr/useHydrated.js';
 
 export default function Contact() {
   usePageMeta(
@@ -13,8 +14,11 @@ export default function Contact() {
     'Get in touch with Chris Allen at Allen Code Co. to start a custom software project, book a technical audit, or ask a question.',
   );
 
+  // The prebuilt page has no query (Phase 9), so `?template=` and `?idea=` start the brief once the
+  // page has hydrated; the form follows a late prefill until the visitor edits it.
+  const hydrated = useHydrated();
   const [searchParams] = useSearchParams();
-  const prefill = briefPrefill(searchParams.get('template'), searchParams.get('idea'));
+  const prefill = hydrated ? briefPrefill(searchParams.get('template'), searchParams.get('idea')) : briefPrefill(null, null);
 
   return (
     <div className="px-6 pb-24 lg:px-10">

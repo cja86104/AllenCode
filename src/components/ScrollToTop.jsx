@@ -1,7 +1,7 @@
 // @ts-check
-import { useLayoutEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { glideTo } from '../scroll/glide.js';
+import { useIsomorphicLayoutEffect } from '../ssr/useHydrated.js';
 
 /**
  * Starts every new page at the top, before the browser paints it, so a phone never shows the new
@@ -12,7 +12,7 @@ import { glideTo } from '../scroll/glide.js';
  */
 export default function ScrollToTop() {
   const { pathname } = useLocation();
-  useLayoutEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     glideTo(0, { instant: true });
   }, [pathname]);
   return null;

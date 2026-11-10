@@ -48,7 +48,7 @@ function validate(form) {
  * It posts `{ name, email, projectType, message }` to `/api/send-contact-email` and shows the same
  * validation, error and success states. `prefill` starts the project type and message; when a new
  * prefill arrives (the visitor sketches another idea), the message follows it until the visitor
- * edits the message themselves.
+ * edits the message themselves, and its project type follows until the visitor picks one.
  *
  * `onFieldsChange` hears every change to the fields, so the page can show the brief as it is written.
  *
@@ -63,6 +63,8 @@ export default function ContactForm({ prefill = {}, idPrefix = 'contact', succes
   const [errorMessage, setErrorMessage] = useState('');
   const [messageEdited, setMessageEdited] = useState(false);
   const [lastPrefill, setLastPrefill] = useState(prefill.message ?? '');
+  const [typeEdited, setTypeEdited] = useState(false);
+  const [lastPrefillType, setLastPrefillType] = useState(prefill.projectType ?? '');
 
   useEffect(() => {
     onFieldsChange?.(form);
@@ -73,6 +75,13 @@ export default function ContactForm({ prefill = {}, idPrefix = 'contact', succes
   if (nextPrefill !== lastPrefill) {
     setLastPrefill(nextPrefill);
     if (!messageEdited) setForm((f) => ({ ...f, message: nextPrefill }));
+  }
+  // Its project type follows the same way, until the visitor picks one (Phase 9: a prebuilt Contact
+  // page receives `?template=` only once it has hydrated).
+  const nextPrefillType = prefill.projectType ?? '';
+  if (nextPrefillType !== lastPrefillType) {
+    setLastPrefillType(nextPrefillType);
+    if (!typeEdited && PROJECT_TYPES.includes(nextPrefillType)) setForm((f) => ({ ...f, projectType: nextPrefillType }));
   }
 
   /**
@@ -131,6 +140,7 @@ export default function ContactForm({ prefill = {}, idPrefix = 'contact', succes
           onClick={() => {
             setStatus('idle');
             setMessageEdited(false);
+            setTypeEdited(false);
             setForm(emptyForm());
           }}
           className="mono mt-2 inline-flex items-center gap-2 rounded-full border border-white/20 px-6 py-3 text-xs uppercase tracking-widest hover:border-orange-500 hover:text-orange-500"
@@ -179,7 +189,10 @@ export default function ContactForm({ prefill = {}, idPrefix = 'contact', succes
         <select
           id={id('type')}
           value={form.projectType}
-          onChange={(e) => update('projectType', e.target.value)}
+          onChange={(e) => {
+            setTypeEdited(true);
+            update('projectType', e.target.value);
+          }}
           className="input mt-2"
         >
           {PROJECT_TYPES.map((t) => (

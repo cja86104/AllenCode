@@ -34,7 +34,8 @@ export default [
   },
   {
     files: ['src/**/*.{js,jsx}'],
-    languageOptions: { globals: globals.browser },
+    // `__BUILD_YEAR__` is set by Vite's `define` (vite.config.js, src/ssr/buildYear.js).
+    languageOptions: { globals: { ...globals.browser, __BUILD_YEAR__: 'readonly' } },
   },
   {
     files: ['*.config.js', 'tools/**/*.{js,mjs}', 'tests/**/*.{js,jsx}', 'e2e/**/*.js'],
