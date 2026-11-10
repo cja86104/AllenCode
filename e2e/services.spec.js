@@ -92,3 +92,29 @@ test('after a lost context is restored mid-flight, the fresh canvas keeps drawin
   const stage = { x: Math.round(width * 0.42), y: Math.round(height * 0.14), width: Math.round(width * 0.54), height: Math.round(height * 0.74) };
   await expect.poll(async () => visibleCodePixels(await page.screenshot({ clip: stage }))).toBeGreaterThan(400);
 });
+
+test('how I work commits its three rules one at a time as the visitor scrolls', async ({ page }) => {
+  await openWithDoor(page, 'a');
+  const chapter = page.locator('[data-chapter="how-i-work"]');
+  await expect(chapter).toBeAttached();
+  /** @param {number} f */
+  const scrollTo = (f) =>
+    chapter.evaluate((el, f) => {
+      const top = el.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo(0, top + (el.getBoundingClientRect().height - window.innerHeight) * f);
+    }, f);
+  const shipped = () => chapter.locator('[data-shipped="true"]').count();
+  await scrollTo(0);
+  await expect.poll(shipped).toBe(0);
+  await scrollTo(0.45);
+  await expect.poll(shipped).toBe(1);
+  await scrollTo(1);
+  await expect.poll(shipped).toBe(3);
+  await expect(chapter.getByRole('heading', { level: 3, name: 'Acquisition-ready from day one' })).toBeVisible();
+});
+
+test('with reduced motion how I work shows all three rules shipped', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await openWithDoor(page, 'a');
+  await expect(page.locator('[data-chapter="how-i-work"] [data-shipped="true"]')).toHaveCount(3);
+});

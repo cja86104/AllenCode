@@ -17,6 +17,7 @@ export const IDEA_CHAPTER = Object.freeze({
   empty: 'Type a few words first.',
   file: 'your-idea.txt',
   typeHere: 'click and type',
+  demoNote: 'example: click to type yours',
   sketchCaption: 'Sketch of your idea',
   waiting: 'Your sketch shows up here.',
   carried: 'That line is now the first line of your brief.',

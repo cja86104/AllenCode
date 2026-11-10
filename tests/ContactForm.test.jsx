@@ -6,7 +6,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import ContactForm, { PROJECT_TYPES } from '../src/components/ContactForm.jsx';
 import Contact from '../src/pages/Contact.jsx';
-import BriefChapter from '../src/scenes/BriefChapter.jsx';
+import BriefChapter, { briefFile } from '../src/scenes/BriefChapter.jsx';
 import DoorProvider from '../src/door/DoorProvider.jsx';
 import { DOOR_STORAGE_KEY } from '../src/door/doorStorage.js';
 import { templates } from '../src/data/templates.js';
@@ -183,5 +183,34 @@ describe('BriefChapter', () => {
     renderBrief('/');
     await waitFor(() => expect(screen.getByRole('link', { name: 'Browse templates' })).toHaveAttribute('href', '/templates'));
     expect(screen.queryByRole('link', { name: 'Start your project' })).toBeNull();
+  });
+});
+
+describe('the brief file', () => {
+  it('is empty until something is written, and leaves out empty fields', () => {
+    expect(briefFile(null)).toBe('');
+    expect(briefFile({ name: ' ', email: '', projectType: 'MVP Sprint', message: '' })).toBe('');
+    expect(briefFile({ name: 'Jane', email: '', projectType: 'MVP Sprint', message: '' })).toBe(
+      '# Project brief\nfrom: Jane\ntype: MVP Sprint',
+    );
+    expect(briefFile({ name: 'Jane', email: 'jane@example.com', projectType: 'MVP Sprint', message: 'A shop.' })).toBe(
+      '# Project brief\nfrom: Jane <jane@example.com>\ntype: MVP Sprint\n\nA shop.',
+    );
+  });
+
+  it('writes itself beside the form as the visitor types, starting from the idea', () => {
+    window.sessionStorage.setItem(DOOR_STORAGE_KEY, 'a');
+    render(
+      <MemoryRouter initialEntries={['/?idea=a%20shop%20for%20candles']}>
+        <DoorProvider>
+          <BriefChapter />
+        </DoorProvider>
+      </MemoryRouter>,
+    );
+    const file = /** @type {HTMLElement} */ (document.querySelector('[data-brief-file]'));
+    expect(file).toHaveTextContent('a shop for candles');
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: '<b>Jane</b>' } });
+    expect(file).toHaveTextContent('from: <b>Jane</b>');
+    expect(file.querySelector('b')).toBeNull();
   });
 });

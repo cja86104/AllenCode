@@ -119,3 +119,17 @@ test('the idea typed into your-idea.txt becomes the first line of the brief', as
   await expect(page.locator('#brief-message')).toHaveValue('a booking site for my bakery');
   await expect(file).toHaveValue('a booking site for my bakery');
 });
+
+test('the idea chapter plays its example when it comes into view, and clicking the file hands it over', async ({ page }) => {
+  await openWithDoor(page, 'a');
+  await expect(page.locator('canvas[data-field="webgl"]')).toHaveAttribute('data-ready', 'true');
+  const chapter = page.locator('[data-chapter="idea"]');
+  await chapter.evaluate((el) => window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 60));
+  const file = page.getByLabel('Your idea', { exact: true });
+  await expect(file).toHaveValue('A booking site for my bakery', { timeout: 6000 });
+  await expect(page.locator('[data-sketch-blocks]')).toContainText('Booking calendar', { timeout: 6000 });
+  expect(new URL(page.url()).searchParams.get('idea')).toBeNull();
+  await file.click();
+  await expect(file).toHaveValue('');
+  await expect(page.locator('[data-idea-hint]')).toHaveText('click and type');
+});

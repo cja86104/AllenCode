@@ -12,6 +12,11 @@ import { IDEA_MAX_LENGTH, capIdea, sketchBlocks, wrapIdea } from './sketchBlocks
 
 /** How long the visitor's line takes to fly into its sketch, in milliseconds. */
 export const IDEA_FLIGHT_MS = 2600;
+/** How fast the example types itself, per character, and the pause before it flies. */
+export const DEMO_TYPE_MS = 55;
+const DEMO_PAUSE_MS = 450;
+/** Scrolling further than this during a flight finishes it, so a small nudge does not cut it short. */
+const SCROLL_FINISH_PX = 120;
 /** The query parameter that carries the idea to the brief. */
 export const IDEA_PARAM = 'idea';
 /** The sketch's drawing space; shapes are placed as percentages of it, so it scales with the page. */
@@ -91,8 +96,13 @@ export default function IdeaSketch() {
   const [flight, setFlight] = useState(1);
   // Each submission's line and blocks, captured together so its flight plays exactly what was submitted.
   const [launch, setLaunch] = useState(/** @type {{ id: number, code: string, blocks: SketchBlock[] } | null} */ (null));
+  // The example plays itself once when the chapter comes into view, until the visitor types their own.
+  const [demo, setDemo] = useState(false);
   const fileRef = useRef(/** @type {HTMLTextAreaElement | null} */ (null));
   const sketchRef = useRef(/** @type {HTMLDivElement | null} */ (null));
+  const sectionRef = useRef(/** @type {HTMLElement | null} */ (null));
+  const stopDemo = useRef(() => {});
+  const demoPlayed = useRef(false);
 
   const blocks = sketchBlocks(idea);
 
@@ -115,11 +125,15 @@ export default function IdeaSketch() {
     });
     let frame = 0;
     let start = 0;
+    const startY = window.scrollY;
     const finish = () => {
       cancelAnimationFrame(frame);
       setFlight(1);
       fieldBus.releaseTransform(key);
-      window.removeEventListener('scroll', finish);
+      window.removeEventListener('scroll', onScroll);
+    };
+    const onScroll = () => {
+      if (Math.abs(window.scrollY - startY) > SCROLL_FINISH_PX) finish();
     };
     /** @param {number} time */
     const tick = (time) => {
@@ -131,9 +145,86 @@ export default function IdeaSketch() {
       else frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);
-    window.addEventListener('scroll', finish, { passive: true });
+    window.addEventListener('scroll', onScroll, { passive: true });
     return finish;
   }, [launch, animate]);
+
+  /**
+   * Turns a line into its sketch, flying its characters when the renderer runs. A visitor's own line
+   * goes into the address for the brief; the example does not.
+   */
+  const sketchIdea = useCallback(
+    (/** @type {string} */ next, /** @type {boolean} */ isDemo) => {
+      // The file wraps at spaces like the browser wraps the field, so the characters lift from where they are.
+      const wrapped = wrapIdea(next, columnsIn(fileRef.current));
+      setError('');
+      setDraft(next);
+      setIdea(next);
+      setDemo(isDemo);
+      if (!isDemo) {
+        setSearchParams(
+          (current) => {
+            const params = new URLSearchParams(current);
+            params.set(IDEA_PARAM, next);
+            return params;
+          },
+          { replace: true, preventScrollReset: true },
+        );
+      }
+      setFlight(animate ? 0 : 1);
+      if (animate) setLaunch((last) => ({ id: (last?.id ?? 0) + 1, code: wrapped, blocks: sketchBlocks(next) }));
+    },
+    [animate, setSearchParams],
+  );
+
+  // The example: once the chapter is well in view, the placeholder line types itself into the file
+  // and flies into its sketch, so the chapter shows what it does before anyone types.
+  const hasIdea = Boolean(idea);
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!animate || hasIdea || demoPlayed.current || !section || typeof IntersectionObserver === 'undefined') return undefined;
+    /** @type {number[]} */
+    const timers = [];
+    let started = false;
+    const stop = () => {
+      timers.forEach((timer) => window.clearTimeout(timer));
+      timers.length = 0;
+    };
+    const play = () => {
+      demoPlayed.current = true;
+      const line = IDEA_CHAPTER.placeholder;
+      setDemo(true);
+      for (let n = 1; n <= line.length; n += 1) {
+        timers.push(window.setTimeout(() => setDraft(line.slice(0, n)), n * DEMO_TYPE_MS));
+      }
+      timers.push(window.setTimeout(() => sketchIdea(line, true), line.length * DEMO_TYPE_MS + DEMO_PAUSE_MS));
+    };
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (started || !entry?.isIntersecting) return;
+        started = true;
+        observer.disconnect();
+        play();
+      },
+      { threshold: 0.45 },
+    );
+    observer.observe(section);
+    stopDemo.current = stop;
+    return () => {
+      observer.disconnect();
+      stop();
+    };
+  }, [animate, hasIdea, sketchIdea]);
+
+  // Clicking into the file hands it to the visitor: the example stops and clears.
+  const takeOver = useCallback(() => {
+    if (!demo) return;
+    stopDemo.current();
+    setDemo(false);
+    setDraft('');
+    setIdea('');
+    setFlight(1);
+  }, [demo]);
 
   const submit = useCallback(
     (/** @type {import('react').FormEvent<HTMLFormElement>} */ event) => {
@@ -143,23 +234,9 @@ export default function IdeaSketch() {
         setError(IDEA_CHAPTER.empty);
         return;
       }
-      // The file wraps at spaces like the browser wraps the field, so the characters lift from where they are.
-      const wrapped = wrapIdea(next, columnsIn(fileRef.current));
-      setError('');
-      setDraft(next);
-      setIdea(next);
-      setSearchParams(
-        (current) => {
-          const params = new URLSearchParams(current);
-          params.set(IDEA_PARAM, next);
-          return params;
-        },
-        { replace: true, preventScrollReset: true },
-      );
-      setFlight(animate ? 0 : 1);
-      if (animate) setLaunch({ id: (launch?.id ?? 0) + 1, code: wrapped, blocks: sketchBlocks(next) });
+      sketchIdea(next, false);
     },
-    [draft, animate, launch, setSearchParams],
+    [draft, sketchIdea],
   );
 
   const flying = flight < 1;
@@ -169,7 +246,7 @@ export default function IdeaSketch() {
   const sketchOpacity = !idea ? 0.25 : flying ? Math.max(0, (flight - 0.88) / 0.12) : 1;
 
   return (
-    <section id="your-idea" data-chapter="idea" className="relative z-10 mx-auto max-w-6xl px-6 py-16 lg:px-10">
+    <section ref={sectionRef} id="your-idea" data-chapter="idea" data-demo={demo ? 'true' : undefined} className="relative z-10 mx-auto max-w-6xl px-6 py-16 lg:px-10">
       <p className="mono text-xs uppercase tracking-[0.3em] text-ember">{IDEA_CHAPTER.eyebrow}</p>
       <h2 className="mt-4 max-w-3xl font-serif-display text-4xl italic leading-tight text-white sm:text-5xl">
         {IDEA_CHAPTER.title}
@@ -184,8 +261,8 @@ export default function IdeaSketch() {
           <div className="mt-2 overflow-hidden rounded-xl border border-white/15 bg-night/95 transition-colors focus-within:border-ember">
             <div className="mono flex items-center justify-between border-b border-white/10 px-4 py-2 text-[11px] tracking-widest text-white/45">
               <span>{IDEA_CHAPTER.file}</span>
-              <span aria-hidden="true" className="text-ember/80">
-                {IDEA_CHAPTER.typeHere}
+              <span aria-hidden="true" data-idea-hint className="text-ember/80">
+                {demo ? IDEA_CHAPTER.demoNote : IDEA_CHAPTER.typeHere}
               </span>
             </div>
             <textarea
@@ -195,6 +272,7 @@ export default function IdeaSketch() {
               value={draft}
               rows={4}
               maxLength={IDEA_MAX_LENGTH}
+              onFocus={takeOver}
               onChange={(event) => setDraft(event.target.value.replace(/[\r\n]+/g, ' '))}
               onKeyDown={(event) => {
                 // One line: Enter sketches it instead of starting a new line.
@@ -257,7 +335,7 @@ export default function IdeaSketch() {
         </figure>
       </form>
 
-      {idea && (
+      {idea && !demo && (
         <p className="mt-8 text-white/70">
           {IDEA_CHAPTER.carried}{' '}
           <a href="#brief" className="mono text-xs uppercase tracking-widest text-ember hover:text-orange-400">

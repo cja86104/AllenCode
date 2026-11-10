@@ -1,5 +1,5 @@
 // @ts-check
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ArrowUpRight, CheckCircle2 } from 'lucide-react';
 import Magnetic from './Magnetic';
 
@@ -50,15 +50,21 @@ function validate(form) {
  * prefill arrives (the visitor sketches another idea), the message follows it until the visitor
  * edits the message themselves.
  *
- * @param {{ prefill?: Prefill, idPrefix?: string, successHeading?: 'h2' | 'h3' }} props
+ * `onFieldsChange` hears every change to the fields, so the page can show the brief as it is written.
+ *
+ * @param {{ prefill?: Prefill, idPrefix?: string, successHeading?: 'h2' | 'h3', onFieldsChange?: (fields: ContactFields) => void }} props
  */
-export default function ContactForm({ prefill = {}, idPrefix = 'contact', successHeading = 'h2' }) {
+export default function ContactForm({ prefill = {}, idPrefix = 'contact', successHeading = 'h2', onFieldsChange }) {
   const [form, setForm] = useState(() => formFrom(prefill));
   const [errors, setErrors] = useState(/** @type {FieldErrors} */ ({}));
   const [status, setStatus] = useState(/** @type {'idle' | 'sending' | 'sent' | 'error'} */ ('idle'));
   const [errorMessage, setErrorMessage] = useState('');
   const [messageEdited, setMessageEdited] = useState(false);
   const [lastPrefill, setLastPrefill] = useState(prefill.message ?? '');
+
+  useEffect(() => {
+    onFieldsChange?.(form);
+  }, [form, onFieldsChange]);
 
   // A new prefill replaces the message only while the visitor has not written it themselves.
   const nextPrefill = prefill.message ?? '';

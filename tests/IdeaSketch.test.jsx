@@ -1,8 +1,9 @@
 // @ts-check
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router-dom';
-import { describe, expect, it } from 'vitest';
-import IdeaSketch from '../src/scenes/IdeaSketch.jsx';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import IdeaSketch, { DEMO_TYPE_MS } from '../src/scenes/IdeaSketch.jsx';
+import { fieldBus } from '../src/field/fieldBus.js';
 import { IDEA_CHAPTER } from '../src/content/visitorTurn.js';
 
 /** Shows the current address so a test can read what the brief will pick up. */
@@ -108,5 +109,82 @@ describe('IdeaSketch', () => {
     renderIdea('/?idea=wedding%20photos');
     expect(screen.getByLabelText(IDEA_CHAPTER.label)).toHaveValue('wedding photos');
     expect(screen.getByRole('list', { name: IDEA_CHAPTER.sketchCaption })).toHaveTextContent('Photo gallery');
+  });
+});
+
+describe('IdeaSketch example', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+    fieldBus.set({ mode: 'pending', transform: null, transformProgress: 0 });
+  });
+
+  /** With the renderer running and the chapter in view, the example plays. */
+  function renderInView() {
+    vi.useFakeTimers();
+    vi.stubGlobal(
+      'IntersectionObserver',
+      class {
+        /** @param {IntersectionObserverCallback} callback */
+        constructor(callback) {
+          this.callback = callback;
+        }
+        /** @param {Element} target */
+        observe(target) {
+          queueMicrotask(() =>
+            this.callback(
+              [/** @type {IntersectionObserverEntry} */ (/** @type {unknown} */ ({ isIntersecting: true, target }))],
+              /** @type {IntersectionObserver} */ (/** @type {unknown} */ (this)),
+            ),
+          );
+        }
+        disconnect() {}
+        unobserve() {}
+        takeRecords() {
+          return [];
+        }
+      },
+    );
+    fieldBus.set({ mode: 'webgl' });
+    return renderIdea();
+  }
+
+  const line = IDEA_CHAPTER.placeholder;
+
+  it('types the example into the file and sketches it, without touching the address', async () => {
+    renderInView();
+    await act(async () => {
+      await Promise.resolve();
+      vi.advanceTimersByTime(DEMO_TYPE_MS * 5);
+    });
+    const file = screen.getByLabelText(IDEA_CHAPTER.label);
+    expect(/** @type {HTMLTextAreaElement} */ (file).value).toBe(line.slice(0, 5));
+    expect(document.querySelector('[data-idea-hint]')).toHaveTextContent(IDEA_CHAPTER.demoNote);
+    await act(async () => {
+      vi.advanceTimersByTime(DEMO_TYPE_MS * line.length + 1000);
+    });
+    expect(file).toHaveValue(line);
+    expect(screen.getByRole('list', { name: IDEA_CHAPTER.sketchCaption })).toHaveTextContent('Booking calendar');
+    expect(screen.getByTestId('address')).toHaveTextContent(/^\/$/);
+    expect(screen.queryByRole('link', { name: IDEA_CHAPTER.carriedLink })).toBeNull();
+  });
+
+  it('clicking into the file stops the example, clears it, and the visitor types their own', async () => {
+    renderInView();
+    await act(async () => {
+      await Promise.resolve();
+      vi.advanceTimersByTime(DEMO_TYPE_MS * 3);
+    });
+    const file = screen.getByLabelText(IDEA_CHAPTER.label);
+    fireEvent.focus(file);
+    expect(file).toHaveValue('');
+    await act(async () => {
+      vi.advanceTimersByTime(DEMO_TYPE_MS * line.length + 1000);
+    });
+    expect(file).toHaveValue('');
+    expect(document.querySelector('[data-idea-hint]')).toHaveTextContent(IDEA_CHAPTER.typeHere);
+    fireEvent.change(file, { target: { value: 'a menu for my diner' } });
+    fireEvent.submit(/** @type {HTMLFormElement} */ (file.closest('form')));
+    expect(screen.getByTestId('address')).toHaveTextContent('idea=a+menu+for+my+diner');
   });
 });

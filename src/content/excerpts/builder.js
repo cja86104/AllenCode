@@ -42,8 +42,7 @@ const builder = {
     "];",
   ].join('\n'),
   becomes: "Chris Allen's portrait",
-  // Proposed 2026-11-09; waiting for Chris's approval. Until then the builder shows its static form.
-  approved: null,
+  approved: { by: 'Chris', on: '2026-11-09' },
 };
 
 export default builder;

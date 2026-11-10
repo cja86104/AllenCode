@@ -30,3 +30,23 @@ export function chapterTimeline(progress) {
 export function auditTimeline(progress, lineCount) {
   return Math.round(clamp01((progress - 0.1) / 0.8) * lineCount);
 }
+
+/**
+ * How I Work as the visitor scrolls: each principle commits in turn between 8 and 88 percent of the
+ * section. Within its share, its title types (first 45 percent), its text slides in (35 to 80
+ * percent), and it is marked shipped for the rest.
+ * @param {number} progress
+ * @param {number} count
+ * @returns {Array<{ typed: number, body: number, shipped: boolean }>}
+ */
+export function commitTimeline(progress, count) {
+  const span = clamp01((progress - 0.08) / 0.8) * count;
+  return Array.from({ length: count }, (_, i) => {
+    const local = clamp01(span - i);
+    return {
+      typed: clamp01(local / 0.45),
+      body: clamp01((local - 0.35) / 0.45),
+      shipped: local >= 0.8,
+    };
+  });
+}
