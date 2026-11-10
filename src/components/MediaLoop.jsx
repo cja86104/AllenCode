@@ -4,6 +4,8 @@ import { usePrefersReducedMotion } from '../field/environment.js';
 
 /** Share of the loop that must be on screen before it plays. */
 const IN_VIEW_THRESHOLD = 0.25;
+/** The loop starts loading a little before it scrolls into view, so it is already moving when it arrives. */
+const LOOK_AHEAD = '25% 0px';
 
 /**
  * A short muted product loop (spec section 7.5). The poster is a real image carrying the alt text;
@@ -40,7 +42,7 @@ export default function MediaLoop({ src, poster, alt, active = true, className =
       (entries) => {
         for (const entry of entries) setInView(entry.isIntersecting);
       },
-      { threshold: IN_VIEW_THRESHOLD },
+      { threshold: IN_VIEW_THRESHOLD, rootMargin: LOOK_AHEAD },
     );
     observer.observe(frame);
     return () => observer.disconnect();

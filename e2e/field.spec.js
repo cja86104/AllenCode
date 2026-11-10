@@ -109,22 +109,24 @@ test('after three restarts in one visit the page settles on the static field', a
   await expect(page.locator('canvas[data-field="webgl"]')).toHaveCount(0);
 });
 
-test('navigating away and back leaves exactly one canvas', async ({ page }) => {
+test('moving between pages keeps the same single canvas, so the field never restarts', async ({ page }) => {
   await page.goto(HOME);
-  await expect(page.locator('canvas[data-field="webgl"]')).toHaveCount(1);
+  const canvas = page.locator('canvas[data-field="webgl"]');
+  await expect(canvas).toHaveAttribute('data-ready', 'true');
+  await canvas.evaluate((el) => el.setAttribute('data-marked', 'first'));
   await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'About' }).click();
   await expect(page).toHaveURL(/\/about$/);
-  await expect(page.locator('canvas')).toHaveCount(0);
+  await expect(page.locator('canvas')).toHaveCount(1);
   await page.goBack();
   await expect(page).toHaveURL(/\/$/);
-  await expect(page.locator('canvas[data-field="webgl"]')).toHaveCount(1);
   await expect(page.locator('canvas')).toHaveCount(1);
+  await expect(page.locator('canvas[data-marked="first"]')).toHaveCount(1);
 });
 
-test('a regular route (/about) has no canvas and no scroll engine', async ({ page }) => {
+test('every page shows the field and runs the scroll engine (Chris, 2026-11-09)', async ({ page }) => {
   await page.goto('/about');
-  await expect(page.locator('canvas')).toHaveCount(0);
-  await expect(page.locator('html')).not.toHaveAttribute('data-scroll-engine', /.*/);
+  await expect(page.locator('canvas[data-field="webgl"]')).toHaveCount(1);
+  await expect(page.locator('html')).toHaveAttribute('data-scroll-engine', 'on');
 });
 
 test('the home page is indexable', async ({ page }) => {
@@ -133,25 +135,19 @@ test('the home page is indexable', async ({ page }) => {
   await expect(page.locator('meta[name="robots"][content*="noindex"]')).toHaveCount(0);
 });
 
-test('a regular route does not download the scroll engine or the glyph renderer', async ({ page }) => {
-  /** @type {string[]} */
-  const scripts = [];
-  page.on('response', async (response) => {
-    if (response.url().endsWith('.js')) scripts.push(await response.text());
-  });
+test('an inner page shows its content before, and without, the renderer', async ({ page }) => {
+  await page.route(/FieldScene-[^/]*\.js$/, (route) => route.abort());
   await page.goto('/about');
-  await page.waitForLoadState('networkidle');
-  expect(scripts.length).toBeGreaterThan(0);
-  const markers = ['lenis-smooth', 'ScrollTrigger', 'aGlyph'];
-  const found = markers.filter((marker) => scripts.some((source) => source.includes(marker)));
-  expect(found).toEqual([]);
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+  await expect(page.locator('[data-field="css"]')).toHaveCount(1);
+  await expect(page.locator('canvas')).toHaveCount(0);
 });
 
-test('the page shell stays opaque on regular routes and clears only on field routes', async ({ page }) => {
+test('the page shell is clear on every page, so the field shows through', async ({ page }) => {
   const shellBackground = () =>
     page.locator('main').evaluate((main) => getComputedStyle(/** @type {HTMLElement} */ (main.parentElement)).backgroundColor);
   await page.goto('/about');
-  expect(await shellBackground()).toBe('rgb(10, 10, 10)');
+  expect(await shellBackground()).toBe('rgba(0, 0, 0, 0)');
   await page.goto(HOME);
   expect(await shellBackground()).toBe('rgba(0, 0, 0, 0)');
 });

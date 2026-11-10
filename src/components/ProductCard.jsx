@@ -1,77 +1,77 @@
+// @ts-check
 import { Link } from 'react-router-dom';
-import { ArrowUpRight, Lock, ExternalLink } from 'lucide-react';
+import { ArrowUpRight, ExternalLink, Lock } from 'lucide-react';
 import Reveal from './Reveal';
+import { DISPLAY, PANEL_HOVER } from './PageHeader.jsx';
 
-export default function ProductCard({ product, index, slot }) {
+/**
+ * One product on the products page, as a file: its folder in the title bar, its `image` (the one
+ * field that drives every product picture, docs/PRODUCT-IMAGES.md), and its status.
+ *
+ * @param {{ product: import('../data/catalog.js').Product, index: number }} props
+ */
+export default function ProductCard({ product, index }) {
   const isPrivate = product.status === 'private';
   const isComingSoon = product.status === 'coming-soon';
+  const isLive = product.status === 'live';
 
   return (
     <Reveal delay={index * 0.08}>
-      <div className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02] transition-colors hover:border-orange-500/50">
-        {/* Image — clicking goes to the detail/showcase page */}
-        <Link to={`/products/${product.slug}`} className="relative block aspect-[4/3] overflow-hidden border-b border-white/10 bg-black">
-          {product.video ? (
-            <video
-              src={product.video}
-              autoPlay
-              muted
-              loop
-              playsInline
-              className="block w-full aspect-[4/3] object-cover opacity-80 transition-transform duration-700 group-hover:scale-105 group-hover:opacity-100"
-            />
-          ) : (
-            <img
-              data-aiwp-slot={slot}
-              src={product.image}
-              alt={`${product.name} product preview`}
-              className="h-full w-full object-cover opacity-80 transition-transform duration-700 group-hover:scale-105 group-hover:opacity-100"
-            />
+      <article data-product-card={product.slug} className={`group flex h-full flex-col overflow-hidden ${PANEL_HOVER}`}>
+        <div className="mono flex items-center justify-between border-b border-white/10 px-5 py-2.5 text-[11px] tracking-widest text-white/55">
+          <span>{product.slug}/</span>
+          {isLive && (
+            <span className="inline-flex items-center gap-2 uppercase text-ember">
+              <span aria-hidden="true" className="h-1.5 w-1.5 animate-pulse rounded-full bg-ember" /> Live
+            </span>
           )}
+          {isComingSoon && <span className="uppercase text-white/50">Coming soon</span>}
           {isPrivate && (
-            <span className="absolute right-4 top-4 mono inline-flex items-center gap-1 rounded-full border border-orange-500/60 bg-black/70 px-3 py-1 text-[10px] uppercase tracking-widest text-orange-500">
-              <Lock size={11} /> Private
+            <span className="inline-flex items-center gap-1 uppercase text-ember">
+              <Lock size={11} aria-hidden="true" /> Private
             </span>
           )}
-          {isComingSoon && (
-            <span className="absolute right-4 top-4 mono inline-flex items-center gap-1 rounded-full border border-white/30 bg-black/70 px-3 py-1 text-[10px] uppercase tracking-widest text-white/60">
-              Coming soon
-            </span>
-          )}
+        </div>
+        <Link
+          to={`/products/${product.slug}`}
+          viewTransition
+          tabIndex={-1}
+          aria-hidden="true"
+          className="relative block aspect-[4/3] overflow-hidden border-b border-white/10 bg-black"
+        >
+          <img
+            src={product.image}
+            alt=""
+            loading={index > 1 ? 'lazy' : undefined}
+            className="h-full w-full object-cover opacity-85 transition duration-700 group-hover:scale-[1.03] group-hover:opacity-100"
+          />
         </Link>
-
-        {/* Card body */}
-        <div className="flex flex-1 flex-col p-8">
-          <p className="mono text-[10px] uppercase tracking-[0.25em] text-orange-500">{product.category}</p>
-          <h3 className="mt-3 font-display text-3xl tracking-tight">{product.name}</h3>
-          <p className="mt-3 text-white/60">{product.tagline}</p>
-
-          {/* Bottom action row */}
-          <div className="mt-6 flex items-center gap-5">
+        <div className="flex flex-1 flex-col p-7">
+          <p className="mono text-[10px] uppercase tracking-[0.25em] text-ember">{product.category}</p>
+          <h2 className={`${DISPLAY} mt-3 text-3xl sm:text-4xl`}>{product.name}</h2>
+          <p className="mt-3 text-white/65">{product.tagline}</p>
+          <div className="mt-auto flex flex-wrap items-center gap-5 pt-6">
             <Link
               to={`/products/${product.slug}`}
-              className="inline-flex items-center gap-2 font-display text-sm text-white hover:text-orange-500"
+              viewTransition
+              className="mono inline-flex items-center gap-2 text-xs uppercase tracking-widest text-white hover:text-ember"
             >
-              View showcase{' '}
-              <ArrowUpRight size={14} className="transition-transform hover:translate-x-0.5 hover:-translate-y-0.5" />
+              Open the showcase <ArrowUpRight size={14} aria-hidden="true" />
             </Link>
-
             {product.url && (
-              <>
-                <span className="text-white/20">·</span>
-                <a
-                  href={product.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 mono text-[11px] uppercase tracking-widest text-white/40 hover:text-orange-500"
-                >
-                  Live site <ExternalLink size={11} />
-                </a>
-              </>
+              <a
+                href={product.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mono inline-flex items-center gap-1.5 text-[11px] uppercase tracking-widest text-white/50 hover:text-ember"
+              >
+                Live site <ExternalLink size={11} aria-hidden="true" />
+                <span className="sr-only">(opens in a new tab)</span>
+              </a>
             )}
           </div>
         </div>
-      </div>
+      </article>
     </Reveal>
   );
 }

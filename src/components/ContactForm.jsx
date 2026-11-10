@@ -52,9 +52,11 @@ function validate(form) {
  *
  * `onFieldsChange` hears every change to the fields, so the page can show the brief as it is written.
  *
- * @param {{ prefill?: Prefill, idPrefix?: string, successHeading?: 'h2' | 'h3', onFieldsChange?: (fields: ContactFields) => void }} props
+ * `framed` draws the form's own border; a page that already sets it in a panel turns it off.
+ *
+ * @param {{ prefill?: Prefill, idPrefix?: string, successHeading?: 'h2' | 'h3', onFieldsChange?: (fields: ContactFields) => void, framed?: boolean }} props
  */
-export default function ContactForm({ prefill = {}, idPrefix = 'contact', successHeading = 'h2', onFieldsChange }) {
+export default function ContactForm({ prefill = {}, idPrefix = 'contact', successHeading = 'h2', onFieldsChange, framed = true }) {
   const [form, setForm] = useState(() => formFrom(prefill));
   const [errors, setErrors] = useState(/** @type {FieldErrors} */ ({}));
   const [status, setStatus] = useState(/** @type {'idle' | 'sending' | 'sent' | 'error'} */ ('idle'));
@@ -114,7 +116,11 @@ export default function ContactForm({ prefill = {}, idPrefix = 'contact', succes
 
   if (status === 'sent') {
     return (
-      <div className="flex h-full flex-col items-start justify-center gap-4 rounded-2xl border border-orange-500/30 bg-orange-500/[0.04] p-10">
+      <div
+        className={`flex h-full flex-col items-start justify-center gap-4 p-10 ${
+          framed ? 'rounded-2xl border border-orange-500/30 bg-orange-500/[0.04]' : ''
+        }`}
+      >
         <CheckCircle2 className="text-orange-500" size={36} />
         <Heading className="font-display text-3xl tracking-tight">Message sent.</Heading>
         <p className="max-w-sm text-white/60">
@@ -136,7 +142,7 @@ export default function ContactForm({ prefill = {}, idPrefix = 'contact', succes
   }
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-2xl border border-white/10 bg-white/[0.02] p-8 sm:p-10">
+    <form onSubmit={handleSubmit} className={`p-8 sm:p-10 ${framed ? 'rounded-2xl border border-white/10 bg-white/[0.02]' : ''}`}>
       <div className="grid gap-5 sm:grid-cols-2">
         <div>
           <label htmlFor={id('name')} className="mono text-[11px] uppercase tracking-widest text-white/40">

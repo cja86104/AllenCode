@@ -71,7 +71,7 @@ for (const route of INNER_ROUTES) {
     await page.goto(route);
     await expect(page.locator('main h1').first()).toBeVisible();
     await expect(page).toHaveTitle(/Allen Code Co/);
-    await expect(page.locator('canvas')).toHaveCount(0);
+    await expect(page.locator('canvas[data-field="webgl"]')).toHaveCount(1);
     expect(errors).toEqual([]);
   });
 }

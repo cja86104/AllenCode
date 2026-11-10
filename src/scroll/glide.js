@@ -5,12 +5,12 @@
  * scrolling is not fought), otherwise the browser's own scroll. The engine registers itself here.
  */
 
-/** @type {((y: number) => void) | null} */
+/** @type {((y: number, instant: boolean) => void) | null} */
 let glider = null;
 
 /**
  * Called by ScrollEngine with its Lenis-driven scroll, and with null when it stops.
- * @param {((y: number) => void) | null} next
+ * @param {((y: number, instant: boolean) => void) | null} next
  */
 export function setGlider(next) {
   glider = next;
@@ -22,8 +22,8 @@ export function setGlider(next) {
  * @param {{ instant?: boolean }} [opts] `instant` jumps without animation (reduced motion).
  */
 export function glideTo(y, { instant = false } = {}) {
-  if (!instant && glider) {
-    glider(y);
+  if (glider) {
+    glider(y, instant);
     return;
   }
   window.scrollTo({ top: y, behavior: instant ? 'auto' : 'smooth' });

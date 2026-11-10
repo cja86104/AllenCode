@@ -1,56 +1,73 @@
-import { useEffect, useState } from 'react';
-import { motion, useMotionValue, useSpring } from 'framer-motion';
+// @ts-check
+import { useEffect, useRef, useState } from 'react';
 
+/** Dot size at rest, and the ring it becomes over something clickable, in CSS pixels. */
+export const CURSOR_DOT = 8;
+export const CURSOR_RING = 22;
+
+/**
+ * The orange cursor (Chris, 2026-11-09: keep it, "smaller, more precise"). A small dot drawn exactly
+ * at the pointer, with no lag; over a link or button it becomes a thin ring around the pointer
+ * instead of swelling over what is under it. Only on devices with a precise pointer; text fields
+ * keep the normal cursor.
+ */
 export default function CustomCursor() {
   const [enabled, setEnabled] = useState(false);
   const [hovering, setHovering] = useState(false);
-  const x = useMotionValue(-100);
-  const y = useMotionValue(-100);
-  const sx = useSpring(x, { stiffness: 500, damping: 40 });
-  const sy = useSpring(y, { stiffness: 500, damping: 40 });
+  const dotRef = useRef(/** @type {HTMLDivElement | null} */ (null));
 
   useEffect(() => {
-    const isFine = window.matchMedia('(pointer: fine)').matches;
-    setEnabled(isFine);
-    if (!isFine) return;
-
+    const fine = typeof window.matchMedia === 'function' && window.matchMedia('(pointer: fine)').matches;
+    if (!fine) return undefined;
+    const frame = requestAnimationFrame(() => setEnabled(true));
     document.body.classList.add('custom-cursor');
 
-    function move(e) {
-      x.set(e.clientX);
-      y.set(e.clientY);
-    }
-    function over(e) {
-      if (e.target.closest && e.target.closest('a,button,[data-cursor-hover]')) setHovering(true);
-    }
-    function out(e) {
-      if (e.target.closest && e.target.closest('a,button,[data-cursor-hover]')) setHovering(false);
-    }
+    /** @param {MouseEvent} event */
+    const move = (event) => {
+      const dot = dotRef.current;
+      if (dot) dot.style.transform = `translate3d(${event.clientX}px, ${event.clientY}px, 0)`;
+    };
+    /** @param {Event} event */
+    const clickable = (event) =>
+      event.target instanceof Element && Boolean(event.target.closest('a,button,[data-cursor-hover]'));
+    /** @param {Event} event */
+    const over = (event) => {
+      if (clickable(event)) setHovering(true);
+    };
+    /** @param {Event} event */
+    const out = (event) => {
+      if (clickable(event)) setHovering(false);
+    };
 
-    window.addEventListener('mousemove', move);
+    window.addEventListener('mousemove', move, { passive: true });
     document.addEventListener('mouseover', over);
     document.addEventListener('mouseout', out);
     return () => {
+      cancelAnimationFrame(frame);
       document.body.classList.remove('custom-cursor');
       window.removeEventListener('mousemove', move);
       document.removeEventListener('mouseover', over);
       document.removeEventListener('mouseout', out);
     };
-  }, [x, y]);
+  }, []);
 
   if (!enabled) return null;
 
+  const size = hovering ? CURSOR_RING : CURSOR_DOT;
   return (
-    <motion.div
+    <div
+      ref={dotRef}
       aria-hidden="true"
-      className="pointer-events-none fixed left-0 top-0 z-[100] mix-blend-difference"
-      style={{ x: sx, y: sy }}
+      data-cursor-dot
+      style={{ transform: 'translate3d(-100px, -100px, 0)' }}
+      className="pointer-events-none fixed left-0 top-0 z-[100]"
     >
-      <motion.div
-        animate={{ width: hovering ? 48 : 14, height: hovering ? 48 : 14, opacity: hovering ? 0.9 : 1 }}
-        transition={{ duration: 0.2 }}
-        className="-translate-x-1/2 -translate-y-1/2 rounded-full bg-orange-500"
+      <div
+        style={{ width: size, height: size, marginLeft: -size / 2, marginTop: -size / 2 }}
+        className={`rounded-full transition-[width,height,margin,background-color,border-color] duration-150 ${
+          hovering ? 'border-[1.5px] border-ember bg-transparent' : 'bg-ember'
+        }`}
       />
-    </motion.div>
+    </div>
   );
 }

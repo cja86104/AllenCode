@@ -1,8 +1,11 @@
+// @ts-check
 import { Link } from 'react-router-dom';
 import { ArrowUpRight } from 'lucide-react';
 import Reveal from '../components/Reveal';
 import Magnetic from '../components/Magnetic';
-import usePageMeta from '../hooks/usePageMeta';
+import { BUTTON, DISPLAY, PANEL } from '../components/PageHeader.jsx';
+import { BUILDER } from '../content/builderStory.js';
+import usePageMeta from '../hooks/usePageMeta.js';
 
 const TIMELINE = [
   {
@@ -50,77 +53,85 @@ const VALUES = [
 export default function About() {
   usePageMeta(
     'About — Allen Code Co.',
-    'Chris Allen spent fifteen years in hospitality before teaching himself to code and building Allen Code Co., a solo build-to-sell software studio.'
+    'Chris Allen spent fifteen years in hospitality before teaching himself to code and building Allen Code Co., a solo build-to-sell software studio.',
   );
+  const { photo } = BUILDER;
 
   return (
-    <div className="px-6 py-20 lg:px-10 lg:py-28">
+    <div className="px-6 pb-24 lg:px-10">
       <div className="mx-auto max-w-7xl">
-        <div className="grid gap-12 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
+        <div className="grid gap-12 pt-32 lg:grid-cols-[0.85fr_1.15fr] lg:items-center lg:pt-36">
           <Reveal>
-            <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02]">
-              <img
-                data-aiwp-slot="5"
-                src="/chris-allen.png"
-                alt="Chris Allen, founder of Allen Code Co."
-                className="aspect-[4/5] w-full object-cover"
-              />
-            </div>
+            <figure className={`overflow-hidden ${PANEL}`}>
+              <p aria-hidden="true" className="mono border-b border-white/10 px-5 py-2.5 text-[11px] tracking-widest text-white/55">
+                chris-allen.jpg
+              </p>
+              <img src={photo.src} alt={photo.alt} width={photo.width} height={photo.height} className="aspect-[4/5] h-auto w-full object-cover" />
+            </figure>
           </Reveal>
           <Reveal delay={0.1}>
-            <p className="mono text-xs uppercase tracking-[0.3em] text-orange-500">About</p>
-            <h1 className="mt-4 font-display text-5xl leading-[0.95] tracking-tight sm:text-6xl">
-              I run one studio. I write every line myself.
-            </h1>
-            <p className="mt-6 text-lg text-white/60">
-              I'm Chris Allen — a solo developer running Allen Code Co. out of a genuine belief that most software
-              doesn't need a team of twelve, a design sprint, and a launch party. It needs one person who's good
+            <p aria-hidden="true" className="mono text-[11px] tracking-widest text-white/45">
+              <span className="text-ember">~/</span>allencode/about
+              <span className="gate-cursor" />
+            </p>
+            <p className="mono mt-6 text-xs uppercase tracking-[0.3em] text-ember">About</p>
+            <h1 className={`${DISPLAY} mt-4 text-5xl sm:text-6xl`}>I run one studio. I write every line myself.</h1>
+            <p className="mt-6 text-lg text-white/70">
+              I&apos;m Chris Allen — a solo developer running Allen Code Co. out of a genuine belief that most software
+              doesn&apos;t need a team of twelve, a design sprint, and a launch party. It needs one person who&apos;s good
               enough to build the whole thing and disciplined enough to finish it properly.
             </p>
-            <p className="mt-4 text-lg text-white/60">
+            <p className="mt-4 text-lg text-white/70">
               Before this, I spent fifteen years in professional kitchens. That job taught me more about shipping
               software than any course did: work under pressure, hit the pass on time, and never let something
               mediocre go out the door with your name on it.
             </p>
             <Magnetic className="mt-8 block w-fit">
-              <Link
-                to="/contact"
-                className="inline-flex items-center gap-2 rounded-full bg-orange-500 px-6 py-3 mono text-xs uppercase tracking-widest text-black hover:bg-orange-400"
-              >
-                Work with me <ArrowUpRight size={14} />
+              <Link to="/contact" viewTransition className={BUTTON}>
+                Work with me <ArrowUpRight size={14} aria-hidden="true" />
               </Link>
             </Magnetic>
           </Reveal>
         </div>
 
-        <div className="mt-24">
+        <section className="mt-24">
           <Reveal>
-            <p className="mono text-xs uppercase tracking-[0.3em] text-orange-500">Timeline</p>
-            <h2 className="mt-4 max-w-2xl font-display text-4xl tracking-tight sm:text-5xl">
-              From the line to the laptop.
-            </h2>
+            <p className="mono text-xs uppercase tracking-[0.3em] text-ember">Timeline</p>
+            <h2 className={`${DISPLAY} mt-4 max-w-2xl text-4xl sm:text-5xl`}>From the line to the laptop.</h2>
           </Reveal>
-          <div className="mt-14 border-t border-white/10">
-            {TIMELINE.map((t, i) => (
-              <Reveal key={t.year} delay={i * 0.06}>
-                <div className="grid gap-4 border-b border-white/10 py-8 md:grid-cols-[180px_1fr] md:gap-10">
-                  <span className="mono text-sm uppercase tracking-widest text-orange-500">{t.year}</span>
-                  <div>
-                    <h3 className="font-display text-2xl tracking-tight">{t.title}</h3>
-                    <p className="mt-2 max-w-2xl text-white/60">{t.body}</p>
-                  </div>
-                </div>
-              </Reveal>
-            ))}
+          <div className={`mt-12 overflow-hidden ${PANEL}`}>
+            <p aria-hidden="true" className="mono border-b border-white/10 px-5 py-2.5 text-[11px] tracking-widest text-white/55">
+              git log --reverse
+            </p>
+            <ol className="divide-y divide-white/10">
+              {TIMELINE.map((t, i) => (
+                <li key={t.year}>
+                  <Reveal delay={i * 0.06}>
+                    <div className="grid gap-3 px-6 py-7 md:grid-cols-[180px_1fr] md:gap-10">
+                      <span className="mono text-sm uppercase tracking-widest text-ember">
+                        <span aria-hidden="true" className="mr-2 text-white/35">
+                          ●
+                        </span>
+                        {t.year}
+                      </span>
+                      <div>
+                        <h3 className={`${DISPLAY} text-2xl sm:text-3xl`}>{t.title}</h3>
+                        <p className="mt-2 max-w-2xl text-white/65">{t.body}</p>
+                      </div>
+                    </div>
+                  </Reveal>
+                </li>
+              ))}
+            </ol>
           </div>
-        </div>
+        </section>
 
         <div className="mt-24 grid gap-6 md:grid-cols-3">
           {VALUES.map((v, i) => (
             <Reveal key={v.title} delay={i * 0.08}>
-              <div className="h-full rounded-2xl border border-white/10 bg-white/[0.02] p-8">
-                <h3 className="font-display text-2xl tracking-tight text-orange-500">{v.title}</h3>
-                <p className="mt-3 text-white/60">{v.body}</p>
+              <div className={`h-full p-8 ${PANEL}`}>
+                <h3 className={`${DISPLAY} text-3xl text-ember`}>{v.title}</h3>
+                <p className="mt-3 text-white/65">{v.body}</p>
               </div>
             </Reveal>
           ))}

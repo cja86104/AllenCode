@@ -6,6 +6,7 @@ import Reveal from '../components/Reveal';
 import Magnetic from '../components/Magnetic';
 import CheckoutModal from '../components/CheckoutModal';
 import usePageMeta from '../hooks/usePageMeta';
+import PageHeader, { BUTTON, BUTTON_QUIET, DISPLAY, PANEL, PANEL_HOVER } from '../components/PageHeader.jsx';
 
 export default function Services() {
   usePageMeta(
@@ -30,64 +31,59 @@ export default function Services() {
   }
 
   return (
-    <div className="px-6 py-20 lg:px-10 lg:py-28">
+    <div className="px-6 pb-24 lg:px-10">
       <div className="mx-auto max-w-7xl">
-        <Reveal>
-          <p className="mono text-xs uppercase tracking-[0.3em] text-orange-500">Services</p>
-          <h1 className="mt-4 max-w-3xl font-display text-5xl leading-[0.95] tracking-tight sm:text-7xl">
-            Custom work, scoped and priced upfront.
-          </h1>
-          <p className="mt-6 max-w-2xl text-lg text-white/60">
-            No hourly retainers, no scope creep. Every engagement below is fixed-scope, deposit-gated, and delivered
-            by me — the person who'll actually write the code.
-          </p>
-        </Reveal>
+        <PageHeader
+          path="services"
+          eyebrow="Services"
+          title="Custom work, scoped and priced upfront."
+          lede="No hourly retainers, no scope creep. Every engagement below is fixed-scope, deposit-gated, and delivered by me — the person who'll actually write the code."
+        />
 
-        <div className="mt-16 space-y-6">
+        <div className="mt-6 space-y-6">
           {services.map((s, i) => (
             <Reveal key={s.slug} delay={i * 0.06}>
-              <div className="grid gap-8 rounded-2xl border border-white/10 bg-white/[0.02] p-8 transition-colors hover:border-orange-500/40 lg:grid-cols-[1.4fr_auto] lg:items-center lg:gap-10">
-                <div>
-                  <h2 className="font-display text-2xl tracking-tight sm:text-3xl">{s.name}</h2>
-                  <p className="mt-3 max-w-xl text-white/60">{s.summary}</p>
-                  <ul className="mt-5 grid gap-2 sm:grid-cols-2">
-                    {s.scope.map((item) => (
-                      <li key={item} className="flex items-start gap-2 text-sm text-white/60">
-                        <Check size={14} className="mt-0.5 shrink-0 text-orange-500" /> {item}
-                      </li>
-                    ))}
-                  </ul>
-                  <p className="mono mt-5 text-[11px] uppercase tracking-widest text-white/30">
-                    {s.timeline} · {s.deposit}
-                  </p>
+              <article data-service={s.slug} className={`overflow-hidden ${PANEL_HOVER}`}>
+                <p aria-hidden="true" className="mono border-b border-white/10 px-6 py-2.5 text-[11px] tracking-widest text-white/55">
+                  services/{s.slug}
+                </p>
+                <div className="grid gap-8 p-8 lg:grid-cols-[1.4fr_auto] lg:items-center lg:gap-10">
+                  <div>
+                    <h2 className={`${DISPLAY} text-3xl sm:text-4xl`}>{s.name}</h2>
+                    <p className="mt-3 max-w-xl text-white/70">{s.summary}</p>
+                    <ul className="mt-5 grid gap-2 sm:grid-cols-2">
+                      {s.scope.map((item) => (
+                        <li key={item} className="flex items-start gap-2 text-sm text-white/70">
+                          <Check size={14} aria-hidden="true" className="mt-0.5 shrink-0 text-ember" /> {item}
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="mono mt-5 text-[11px] uppercase tracking-widest text-ember/80">
+                      {s.timeline} · {s.deposit}
+                    </p>
+                  </div>
+                  <Magnetic>
+                    <Link to="/contact" viewTransition className={`${BUTTON} w-full whitespace-nowrap lg:w-auto`}>
+                      Reserve a slot <ArrowUpRight size={14} aria-hidden="true" />
+                    </Link>
+                  </Magnetic>
                 </div>
-                <Magnetic>
-                  <Link
-                    to="/contact"
-                    className="inline-flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-full bg-orange-500 px-6 py-3 mono text-xs uppercase tracking-widest text-black hover:bg-orange-400 lg:w-auto"
-                  >
-                    Reserve a slot <ArrowUpRight size={14} />
-                  </Link>
-                </Magnetic>
-              </div>
+              </article>
             </Reveal>
           ))}
         </div>
 
         <Reveal>
-          <div className="mt-16 flex flex-col items-start gap-4 rounded-2xl border border-white/10 bg-white/[0.02] p-10 sm:flex-row sm:items-center sm:justify-between">
+          <div className={`mt-16 flex flex-col items-start gap-6 p-10 sm:flex-row sm:items-center sm:justify-between ${PANEL}`}>
             <div>
-              <h3 className="font-display text-2xl tracking-tight sm:text-3xl">Not sure what you need?</h3>
-              <p className="mt-2 max-w-lg text-white/60">
+              <h2 className={`${DISPLAY} text-3xl sm:text-4xl`}>Not sure what you need?</h2>
+              <p className="mt-2 max-w-lg text-white/65">
                 Send me a few lines about the problem you're solving and I'll tell you honestly what it'll take.
               </p>
             </div>
             <Magnetic>
-              <Link
-                to="/contact"
-                className="inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-white/20 px-6 py-3 mono text-xs uppercase tracking-widest text-white hover:border-orange-500 hover:text-orange-500"
-              >
-                Get in touch <ArrowUpRight size={14} />
+              <Link to="/contact" viewTransition className={`${BUTTON_QUIET} whitespace-nowrap`}>
+                Get in touch <ArrowUpRight size={14} aria-hidden="true" />
               </Link>
             </Magnetic>
           </div>
@@ -97,4 +93,4 @@ export default function Services() {
       <CheckoutModal item={checkoutItem} onClose={() => setCheckoutItem(null)} />
     </div>
   );
-}
+}

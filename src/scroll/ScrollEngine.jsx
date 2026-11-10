@@ -42,7 +42,7 @@ export default function ScrollEngine({ enabled }) {
     };
 
     lenis.on('scroll', onScroll);
-    setGlider((y) => lenis.scrollTo(y, { duration: GLIDE_SECONDS }));
+    setGlider((y, instant) => lenis.scrollTo(y, instant ? { immediate: true, force: true } : { duration: GLIDE_SECONDS }));
     gsap.ticker.add(tick);
     gsap.ticker.lagSmoothing(0);
     root.dataset.scrollEngine = 'on';

@@ -72,7 +72,7 @@ export default function Nav({ overlay = false }) {
       className={`${overlay ? 'fixed inset-x-0' : 'sticky'} top-0 z-50 border-b border-white/10 bg-[#0a0a0a]/80 backdrop-blur-md`}
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-10">
-        <Link to="/" onClick={() => setOpen(false)} className="mono text-sm font-bold uppercase tracking-[0.2em] text-white">
+        <Link to="/" viewTransition onClick={() => setOpen(false)} className="mono text-sm font-bold uppercase tracking-[0.2em] text-white">
           Allen<span className="text-orange-500">Code</span> Co.
         </Link>
 
@@ -81,6 +81,7 @@ export default function Nav({ overlay = false }) {
             <NavLink
               key={l.to}
               to={l.to}
+              viewTransition
               className={({ isActive }) =>
                 `mono text-xs uppercase tracking-widest transition-colors ${isActive ? 'text-orange-500' : 'text-white/70 hover:text-white'}`
               }
@@ -92,6 +93,7 @@ export default function Nav({ overlay = false }) {
           <Magnetic>
             <Link
               to={action.to}
+              viewTransition
               data-primary-action
               className="rounded-full border border-orange-500 px-5 py-2 mono text-xs uppercase tracking-widest text-orange-500 transition-colors hover:bg-orange-500 hover:text-black"
             >
@@ -125,6 +127,7 @@ export default function Nav({ overlay = false }) {
                 <NavLink
                   key={l.to}
                   to={l.to}
+              viewTransition
                   onClick={() => setOpen(false)}
                   className={({ isActive }) =>
                     `mono border-b border-white/5 py-3 text-sm uppercase tracking-widest ${isActive ? 'text-orange-500' : 'text-white/80'}`
@@ -136,6 +139,7 @@ export default function Nav({ overlay = false }) {
               <DoorSwitcher className="mt-3 w-fit" />
               <Link
                 to={action.to}
+                viewTransition
                 onClick={() => setOpen(false)}
                 className="mono mt-3 rounded-full border border-orange-500 px-5 py-3 text-center text-xs uppercase tracking-widest text-orange-500"
               >

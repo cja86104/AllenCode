@@ -1,13 +1,13 @@
 // @ts-check
-import { lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { lazy, Suspense, useState } from 'react';
+import { Outlet, RouterProvider, createBrowserRouter } from 'react-router-dom';
 import { Analytics } from '@vercel/analytics/react';
 import Nav from './components/Nav';
 import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
 import Noise from './components/Noise';
 import CustomCursor from './components/CustomCursor';
-import FieldLayer, { useIsFieldRoute } from './field/FieldLayer.jsx';
+import FieldLayer from './field/FieldLayer.jsx';
 import DoorProvider from './door/DoorProvider.jsx';
 import Products from './pages/Products';
 import ProductDetail from './pages/ProductDetail';
@@ -17,16 +17,19 @@ import About from './pages/About';
 import Contact from './pages/Contact';
 import CheckoutSuccess from './pages/CheckoutSuccess';
 import NotFound from './pages/NotFound';
+import RouteError from './pages/RouteError.jsx';
 
 // The home page is the Source to Screen experience. It loads on demand so its scenes and excerpts
 // add nothing to the bundle the inner pages download (spec section 9).
 const Home = lazy(() => import('./pages/Home.jsx'));
 
-/** Everything inside the router, so the shell can tell whether the route shows the field. */
+/**
+ * The frame every page shares: the skip link, the code field behind everything (Chris, 2026-11-09:
+ * on every page, not only the home page), the nav over the page, and the footer.
+ */
 function AppShell() {
-  const onFieldRoute = useIsFieldRoute();
   return (
-    <>
+    <DoorProvider>
       {/* The first thing a keyboard reaches: straight past the nav and the pinned scenes' chrome. */}
       <a
         href="#main"
@@ -39,48 +42,49 @@ function AppShell() {
       <Noise />
       <CustomCursor />
       <FieldLayer />
-      {/* Field routes clear the shell background so the fixed field behind it shows through, and use
-          overflow-x: clip, because overflow-x: hidden makes the shell a scroll container and breaks
-          position: sticky in the chapters. Regular routes keep their original classes. */}
-      <div
-        className={`relative flex min-h-screen flex-col ${
-          onFieldRoute ? 'overflow-x-clip' : 'overflow-x-hidden bg-[#0a0a0a]'
-        }`}
-      >
-        <Nav overlay={onFieldRoute} />
+      {/* The shell is clear so the fixed field behind it shows through, and uses overflow-x: clip,
+          because overflow-x: hidden makes the shell a scroll container and breaks position: sticky
+          in the pinned chapters. */}
+      <div className="relative flex min-h-screen flex-col overflow-x-clip">
+        <Nav overlay />
         <main id="main" tabIndex={-1} className="flex-1 focus:outline-none">
-          <Routes>
-            <Route
-              path="/"
-              element={
-                <Suspense fallback={null}>
-                  <Home />
-                </Suspense>
-              }
-            />
-            <Route path="/products" element={<Products />} />
-            <Route path="/products/:slug" element={<ProductDetail />} />
-            <Route path="/services" element={<Services />} />
-            <Route path="/templates" element={<Templates />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/checkout-success" element={<CheckoutSuccess />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <Outlet />
         </main>
         <Footer />
       </div>
       <Analytics />
-    </>
+    </DoorProvider>
   );
 }
 
+/** Every route the site serves, unchanged by the move to the data router. */
+export const routes = [
+  {
+    element: <AppShell />,
+    errorElement: <RouteError />,
+    children: [
+      {
+        path: '/',
+        element: (
+          <Suspense fallback={null}>
+            <Home />
+          </Suspense>
+        ),
+      },
+      { path: '/products', element: <Products /> },
+      { path: '/products/:slug', element: <ProductDetail /> },
+      { path: '/services', element: <Services /> },
+      { path: '/templates', element: <Templates /> },
+      { path: '/about', element: <About /> },
+      { path: '/contact', element: <Contact /> },
+      { path: '/checkout-success', element: <CheckoutSuccess /> },
+      { path: '*', element: <NotFound /> },
+    ],
+  },
+];
+
 export default function App() {
-  return (
-    <BrowserRouter>
-      <DoorProvider>
-        <AppShell />
-      </DoorProvider>
-    </BrowserRouter>
-  );
+  // Created on first render, so the router starts from the address the page opened at.
+  const [router] = useState(() => createBrowserRouter(routes));
+  return <RouterProvider router={router} />;
 }
