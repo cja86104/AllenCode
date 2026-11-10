@@ -19,7 +19,7 @@ async function scrollSection(page, section, share) {
 /** @param {import('@playwright/test').Page} page */
 async function stageCodePixels(page) {
   const { width, height } = page.viewportSize() ?? { width: 0, height: 0 };
-  const stage = { x: Math.round(width * 0.42), y: Math.round(height * 0.14), width: Math.round(width * 0.54), height: Math.round(height * 0.74) };
+  const stage = { x: Math.round(width * 0.45), y: Math.round(height * 0.14), width: Math.round(width * 0.51), height: Math.round(height * 0.74) };
   return visibleCodePixels(await page.screenshot({ clip: stage }));
 }
 

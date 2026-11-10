@@ -8,6 +8,7 @@ import MediaLoop from '../components/MediaLoop.jsx';
 import { chapterTimeline } from './chapterTimeline.js';
 import { useSectionProgress } from './useSectionProgress.js';
 import { DESKTOP_MIN_WIDTH, EditorPanel, FlightEditor, flightGeometry, useImageFlight } from './flight.jsx';
+import { CHAPTER_BODY, CHAPTER_GRID, CHAPTER_LABEL, CHAPTER_TITLE } from './chapterType.js';
 
 /** @typedef {import('../content/excerpts/index.js').Excerpt} Excerpt */
 /** @typedef {(typeof products)[number]} Product */
@@ -58,11 +59,11 @@ export function countText(value, t) {
  */
 function Status({ product }) {
   if (product.status !== 'live' || !product.url) {
-    return <p className="mono mt-5 text-[11px] uppercase tracking-[0.25em] text-white/50">Coming soon</p>;
+    return <p className={`mt-5 tracking-[0.25em] text-white/60 ${CHAPTER_LABEL}`}>Coming soon</p>;
   }
   return (
     <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2">
-      <span className="mono flex items-center gap-2 text-[11px] uppercase tracking-[0.25em] text-white/70">
+      <span className={`flex items-center gap-2 tracking-[0.25em] text-white/70 ${CHAPTER_LABEL}`}>
         <span data-live-dot aria-hidden="true" className="relative flex h-2 w-2">
           <span className="absolute inline-flex h-full w-full rounded-full bg-ember opacity-60 motion-safe:animate-ping" />
           <span className="relative inline-flex h-2 w-2 rounded-full bg-ember" />
@@ -73,7 +74,7 @@ function Status({ product }) {
         href={product.url}
         target="_blank"
         rel="noopener noreferrer"
-        className="mono text-[11px] uppercase tracking-[0.25em] text-ember underline-offset-4 hover:underline focus-visible:underline"
+        className={`tracking-[0.25em] text-ember underline-offset-4 hover:underline focus-visible:underline ${CHAPTER_LABEL}`}
       >
         Open live site<span aria-hidden="true"> ↗</span>
         <span className="sr-only"> (opens in a new tab)</span>
@@ -91,20 +92,20 @@ function ProductText({ product, countT, compact = false }) {
   const stats = (product.stats ?? []).slice(0, COUNTERS_SHOWN);
   return (
     <div>
-      <h2 className="font-serif-display text-4xl italic leading-tight text-white sm:text-5xl">{product.name}</h2>
-      {!compact && <p className="mt-4 max-w-xl text-white/65">{product.tagline}</p>}
+      <h2 className={CHAPTER_TITLE}>{product.name}</h2>
+      {!compact && <p className={`mt-4 max-w-xl lg:max-w-none ${CHAPTER_BODY}`}>{product.tagline}</p>}
       <Status product={product} />
       {stats.length > 0 && (
         <ul className={`mt-6 grid border-t border-white/10 pt-5 ${compact ? 'grid-cols-4 gap-3' : 'grid-cols-2 gap-x-8 gap-y-5'}`}>
           {stats.map((stat) => (
             <li key={stat.label}>
-              <span className={`block font-serif-display leading-none text-white ${compact ? 'text-2xl' : 'text-4xl'}`}>
+              <span className={`block font-serif-display leading-none text-white ${compact ? 'text-2xl' : 'text-4xl lg:text-[length:clamp(2.25rem,min(3.3vw,6vh),3.75rem)]'}`}>
                 <span data-counter aria-hidden="true">
                   {countText(stat.number, countT)}
                 </span>
                 <span className="sr-only">{stat.number}</span>
               </span>
-              <span className="mono mt-2 block text-[10px] uppercase tracking-[0.2em] text-white/60">{stat.label}</span>
+              <span className={`mt-2 block tracking-[0.2em] text-white/60 ${compact ? 'mono text-[10px] uppercase' : CHAPTER_LABEL}`}>{stat.label}</span>
             </li>
           ))}
         </ul>
@@ -172,7 +173,7 @@ function StaticProductChapter({ product, excerpt, loop }) {
   return (
     <section
       data-product={product.slug}
-      className="relative z-10 mx-auto grid max-w-6xl gap-10 px-6 py-16 lg:grid-cols-[0.85fr_1.15fr] lg:items-center lg:px-10"
+      className={`relative z-10 mx-auto grid max-w-6xl gap-10 px-6 py-16 ${CHAPTER_GRID} lg:items-center lg:px-10`}
     >
       <ProductText product={product} countT={1} />
       <div className="min-w-0 space-y-6">
@@ -193,7 +194,7 @@ function ComingSoonChapter({ product, excerpt, animate }) {
   const { progress } = useSectionProgress(sectionRef, animate);
   const typed = TYPED_FROM + (TYPED_TO - TYPED_FROM) * (animate ? clamp01((progress - 0.1) / 0.8) : 1);
   const body = (
-    <div className="relative z-10 mx-auto grid w-full max-w-6xl gap-10 px-6 lg:grid-cols-[0.85fr_1.15fr] lg:items-center lg:px-10">
+    <div className={`relative z-10 mx-auto grid w-full max-w-6xl gap-10 px-6 ${CHAPTER_GRID} lg:items-center lg:px-10`}>
       <ProductText product={product} countT={1} />
       <div className="min-w-0">
         {excerpt && <EditorPanel excerpt={excerpt} visible={Math.round(excerpt.code.length * typed)} cursor />}

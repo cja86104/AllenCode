@@ -10,6 +10,7 @@ import { SYNTAX_COLORS, tokenizeLine } from '../field/syntax.js';
 import { auditTimeline, chapterTimeline } from './chapterTimeline.js';
 import { useSectionProgress } from './useSectionProgress.js';
 import { DESKTOP_MIN_WIDTH, EditorPanel, FlightEditor, flightGeometry, useImageFlight } from './flight.jsx';
+import { CHAPTER_BODY, CHAPTER_GRID, CHAPTER_ITEM, CHAPTER_LABEL, CHAPTER_TITLE } from './chapterType.js';
 
 /** @typedef {import('../content/excerpts/index.js').Excerpt} Excerpt */
 /** @typedef {(typeof services)[number]} Service */
@@ -38,19 +39,19 @@ function css(color) {
 function ServiceText({ service, compact = false }) {
   return (
     <div>
-      <h2 className="font-serif-display text-4xl italic leading-tight text-white sm:text-5xl">{service.name}</h2>
-      <p className="mt-5 max-w-xl text-white/65">{service.summary}</p>
+      <h2 className={CHAPTER_TITLE}>{service.name}</h2>
+      <p className={`mt-5 max-w-xl lg:max-w-none ${CHAPTER_BODY}`}>{service.summary}</p>
       {!compact && (
         <ul className="mt-6 space-y-2 border-t border-white/10 pt-6">
           {service.scope.map((item) => (
-            <li key={item} className="flex items-start gap-3 text-sm text-white/55">
-              <span aria-hidden="true" className="mt-2 h-px w-4 shrink-0 bg-ember/70" />
+            <li key={item} className={`flex items-start gap-3 ${CHAPTER_ITEM}`}>
+              <span aria-hidden="true" className="mt-[0.7em] h-px w-4 shrink-0 bg-ember/70" />
               {item}
             </li>
           ))}
         </ul>
       )}
-      <p className="mono mt-6 text-xs uppercase tracking-[0.25em] text-ember">Timeline: {service.timeline}</p>
+      <p className={`mt-6 tracking-[0.25em] text-ember ${CHAPTER_LABEL}`}>Timeline: {service.timeline}</p>
     </div>
   );
 }
@@ -104,7 +105,7 @@ function StaticChapter({ service, excerpt, screen }) {
   return (
     <section
       data-chapter={service.slug}
-      className="relative z-10 mx-auto grid max-w-6xl gap-10 px-6 py-16 lg:grid-cols-[0.85fr_1.15fr] lg:items-center lg:px-10"
+      className={`relative z-10 mx-auto grid max-w-6xl gap-10 px-6 py-16 ${CHAPTER_GRID} lg:items-center lg:px-10`}
     >
       <ServiceText service={service} />
       <div className="min-w-0 space-y-6">
@@ -140,7 +141,7 @@ function AuditChapter({ service, excerpt, animate }) {
       </div>
       <pre
         style={{ fontSize, lineHeight: 1.46 }}
-        className="mono overflow-x-auto py-4 [font-variant-ligatures:none]"
+        className="mono whitespace-pre-wrap py-4 [font-variant-ligatures:none] [overflow-wrap:anywhere]"
       >
         {lines.map((line, row) => {
           const isChecked = row < checked;
@@ -155,7 +156,7 @@ function AuditChapter({ service, excerpt, animate }) {
               <span aria-hidden="true" className={`w-3 shrink-0 ${isChecked ? 'text-ember' : 'text-transparent'}`}>
                 ✓
               </span>
-              <span>
+              <span className="min-w-0">
                 {tokenizeLine(line).map((token, i) => (
                   <span key={i} style={{ color: css(SYNTAX_COLORS[token.kind]) }}>
                     {token.text}
@@ -174,7 +175,7 @@ function AuditChapter({ service, excerpt, animate }) {
     return (
       <section
         data-chapter={service.slug}
-        className="relative z-10 mx-auto grid max-w-6xl gap-10 px-6 py-16 lg:grid-cols-[0.85fr_1.15fr] lg:items-center lg:px-10"
+        className={`relative z-10 mx-auto grid max-w-6xl gap-10 px-6 py-16 ${CHAPTER_GRID} lg:items-center lg:px-10`}
       >
         <ServiceText service={service} />
         <div className="min-w-0">{panel}</div>
@@ -185,7 +186,7 @@ function AuditChapter({ service, excerpt, animate }) {
   return (
     <section ref={sectionRef} data-chapter={service.slug} className="relative h-[180vh]">
       <div className="pin-frame sticky top-0 flex items-center">
-        <div className="relative z-10 mx-auto grid w-full max-w-6xl gap-10 px-6 lg:grid-cols-[0.85fr_1.15fr] lg:items-center lg:px-10">
+        <div className={`relative z-10 mx-auto grid w-full max-w-6xl gap-10 px-6 ${CHAPTER_GRID} lg:items-center lg:px-10`}>
           <ServiceText service={service} />
           <div className="min-w-0">{panel}</div>
         </div>

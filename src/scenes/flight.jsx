@@ -26,8 +26,8 @@ export const DESKTOP_MIN_WIDTH = 1024;
 export function chapterLayout(w, h) {
   if (w >= DESKTOP_MIN_WIDTH) {
     return {
-      text: { x: w * 0.06, y: h * 0.18, w: w * 0.32, h: h * 0.64 },
-      stage: { x: w * 0.42, y: h * 0.14, w: w * 0.54, h: h * 0.74 },
+      text: { x: w * 0.06, y: h * 0.16, w: w * 0.36, h: h * 0.68 },
+      stage: { x: w * 0.45, y: h * 0.14, w: w * 0.51, h: h * 0.74 },
     };
   }
   return {
@@ -156,7 +156,8 @@ export function EditorPanel({ excerpt, visible = excerpt.code.length, cursor = f
       <div className="mono border-b border-white/10 px-4 py-2 text-[11px] tracking-widest text-white/60">
         {excerpt.file}
       </div>
-      <pre className="mono overflow-x-auto p-5 text-[13px] leading-[19px] [font-variant-ligatures:none]">
+      {/* Long lines wrap rather than scroll, so no part of the code is hidden from a keyboard (WCAG 2.1.1). */}
+      <pre className="mono whitespace-pre-wrap p-5 text-[13px] leading-[19px] [font-variant-ligatures:none] [overflow-wrap:anywhere]">
         <CodeLines code={excerpt.code} visible={visible} />
         {cursor && <span aria-hidden="true" data-cursor className="gate-cursor" />}
       </pre>

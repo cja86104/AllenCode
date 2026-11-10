@@ -17,7 +17,7 @@ export const serviceScreens = Object.freeze({
     src: '/media/services/founders-helm-dashboard.jpg',
     alt: 'The Founders Helm dashboard: revenue, contacts, deals and projects above its ten tools.',
     width: 1800,
-    height: 1125,
+    height: 982,
   },
   // Chris's own OpenRouter activity dashboard (2026-11-10), replacing the Crew Advisors concept art.
   'ai-integration': {

@@ -9,6 +9,7 @@ import { usePrefersReducedMotion } from '../field/environment.js';
 import MediaLoop from '../components/MediaLoop.jsx';
 import { useSectionProgress } from './useSectionProgress.js';
 import { DESKTOP_MIN_WIDTH, EditorPanel, FlightEditor, flightGeometry, useImageFlight } from './flight.jsx';
+import { CHAPTER_BODY, CHAPTER_GRID, CHAPTER_LABEL, CHAPTER_TITLE } from './chapterType.js';
 
 /** @typedef {import('../content/excerpts/index.js').Excerpt} Excerpt */
 /** @typedef {(typeof templates)[number]} Template */
@@ -50,16 +51,16 @@ function TemplateText({ template, compact = false }) {
   const [title, kind] = template.name.split(' — ');
   return (
     <div>
-      <p className="mono text-[11px] uppercase tracking-[0.25em] text-ember">{template.category}</p>
-      <h3 className="mt-3 font-serif-display text-4xl italic leading-tight text-white">{title}</h3>
-      <p className="mono mt-1 text-xs uppercase tracking-[0.2em] text-white/50">{kind}</p>
-      {!compact && <p className="mt-4 max-w-md text-white/70">{TEMPLATE_STORIES[template.id]}</p>}
+      <p className={`tracking-[0.25em] text-ember ${CHAPTER_LABEL}`}>{template.category}</p>
+      <h3 className={`mt-3 ${CHAPTER_TITLE}`}>{title}</h3>
+      <p className={`mt-2 tracking-[0.2em] text-white/60 ${CHAPTER_LABEL}`}>{kind}</p>
+      {!compact && <p className={`mt-4 max-w-md lg:max-w-none ${CHAPTER_BODY}`}>{TEMPLATE_STORIES[template.id]}</p>}
       {template.status === 'concept' && !compact && (
-        <p className="mono mt-4 text-[10px] uppercase tracking-[0.2em] text-white/60">Concept preview, coming soon</p>
+        <p className={`mt-4 tracking-[0.2em] text-white/60 ${CHAPTER_LABEL}`}>Concept preview, coming soon</p>
       )}
       <Link
         to={`/contact?template=${template.id}`}
-        className="mono mt-5 inline-flex items-center gap-2 rounded-full border border-ember/60 px-4 py-2 text-[11px] uppercase tracking-widest text-ember hover:bg-ember hover:text-black"
+        className={`mt-5 inline-flex items-center gap-2 rounded-full border border-ember/60 px-4 py-2 tracking-widest text-ember hover:bg-ember hover:text-black lg:px-5 lg:py-2.5 ${CHAPTER_LABEL}`}
       >
         Ask about this template<span aria-hidden="true"> ↗</span>
       </Link>
@@ -70,8 +71,10 @@ function TemplateText({ template, compact = false }) {
 function ChapterHeading() {
   return (
     <div>
-      <p className="mono text-[11px] uppercase tracking-[0.3em] text-ember">{TEMPLATE_CHAPTER.eyebrow}</p>
-      <h2 className="mt-3 font-serif-display text-3xl italic leading-tight text-white sm:text-4xl">{TEMPLATE_CHAPTER.title}</h2>
+      <p className={`tracking-[0.3em] text-ember ${CHAPTER_LABEL}`}>{TEMPLATE_CHAPTER.eyebrow}</p>
+      <h2 className="mt-3 font-serif-display text-3xl italic leading-tight text-white sm:text-4xl lg:text-[length:clamp(2.25rem,min(2.8vw,5vh),3rem)]">
+        {TEMPLATE_CHAPTER.title}
+      </h2>
     </div>
   );
 }
@@ -109,7 +112,7 @@ function TemplateSegment({ template, excerpt, local, active, visible, viewport, 
         <div className={compact ? 'mt-4' : 'mt-10'}>
           <TemplateText template={template} compact={compact} />
         </div>
-        <p className="mono mt-6 text-[11px] tracking-[0.25em] text-white/55">
+        <p className={`mt-6 tracking-[0.25em] text-white/60 ${CHAPTER_LABEL}`}>
           {index + 1} / {count}
         </p>
       </div>
@@ -188,7 +191,7 @@ export default function TemplateChapter({ includeDrafts }) {
     <section data-template-chapter className="relative z-10 mx-auto max-w-6xl space-y-16 px-6 py-16 lg:px-10">
       <ChapterHeading />
       {items.map(({ template, excerpt }) => (
-        <div key={template.id} data-door-b-template={template.id} className="grid gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
+        <div key={template.id} data-door-b-template={template.id} className={`grid gap-10 ${CHAPTER_GRID} lg:items-center`}>
           <TemplateText template={template} />
           <div className="min-w-0 space-y-6">
             <EditorPanel excerpt={excerpt} />

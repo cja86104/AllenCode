@@ -47,7 +47,7 @@ test('the code lands on the poster, then the loop plays, and the live link has r
   await scrollChapter(page, chapter, 0.5);
   await expect(code).toHaveCSS('opacity', '0');
   const { width, height } = page.viewportSize() ?? { width: 0, height: 0 };
-  const stage = { x: Math.round(width * 0.42), y: Math.round(height * 0.14), width: Math.round(width * 0.54), height: Math.round(height * 0.74) };
+  const stage = { x: Math.round(width * 0.45), y: Math.round(height * 0.14), width: Math.round(width * 0.51), height: Math.round(height * 0.74) };
   await expect.poll(async () => visibleCodePixels(await page.screenshot({ clip: stage }))).toBeGreaterThan(400);
   expect(await video.evaluate((el) => /** @type {HTMLVideoElement} */ (el).paused)).toBe(true);
 
