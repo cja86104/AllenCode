@@ -145,7 +145,7 @@ export default function ContactForm({ prefill = {}, idPrefix = 'contact', succes
     <form onSubmit={handleSubmit} className={`p-8 sm:p-10 ${framed ? 'rounded-2xl border border-white/10 bg-white/[0.02]' : ''}`}>
       <div className="grid gap-5 sm:grid-cols-2">
         <div>
-          <label htmlFor={id('name')} className="mono text-[11px] uppercase tracking-widest text-white/40">
+          <label htmlFor={id('name')} className="mono text-[11px] uppercase tracking-widest text-white/55">
             Name
           </label>
           <input
@@ -158,7 +158,7 @@ export default function ContactForm({ prefill = {}, idPrefix = 'contact', succes
           {errors.name && <p className="mt-1.5 text-xs text-orange-500">{errors.name}</p>}
         </div>
         <div>
-          <label htmlFor={id('email')} className="mono text-[11px] uppercase tracking-widest text-white/40">
+          <label htmlFor={id('email')} className="mono text-[11px] uppercase tracking-widest text-white/55">
             Email
           </label>
           <input
@@ -173,7 +173,7 @@ export default function ContactForm({ prefill = {}, idPrefix = 'contact', succes
         </div>
       </div>
       <div className="mt-5">
-        <label htmlFor={id('type')} className="mono text-[11px] uppercase tracking-widest text-white/40">
+        <label htmlFor={id('type')} className="mono text-[11px] uppercase tracking-widest text-white/55">
           Project type
         </label>
         <select
@@ -190,7 +190,7 @@ export default function ContactForm({ prefill = {}, idPrefix = 'contact', succes
         </select>
       </div>
       <div className="mt-5">
-        <label htmlFor={id('message')} className="mono text-[11px] uppercase tracking-widest text-white/40">
+        <label htmlFor={id('message')} className="mono text-[11px] uppercase tracking-widest text-white/55">
           What are you building?
         </label>
         <textarea

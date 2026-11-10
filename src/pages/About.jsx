@@ -61,7 +61,7 @@ export default function About() {
     <div className="px-6 pb-24 lg:px-10">
       <div className="mx-auto max-w-7xl">
         <div className="grid gap-12 pt-32 lg:grid-cols-[0.85fr_1.15fr] lg:items-center lg:pt-36">
-          <Reveal>
+          <Reveal instant>
             <figure className={`overflow-hidden ${PANEL}`}>
               <p aria-hidden="true" className="mono border-b border-white/10 px-5 py-2.5 text-[11px] tracking-widest text-white/55">
                 chris-allen.jpg
@@ -69,8 +69,8 @@ export default function About() {
               <img src={photo.src} alt={photo.alt} width={photo.width} height={photo.height} className="aspect-[4/5] h-auto w-full object-cover" />
             </figure>
           </Reveal>
-          <Reveal delay={0.1}>
-            <p aria-hidden="true" className="mono text-[11px] tracking-widest text-white/45">
+          <Reveal instant>
+            <p aria-hidden="true" className="mono text-[11px] tracking-widest text-white/60">
               <span className="text-ember">~/</span>allencode/about
               <span className="gate-cursor" />
             </p>
@@ -109,7 +109,7 @@ export default function About() {
                   <Reveal delay={i * 0.06}>
                     <div className="grid gap-3 px-6 py-7 md:grid-cols-[180px_1fr] md:gap-10">
                       <span className="mono text-sm uppercase tracking-widest text-ember">
-                        <span aria-hidden="true" className="mr-2 text-white/35">
+                        <span aria-hidden="true" className="mr-2 text-white/55">
                           ●
                         </span>
                         {t.year}

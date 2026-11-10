@@ -259,7 +259,7 @@ export default function IdeaSketch() {
             {IDEA_CHAPTER.label}
           </label>
           <div className="mt-2 overflow-hidden rounded-xl border border-white/15 bg-night/95 transition-colors focus-within:border-ember">
-            <div className="mono flex items-center justify-between border-b border-white/10 px-4 py-2 text-[11px] tracking-widest text-white/45">
+            <div className="mono flex items-center justify-between border-b border-white/10 px-4 py-2 text-[11px] tracking-widest text-white/60">
               <span>{IDEA_CHAPTER.file}</span>
               <span aria-hidden="true" data-idea-hint className="text-ember/80">
                 {demo ? IDEA_CHAPTER.demoNote : IDEA_CHAPTER.typeHere}
@@ -293,11 +293,11 @@ export default function IdeaSketch() {
                 lineHeight: `${CODE_LINE_HEIGHT}px`,
                 color: textHidden ? 'transparent' : undefined,
               }}
-              className="mono block w-full resize-none overflow-hidden whitespace-pre-wrap bg-transparent text-white caret-ember outline-none [font-variant-ligatures:none] [overflow-wrap:anywhere] placeholder:text-white/35"
+              className="mono block w-full resize-none overflow-hidden whitespace-pre-wrap bg-transparent text-white caret-ember outline-none [font-variant-ligatures:none] [overflow-wrap:anywhere] placeholder:text-white/55"
             />
           </div>
           <div className="mt-3 flex items-center justify-between gap-4">
-            <p id="idea-count" className="mono text-[11px] text-white/45">
+            <p id="idea-count" className="mono text-[11px] text-white/60">
               {draft.length} / {IDEA_MAX_LENGTH}
             </p>
             <button
@@ -329,7 +329,7 @@ export default function IdeaSketch() {
                 ))}
               </ul>
             ) : (
-              <span className="mono text-[11px] uppercase tracking-widest text-white/45">{IDEA_CHAPTER.waiting}</span>
+              <span className="mono text-[11px] uppercase tracking-widest text-white/60">{IDEA_CHAPTER.waiting}</span>
             )}
           </figcaption>
         </figure>

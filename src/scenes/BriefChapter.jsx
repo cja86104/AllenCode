@@ -52,7 +52,7 @@ export default function BriefChapter() {
         <p className="mono text-xs uppercase tracking-[0.3em] text-ember">{BRIEF_CHAPTER.eyebrow}</p>
         <h2 className="mt-4 font-serif-display text-4xl italic leading-tight text-white sm:text-5xl">{BRIEF_CHAPTER.title}</h2>
         <div aria-hidden="true" className="mt-8 overflow-hidden rounded-xl border border-white/10 bg-night/80">
-          <div className="mono border-b border-white/10 px-4 py-2 text-[11px] tracking-widest text-white/45">
+          <div className="mono border-b border-white/10 px-4 py-2 text-[11px] tracking-widest text-white/60">
             {BRIEF_CHAPTER.file}
           </div>
           <pre

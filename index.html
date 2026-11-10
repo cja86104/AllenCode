@@ -72,6 +72,24 @@
   </head>
   <body class="bg-[#0a0a0a]">
     <div id="root"></div>
+    <!--
+      What a reader without JavaScript gets (Phase 8): what the studio is and the way to every page.
+      Crawlers that run JavaScript see the full site; prerendering is Chris's decision (spec section 11).
+    -->
+    <noscript>
+      <main style="max-width: 40rem; margin: 0 auto; padding: 4rem 1.5rem; color: #f5f5f5; font-family: system-ui, sans-serif; line-height: 1.6">
+        <h1>Allen Code Co.</h1>
+        <p>Custom development, web design, UI/UX, and AI integration — built around your business. Tailored work for small business owners and founders, by Chris Allen.</p>
+        <ul>
+          <li><a href="/products" style="color: #f97316">Products</a></li>
+          <li><a href="/services" style="color: #f97316">Services</a></li>
+          <li><a href="/templates" style="color: #f97316">Templates</a></li>
+          <li><a href="/about" style="color: #f97316">About</a></li>
+          <li><a href="/contact" style="color: #f97316">Contact</a></li>
+        </ul>
+        <p>This site is built with JavaScript; turn it on to see the full experience, or write to <a href="mailto:chris@allencodeco.com" style="color: #f97316">chris@allencodeco.com</a>.</p>
+      </main>
+    </noscript>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

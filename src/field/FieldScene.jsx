@@ -1,8 +1,6 @@
 // @ts-check
 // Self-hosted faces the field draws with (OFL-1.1). They load with this lazy chunk only, so pages
 // without the field are unaffected, and the field never depends on a third-party font CDN.
-import '@fontsource/jetbrains-mono/500.css';
-import '@fontsource/instrument-serif/400-italic.css';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import CssField from './CssField.jsx';
 import FieldStage from './FieldStage.jsx';

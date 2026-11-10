@@ -24,7 +24,7 @@ export const DISPLAY = 'font-serif-display italic leading-[1.05] text-white';
 export default function PageHeader({ path, eyebrow, title, lede, children }) {
   return (
     <header className="pb-10 pt-32 lg:pt-36">
-      <p aria-hidden="true" className="mono text-[11px] tracking-widest text-white/45">
+      <p aria-hidden="true" className="mono text-[11px] tracking-widest text-white/60">
         <span className="text-ember">~/</span>allencode/{path}
         <span className="gate-cursor" />
       </p>

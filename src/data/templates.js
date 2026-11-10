@@ -1,3 +1,4 @@
+// @ts-check
 // Template catalog (spec section 7.6). Every entry is a concept until Chris builds the real template:
 // its loop and poster are filmed from tools/previews. `price` stays in the data so prices can return,
 // but no page renders it.

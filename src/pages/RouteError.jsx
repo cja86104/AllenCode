@@ -9,7 +9,7 @@ import { BUTTON, BUTTON_QUIET, DISPLAY } from '../components/PageHeader.jsx';
 export default function RouteError() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-night px-6 text-center">
-      <p aria-hidden="true" className="mono text-[11px] tracking-widest text-white/45">
+      <p aria-hidden="true" className="mono text-[11px] tracking-widest text-white/60">
         <span className="text-ember">~/</span>allencode: failed to load
         <span className="gate-cursor" />
       </p>

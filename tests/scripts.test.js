@@ -14,7 +14,8 @@ describe('package scripts', () => {
     }
   });
 
-  it('verify chains lint, typecheck, test and build', () => {
-    expect(scripts.verify).toBe('npm run lint && npm run typecheck && npm run test && npm run build');
+  it('verify chains lint, typecheck, test, build and the size budget', () => {
+    expect(scripts.verify).toBe('npm run lint && npm run typecheck && npm run test && npm run build && npm run budget');
+    expect(scripts.budget).toBe('node tools/budget/check.mjs');
   });
 });

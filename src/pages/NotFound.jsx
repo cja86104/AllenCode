@@ -8,7 +8,7 @@ export default function NotFound() {
   usePageMeta('Page not found — Allen Code Co.', 'The page you were looking for does not exist.');
   return (
     <div className="flex min-h-[80vh] flex-col items-center justify-center px-6 pt-24 text-center">
-      <p aria-hidden="true" className="mono text-[11px] tracking-widest text-white/45">
+      <p aria-hidden="true" className="mono text-[11px] tracking-widest text-white/60">
         <span className="text-ember">~/</span>allencode: no such file
         <span className="gate-cursor" />
       </p>

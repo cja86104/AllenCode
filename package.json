@@ -11,7 +11,8 @@
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "verify": "npm run lint && npm run typecheck && npm run test && npm run build",
+    "budget": "node tools/budget/check.mjs",
+    "verify": "npm run lint && npm run typecheck && npm run test && npm run build && npm run budget",
     "excerpts:verify": "node tools/excerpts/verify.mjs",
     "media:capture": "node tools/media/capture-products.mjs",
     "media:loops": "node tools/media/make-loops.mjs"
@@ -19,6 +20,7 @@
   "dependencies": {
     "@fontsource/instrument-serif": "^5.3.0",
     "@fontsource/jetbrains-mono": "^5.3.0",
+    "@fontsource/space-grotesk": "^5.3.0",
     "@vercel/analytics": "^2.0.1",
     "framer-motion": "^11.0.0",
     "gsap": "^3.15.1",
@@ -31,6 +33,7 @@
     "stripe": "^22.3.2"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
     "@eslint/js": "^9.39.5",
     "@playwright/test": "^1.65.0",
     "@testing-library/dom": "^10.4.2",

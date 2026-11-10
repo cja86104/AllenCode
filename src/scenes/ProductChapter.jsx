@@ -104,7 +104,7 @@ function ProductText({ product, countT, compact = false }) {
                 </span>
                 <span className="sr-only">{stat.number}</span>
               </span>
-              <span className="mono mt-2 block text-[10px] uppercase tracking-[0.2em] text-white/45">{stat.label}</span>
+              <span className="mono mt-2 block text-[10px] uppercase tracking-[0.2em] text-white/60">{stat.label}</span>
             </li>
           ))}
         </ul>

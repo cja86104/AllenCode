@@ -2,8 +2,7 @@
 
 /**
  * The screen each service chapter's code lands on (spec section 4). Chris supplies these: real
- * screenshots of his live products, or for Crew Advisors, which is not live yet, its concept artwork.
- * Until a chapter has one, it shows its code beside its description.
+ * screenshots of his own live work. Until a chapter has one, it shows its code beside its description.
  *
  * @type {Readonly<Record<'mvp-sprints' | 'custom-saas-builds' | 'ai-integration', { src: string, alt: string, width: number, height: number } | null>>}
  */
@@ -20,11 +19,11 @@ export const serviceScreens = Object.freeze({
     width: 1800,
     height: 1125,
   },
-  // Crew Advisors' concept artwork, AI-generated; Chris chose it (2026-11-09) until the app has a real screen.
+  // Chris's own OpenRouter activity dashboard (2026-11-10), replacing the Crew Advisors concept art.
   'ai-integration': {
-    src: '/media/services/crew-advisors.jpg',
-    alt: 'Crew Advisors: AI experts that know your business, remember every conversation, and get better over time. Six advisors around a table with their memory and calibration panels.',
-    width: 1456,
-    height: 1088,
+    src: '/media/services/openrouter-usage.jpg',
+    alt: 'An OpenRouter usage dashboard: spend, 1.38K requests and 17.3M tokens over the period, a 74.2% cache hit rate, the top API keys and apps, and daily spend by model.',
+    width: 1260,
+    height: 796,
   },
 });

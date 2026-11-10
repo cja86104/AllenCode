@@ -58,7 +58,7 @@ export default function ProductCard({ product, index }) {
   const isLive = product.status === 'live';
 
   return (
-    <Reveal delay={index * 0.08}>
+    <Reveal delay={index * 0.08} instant={index < 2}>
       <article data-product-card={product.slug} className={`group flex h-full flex-col overflow-hidden ${PANEL_HOVER}`}>
         <div className="mono flex items-center justify-between border-b border-white/10 px-5 py-2.5 text-[11px] tracking-widest text-white/55">
           <span>{product.slug}/</span>

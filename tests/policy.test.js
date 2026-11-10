@@ -1,10 +1,9 @@
 /** @vitest-environment node */
 // @ts-check
 import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, relative, sep } from 'node:path';
+import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { legacyFiles } from '../tools/legacy-files.js';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const thisFile = fileURLToPath(import.meta.url);
@@ -64,19 +63,15 @@ function walk(dir) {
 
 describe('code policy', () => {
   it('no banned directives in source', () => {
-    const legacy = new Set(legacyFiles);
     const offenders = SCANNED_DIRS.flatMap((d) => walk(join(root, d)))
       .filter((file) => file !== thisFile)
-      .filter((file) => !legacy.has(relative(root, file).split(sep).join('/')))
       .filter((file) => BANNED.test(readFileSync(file, 'utf8')))
       .map((file) => relative(root, file));
     expect(offenders).toEqual([]);
   });
 
-  it('every non-legacy source file opts into type checking with // @ts-check', () => {
-    const legacy = new Set(legacyFiles);
+  it('every source file opts into type checking with // @ts-check', () => {
     const missing = [...SCANNED_DIRS.flatMap((d) => walk(join(root, d))), ...CONFIG_FILES.map((f) => join(root, f))]
-      .filter((file) => !legacy.has(relative(root, file).split(sep).join('/')))
       .filter((file) => !leadingComments(readFileSync(file, 'utf8')).includes('// @ts-check'))
       .map((file) => relative(root, file));
     expect(missing).toEqual([]);

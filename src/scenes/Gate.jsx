@@ -161,7 +161,7 @@ export default function Gate({ includeDrafts }) {
         >
           <div
             style={{ height: TITLE_BAR_HEIGHT }}
-            className="mono flex items-center border-b border-white/10 px-4 text-[11px] tracking-widest text-white/45"
+            className="mono flex items-center border-b border-white/10 px-4 text-[11px] tracking-widest text-white/60"
           >
             {excerpt.file}
           </div>

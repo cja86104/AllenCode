@@ -43,7 +43,7 @@ function Entry({ principle, state, live, compact }) {
       data-shipped={state.shipped ? 'true' : undefined}
       className={`grid grid-cols-[auto_1fr] px-5 sm:gap-8 sm:px-8 ${compact ? 'gap-3 py-3' : 'gap-2 py-6'}`}
     >
-      <span className={`mono text-sm transition-colors ${compact ? 'pt-1' : ''} ${state.typed > 0 ? 'text-ember' : 'text-white/25'}`}>
+      <span className={`mono text-sm transition-colors ${compact ? 'pt-1' : ''} ${state.typed > 0 ? 'text-ember' : 'text-white/55'}`}>
         <span aria-hidden="true">## </span>
         {principle.n}
       </span>
@@ -118,7 +118,7 @@ export default function HowIWork() {
         Three rules that never bend.
       </h2>
       <div className={`overflow-hidden rounded-xl border border-white/10 bg-night/85 ${compact ? 'mt-5' : 'mt-10'}`}>
-        <p aria-hidden="true" className="mono border-b border-white/10 px-4 py-2 text-[11px] tracking-widest text-white/45">
+        <p aria-hidden="true" className="mono border-b border-white/10 px-4 py-2 text-[11px] tracking-widest text-white/60">
           CHANGELOG.md
         </p>
         <ol className="divide-y divide-white/10">

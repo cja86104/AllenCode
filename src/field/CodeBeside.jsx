@@ -16,7 +16,7 @@ export default function CodeBeside({ excerpt, result }) {
         {`Code from ${excerpt.file} (${excerpt.repo}), which becomes ${excerpt.becomes}.`}
       </figcaption>
       <div className="overflow-hidden rounded-xl border border-white/10 bg-night/80">
-        <div className="mono border-b border-white/10 px-4 py-2 text-[11px] tracking-widest text-white/45">
+        <div className="mono border-b border-white/10 px-4 py-2 text-[11px] tracking-widest text-white/60">
           {excerpt.file}
         </div>
         {/* Ligatures off: the page shows the literal characters of the code (=> stays =>). */}

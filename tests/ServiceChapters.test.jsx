@@ -31,11 +31,11 @@ describe('ServiceChapters', () => {
     for (const service of services) expect(text).not.toContain(String(service.startingPrice));
   });
 
-  it('the AI integration chapter shows its real code beside the Crew Advisors screen', () => {
+  it('the AI integration chapter shows its real code beside the OpenRouter usage dashboard', () => {
     render(<ServiceChapters includeDrafts />);
     const ai = /** @type {HTMLElement} */ (document.querySelector('[data-chapter="ai-integration"]'));
     expect(ai.querySelector('pre')?.textContent).toContain('export async function generateSimpleCompletion(');
-    expect(within(ai).getByRole('img', { name: /^Crew Advisors:/ })).toHaveAttribute('src', '/media/services/crew-advisors.jpg');
+    expect(within(ai).getByRole('img', { name: /^An OpenRouter usage dashboard:/ })).toHaveAttribute('src', '/media/services/openrouter-usage.jpg');
   });
 
   it('without the renderer, a chapter with a screen shows its code and the screen it becomes', () => {

@@ -42,7 +42,7 @@ test('the fork buttons are reachable by keyboard', async ({ page }) => {
   let reached = false;
   for (let i = 0; i < 40 && !reached; i += 1) {
     await page.keyboard.press('Tab');
-    reached = await page.evaluate((name) => document.activeElement?.getAttribute('aria-label') === name, DOOR_A);
+    reached = await page.evaluate(() => document.activeElement?.getAttribute('data-door-card') === 'a');
   }
   expect(reached).toBe(true);
   await page.keyboard.press('Enter');

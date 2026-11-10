@@ -26,7 +26,7 @@ export default function Contact() {
             title="Tell me what you're building."
             lede="I read every message myself. Give me the real problem, not the pitch — I'll tell you honestly whether I'm the right person to build it."
           />
-          <Reveal delay={0.1}>
+          <Reveal instant>
             <div className="space-y-4">
               <a href="mailto:chris@allencodeco.com" className="flex w-fit items-center gap-3 text-white/75 hover:text-ember">
                 <span className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-night/80">
@@ -48,7 +48,7 @@ export default function Contact() {
               </a>
             </div>
           </Reveal>
-          <Reveal delay={0.15}>
+          <Reveal instant>
             <div className={`mt-10 p-6 ${PANEL}`}>
               <p className="mono text-xs uppercase tracking-widest text-white/50">Typical response time</p>
               <p className={`${DISPLAY} mt-2 text-3xl text-ember`}>Within 1 business day</p>
@@ -56,7 +56,7 @@ export default function Contact() {
           </Reveal>
         </div>
 
-        <Reveal delay={0.05}>
+        <Reveal instant>
           <div className="lg:pt-36">
             <div className={`overflow-hidden ${PANEL}`}>
               <p aria-hidden="true" className="mono border-b border-white/10 px-5 py-2.5 text-[11px] tracking-widest text-white/55">

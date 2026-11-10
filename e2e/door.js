@@ -20,4 +20,17 @@ export async function openWithDoor(page, door, path = '/') {
     [DOOR_STORAGE_KEY, door],
   );
   await page.goto(path);
+  await fieldRunning(page);
+}
+
+/**
+ * Waits, when motion is on, until the field and its scroll engine are running. They start after the
+ * first paint (Phase 8); before then the stylesheet's smooth scrolling turns a test's jump into a
+ * second-long scroll, so a test that scrolls first would read a chapter mid-scroll.
+ * @param {import('@playwright/test').Page} page
+ */
+export async function fieldRunning(page) {
+  const reduced = await page.evaluate(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  if (reduced) return;
+  await page.locator('html[data-scroll-engine="on"]').waitFor({ state: 'attached', timeout: 10000 });
 }

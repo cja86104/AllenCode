@@ -135,7 +135,7 @@ function AuditChapter({ service, excerpt, animate }) {
       <figcaption className="sr-only">
         {`Code from ${excerpt.file} (${excerpt.repo}), which becomes ${excerpt.becomes}.`}
       </figcaption>
-      <div className="mono border-b border-white/10 px-4 py-2 text-[11px] tracking-widest text-white/45">
+      <div className="mono border-b border-white/10 px-4 py-2 text-[11px] tracking-widest text-white/60">
         {excerpt.file}
       </div>
       <pre

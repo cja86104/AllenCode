@@ -66,7 +66,9 @@ export const routes = [
       {
         path: '/',
         element: (
-          <Suspense fallback={null}>
+          // A screen's height while the home page's code arrives, so the footer never paints at the
+          // top and then jumps down (measured: CLS 0.59 on desktop before this).
+          <Suspense fallback={<div aria-hidden="true" className="min-h-screen" />}>
             <Home />
           </Suspense>
         ),

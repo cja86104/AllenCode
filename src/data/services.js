@@ -1,3 +1,4 @@
+// @ts-check
 export const services = [
   {
     slug: 'custom-saas-builds',
@@ -111,4 +112,4 @@ export const services = [
     deposit: '50% deposit to begin, balance due on delivery.',
     timeline: '1–2 weeks depending on scope',
   },
-];
+];

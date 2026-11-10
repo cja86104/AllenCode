@@ -55,7 +55,7 @@ function TemplateText({ template, compact = false }) {
       <p className="mono mt-1 text-xs uppercase tracking-[0.2em] text-white/50">{kind}</p>
       {!compact && <p className="mt-4 max-w-md text-white/70">{TEMPLATE_STORIES[template.id]}</p>}
       {template.status === 'concept' && !compact && (
-        <p className="mono mt-4 text-[10px] uppercase tracking-[0.2em] text-white/45">Concept preview, coming soon</p>
+        <p className="mono mt-4 text-[10px] uppercase tracking-[0.2em] text-white/60">Concept preview, coming soon</p>
       )}
       <Link
         to={`/contact?template=${template.id}`}
@@ -109,7 +109,7 @@ function TemplateSegment({ template, excerpt, local, active, visible, viewport, 
         <div className={compact ? 'mt-4' : 'mt-10'}>
           <TemplateText template={template} compact={compact} />
         </div>
-        <p className="mono mt-6 text-[11px] tracking-[0.25em] text-white/40">
+        <p className="mono mt-6 text-[11px] tracking-[0.25em] text-white/55">
           {index + 1} / {count}
         </p>
       </div>

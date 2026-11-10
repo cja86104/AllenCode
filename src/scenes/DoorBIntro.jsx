@@ -31,7 +31,7 @@ function IntroText({ compact = false }) {
           {paragraph}
         </p>
       ))}
-      {!compact && <p className="mono mt-6 text-xs uppercase tracking-[0.2em] text-white/45">{DOOR_B_INTRO.note}</p>}
+      {!compact && <p className="mono mt-6 text-xs uppercase tracking-[0.2em] text-white/60">{DOOR_B_INTRO.note}</p>}
     </div>
   );
 }

@@ -1,35 +1,22 @@
-import { useState } from 'react';
+// @ts-check
 import { Check, ArrowUpRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { services } from '../data/services';
 import Reveal from '../components/Reveal';
 import Magnetic from '../components/Magnetic';
-import CheckoutModal from '../components/CheckoutModal';
-import usePageMeta from '../hooks/usePageMeta';
+import usePageMeta from '../hooks/usePageMeta.js';
 import PageHeader, { BUTTON, BUTTON_QUIET, DISPLAY, PANEL, PANEL_HOVER } from '../components/PageHeader.jsx';
 
+/**
+ * The services, each leading to the brief. No prices: the deposit checkout this page once kept
+ * unwired was removed (Chris, 2026-11-10); `CheckoutModal` and `api/create-checkout-session.js`
+ * remain, and the blueprint ledger records how to wire a deposit button back in.
+ */
 export default function Services() {
   usePageMeta(
     'Services — Allen Code Co.',
     'Custom SaaS builds, MVP sprints, AI integration, technical audits, and acquisition-readiness consulting from Allen Code Co.'
   );
-  const [checkoutItem, setCheckoutItem] = useState(null);
-
-  // Deposit checkout is intentionally kept but not wired to any button right now.
-  // "Reserve a slot" routes to /contact. To restore payments, swap the Link below
-  // back to a <button onClick={() => openDeposit(s)}> and re-add the price column.
-  function openDeposit(service) {
-    const isFlat = service.priceNote.toLowerCase().includes('flat');
-    const depositAmount = isFlat ? service.startingPrice : Math.round(service.startingPrice * 0.4);
-    setCheckoutItem({
-      mode: isFlat ? 'template' : 'deposit',
-      title: service.name,
-      description: service.summary,
-      price: depositAmount,
-      balance: Math.max(service.startingPrice - depositAmount, 0),
-    });
-  }
-
   return (
     <div className="px-6 pb-24 lg:px-10">
       <div className="mx-auto max-w-7xl">
@@ -78,7 +65,7 @@ export default function Services() {
             <div>
               <h2 className={`${DISPLAY} text-3xl sm:text-4xl`}>Not sure what you need?</h2>
               <p className="mt-2 max-w-lg text-white/65">
-                Send me a few lines about the problem you're solving and I'll tell you honestly what it'll take.
+                Send me a few lines about the problem you&apos;re solving and I&apos;ll tell you honestly what it&apos;ll take.
               </p>
             </div>
             <Magnetic>
@@ -89,8 +76,6 @@ export default function Services() {
           </div>
         </Reveal>
       </div>
-
-      <CheckoutModal item={checkoutItem} onClose={() => setCheckoutItem(null)} />
     </div>
   );
 }

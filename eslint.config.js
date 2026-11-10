@@ -4,7 +4,6 @@ import globals from 'globals';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
-import { legacyFiles } from './tools/legacy-files.js';
 
 const reactFiles = ['src/**/*.{js,jsx}', 'tests/**/*.{js,jsx}'];
 
@@ -18,7 +17,6 @@ export default [
       'tools/previews/out/**',
       // Serverless routes are out of scope for the redesign (spec section 2) and stay untouched.
       'api/**',
-      ...legacyFiles,
     ],
   },
   {

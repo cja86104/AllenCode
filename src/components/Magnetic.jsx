@@ -1,11 +1,18 @@
+// @ts-check
 import { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 
+/**
+ * Pulls its child a little toward the pointer while the pointer is over it.
+ * @param {{ children: import('react').ReactNode, className?: string }} props
+ */
 export default function Magnetic({ children, className = '' }) {
-  const ref = useRef(null);
+  const ref = useRef(/** @type {HTMLDivElement | null} */ (null));
   const [pos, setPos] = useState({ x: 0, y: 0 });
 
+  /** @param {import('react').MouseEvent<HTMLDivElement>} e */
   function handleMove(e) {
+    if (!ref.current) return;
     const rect = ref.current.getBoundingClientRect();
     const x = e.clientX - rect.left - rect.width / 2;
     const y = e.clientY - rect.top - rect.height / 2;
@@ -28,4 +35,4 @@ export default function Magnetic({ children, className = '' }) {
       {children}
     </motion.div>
   );
-}
+}

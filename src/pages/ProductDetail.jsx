@@ -80,7 +80,7 @@ export default function ProductDetail() {
           <p className="mt-4 max-w-2xl text-lg text-white/70">{product.tagline}</p>
         </header>
 
-        <Reveal delay={0.05}>
+        <Reveal instant>
           <div className={`overflow-hidden ${PANEL}`}>
             <p aria-hidden="true" className="mono border-b border-white/10 px-5 py-2.5 text-[11px] tracking-widest text-white/55">
               {product.slug}/screen
@@ -188,7 +188,7 @@ export default function ProductDetail() {
                   <h3 className={`${DISPLAY} text-2xl`}>{a.name}</h3>
                   <p className="mt-3 text-sm italic text-ember/90">{a.quote}</p>
                   <p className="mt-3 text-sm leading-relaxed text-white/65">{a.desc}</p>
-                  <p className="mono mt-4 text-[10px] text-white/40">{a.traits}</p>
+                  <p className="mono mt-4 text-[10px] text-white/55">{a.traits}</p>
                 </div>
               ))}
             </div>
@@ -207,7 +207,7 @@ export default function ProductDetail() {
                       </span>
                       <span className={`${DISPLAY} text-2xl group-open:text-ember`}>{f.name}</span>
                     </span>
-                    <span aria-hidden="true" className="mono shrink-0 text-lg text-white/40 transition-transform group-open:rotate-45">
+                    <span aria-hidden="true" className="mono shrink-0 text-lg text-white/55 transition-transform group-open:rotate-45">
                       +
                     </span>
                   </summary>
@@ -260,7 +260,7 @@ export default function ProductDetail() {
         {product.stack.length > 6 && (
           <Reveal>
             <div className="mt-10">
-              <p className="mono mb-4 text-xs uppercase tracking-widest text-white/45">Full tech stack</p>
+              <p className="mono mb-4 text-xs uppercase tracking-widest text-white/60">Full tech stack</p>
               <div className="flex flex-wrap gap-2">
                 {product.stack.map((s) => (
                   <span key={s} className="mono rounded-full border border-white/10 bg-night/80 px-3 py-1 text-[11px] text-white/60">

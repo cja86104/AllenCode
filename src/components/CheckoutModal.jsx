@@ -1,7 +1,19 @@
+// @ts-check
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { X, Loader2, ShieldCheck } from 'lucide-react';
 
+/**
+ * What to charge for: a flat template price, or a deposit with the balance invoiced on delivery.
+ * @typedef {{ mode: 'template' | 'deposit', title: string, description: string, price: number, balance: number }} CheckoutItem
+ */
+
+/**
+ * Stripe checkout in a dialog. Not mounted anywhere since the Services deposit flow was removed
+ * (Chris, 2026-11-10); kept, with `api/create-checkout-session.js`, so payments can be switched back on.
+ *
+ * @param {{ item: CheckoutItem | null, onClose: () => void }} props
+ */
 export default function CheckoutModal({ item, onClose }) {
   const [stage, setStage] = useState('details');
   const [email, setEmail] = useState('');
@@ -20,8 +32,10 @@ export default function CheckoutModal({ item, onClose }) {
     onClose();
   }
 
+  /** @param {import('react').FormEvent<HTMLFormElement>} e */
   async function handleSubmit(e) {
     e.preventDefault();
+    if (!item) return;
     if (!name.trim() || !/^\S+@\S+\.\S+$/.test(email)) {
       setError('Enter your name and a valid email to continue.');
       return;
@@ -49,7 +63,7 @@ export default function CheckoutModal({ item, onClose }) {
       // /checkout-success (or /services on cancel) once payment finishes.
       window.location.href = data.url;
     } catch (err) {
-      setError(err.message || 'Something went wrong starting checkout. Please try again.');
+      setError((err instanceof Error && err.message) || 'Something went wrong starting checkout. Please try again.');
       setStage('details');
     }
   }
@@ -90,7 +104,7 @@ export default function CheckoutModal({ item, onClose }) {
                 <span className="font-display text-2xl text-orange-500">${item.price.toLocaleString()}</span>
               </div>
               {item.mode === 'deposit' && (
-                <p className="mt-2 text-xs text-white/40">Balance of ${item.balance.toLocaleString()} invoiced on delivery.</p>
+                <p className="mt-2 text-xs text-white/55">Balance of ${item.balance.toLocaleString()} invoiced on delivery.</p>
               )}
               <div className="mt-6 space-y-3">
                 <input
@@ -114,7 +128,7 @@ export default function CheckoutModal({ item, onClose }) {
               >
                 <ShieldCheck size={15} /> Pay with Stripe
               </button>
-              <p className="mt-4 text-center text-[11px] text-white/30">Secure payment via Stripe. Card details never touch our servers.</p>
+              <p className="mt-4 text-center text-[11px] text-white/55">Secure payment via Stripe. Card details never touch our servers.</p>
             </form>
           )}
 
@@ -128,4 +142,4 @@ export default function CheckoutModal({ item, onClose }) {
       </motion.div>
     </AnimatePresence>
   );
-}
+}

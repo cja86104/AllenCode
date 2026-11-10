@@ -28,6 +28,8 @@ test('no service price appears anywhere on the page', async ({ page }) => {
 
 test('the audit chapter checks its lines as the visitor scrolls', async ({ page }) => {
   await openWithDoor(page, 'a');
+  // The field and its scroll engine start after the first paint; scroll once they are running.
+  await expect(page.locator('canvas[data-field="webgl"]')).toHaveAttribute('data-ready', 'true');
   const audit = page.locator('[data-chapter="technical-audits"]');
   const top = await audit.evaluate((el) => el.getBoundingClientRect().top + window.scrollY);
   const span = await audit.evaluate((el) => el.getBoundingClientRect().height - window.innerHeight);

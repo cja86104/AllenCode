@@ -94,7 +94,6 @@ export default function Fork() {
                 layout
                 type="button"
                 aria-pressed={chosen}
-                aria-label={option.label}
                 aria-describedby={promiseId}
                 data-door-card={option.door}
                 data-opening={isOpening ? 'true' : undefined}
@@ -108,7 +107,12 @@ export default function Fork() {
                   isOpening ? 'sm:col-span-2' : ''
                 } ${chosen ? 'border-ember shadow-[0_0_40px_-12px_rgba(249,115,22,0.6)]' : 'border-white/15 hover:border-ember/70'}`}
               >
-                <span className="mono flex items-center justify-between border-b border-white/10 px-5 py-2.5 text-[11px] tracking-widest text-white/55">
+                {/* The file name and the promise are kept out of the button's name, which is the choice
+                    itself; the promise is still read, as the button's description. */}
+                <span
+                  aria-hidden="true"
+                  className="mono flex items-center justify-between border-b border-white/10 px-5 py-2.5 text-[11px] tracking-widest text-white/55"
+                >
                   <span>{option.file}</span>
                   <span
                     aria-hidden="true"
@@ -119,7 +123,7 @@ export default function Fork() {
                   <span className="block font-serif-display text-3xl italic leading-tight text-white sm:text-4xl">
                     {option.label}
                   </span>
-                  <span id={promiseId} className="mono mt-6 flex items-center text-xs text-white/65">
+                  <span id={promiseId} aria-hidden="true" className="mono mt-6 flex items-center text-xs text-white/65">
                     <span aria-hidden="true" className="mr-2 text-ember">
                       &gt;
                     </span>

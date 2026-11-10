@@ -98,7 +98,7 @@ export default function Templates() {
 
         <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((t, i) => (
-            <Reveal key={t.id} delay={(i % 3) * 0.05}>
+            <Reveal key={t.id} delay={(i % 3) * 0.05} instant={i < 3}>
               <TemplateCard template={t} />
             </Reveal>
           ))}

@@ -1,3 +1,4 @@
+// @ts-check
 export const products = [
   // ─── My Teachers Toolbox ────────────────────────────────────────────────────
   {

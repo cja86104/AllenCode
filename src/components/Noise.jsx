@@ -1,3 +1,6 @@
+// @ts-check
+
+/** The fine grain over the whole page. */
 export default function Noise() {
   return (
     <div
@@ -11,4 +14,4 @@ export default function Noise() {
       }}
     />
   );
-}
+}

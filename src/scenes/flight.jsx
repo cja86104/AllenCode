@@ -120,7 +120,7 @@ export function FlightEditor({ file, code, sourceBox, codeScale, codeOpacity, fr
       >
         <div
           style={{ height: TITLE_BAR_HEIGHT }}
-          className="mono flex items-center border-b border-white/10 px-4 text-[11px] tracking-widest text-white/45"
+          className="mono flex items-center border-b border-white/10 px-4 text-[11px] tracking-widest text-white/60"
         >
           {file}
         </div>
@@ -153,7 +153,7 @@ export function EditorPanel({ excerpt, visible = excerpt.code.length, cursor = f
       <figcaption className="sr-only">
         {`Code from ${excerpt.file} (${excerpt.repo}), which becomes ${excerpt.becomes}.`}
       </figcaption>
-      <div className="mono border-b border-white/10 px-4 py-2 text-[11px] tracking-widest text-white/45">
+      <div className="mono border-b border-white/10 px-4 py-2 text-[11px] tracking-widest text-white/60">
         {excerpt.file}
       </div>
       <pre className="mono overflow-x-auto p-5 text-[13px] leading-[19px] [font-variant-ligatures:none]">
