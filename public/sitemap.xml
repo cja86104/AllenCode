@@ -12,26 +12,25 @@
     before the request is ever made and Google retired the AJAX-crawling
     scheme that used to work around that.
 
-    That's fixed: App.jsx now uses <BrowserRouter>, and vercel.json adds
-    the rewrite so a direct hit on any of these paths serves index.html
-    instead of 404ing (excluding /api/*, which stays routed to the
-    serverless functions). Every real route is now a genuine, separately
-    fetchable URL, so all of them are listed here.
+    That's fixed: App.jsx uses the browser router, and every path below is
+    built as its own HTML file (Phase 9, 2026-11-10: tools/prerender), so
+    a direct hit serves that page; vercel.json rewrites any other path
+    (except /api/*, which stays routed to the serverless functions) to the
+    shell, spa.html. Every real route is a genuine, separately fetchable
+    URL, so all of them are listed here.
 
     Deliberately NOT listed: /checkout-success (post-purchase
     transactional page, not something search should surface) and the
     catch-all 404 route.
 
-  KNOWN LIMITATION — SOCIAL PREVIEW CRAWLERS
-    This is still a client-rendered SPA with no server-side rendering.
-    Google indexes it fine because Googlebot executes the JS and renders
-    each route before indexing. Facebook/LinkedIn/Twitter/Slack link-
-    preview bots do NOT execute JavaScript — they only read the raw HTML
-    Vercel returns for a given path, which is the same static index.html
-    for every route. Until per-route static HTML or prerendering exists,
-    sharing a deep link (e.g. /products/underfire-ai) on social platforms
-    will show the homepage's Open Graph tags, not that page's own. Search
-    indexing is unaffected by this; only social link previews are.
+  PER-PAGE HTML (was KNOWN LIMITATION — SOCIAL PREVIEW CRAWLERS)
+    `npm run build` prerenders every <loc> below into its own HTML file
+    with that page's own title, description, canonical, Open Graph and
+    Twitter tags and its real content (Phase 9). Link-preview bots
+    (Facebook, LinkedIn, X, Slack) and crawlers that do not run JavaScript
+    now read each page's own tags. A path added here is prerendered on the
+    next build; it must be a real route that answers 200, or the build
+    fails naming it.
 
   NAMESPACE
     Correct sitemaps.org namespace (singular "sitemap" in the old xmlns

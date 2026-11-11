@@ -11,6 +11,7 @@ export default [
   {
     ignores: [
       'dist/**',
+      'dist-ssr/**',
       'node_modules/**',
       'test-results/**',
       'playwright-report/**',

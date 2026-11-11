@@ -13,14 +13,11 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 
     <!--
-      Static defaults below. usePageMeta.js (src/hooks/usePageMeta.js)
-      overrides title/description/canonical/og:*/twitter:* per route once
-      React mounts — every page in src/pages already calls it. These static
-      values are what's actually seen by anything that reads raw HTML
-      without running JS: the very first paint before React mounts, and
-      social link-preview bots (Facebook/LinkedIn/Slack) which never
-      execute JS at all. So these represent the site/homepage generally,
-      and every other page's real per-route values live in that hook.
+      Static defaults below. The build writes each sitemap page's own title, description,
+      canonical, og:* and twitter:* into that page's prebuilt HTML (Phase 9, tools/prerender/html.mjs
+      applyHead), so link-preview bots and crawlers that never run JavaScript read the right page.
+      usePageMeta.js (src/hooks/usePageMeta.js) keeps them right as the visitor moves between pages.
+      These values remain in spa.html, the shell served for every address without a prebuilt page.
     -->
     <link rel="canonical" href="https://www.allencodeco.com/" />
 
@@ -73,8 +70,9 @@
   <body class="bg-[#0a0a0a]">
     <div id="root"></div>
     <!--
-      What a reader without JavaScript gets (Phase 8): what the studio is and the way to every page.
-      Crawlers that run JavaScript see the full site; prerendering is Chris's decision (spec section 11).
+      What a reader without JavaScript gets on the shell (spa.html), for addresses without a prebuilt
+      page: what the studio is and the way to every page. The prebuilt pages replace this block with
+      their real content (Phase 9, tools/prerender/html.mjs injectApp).
     -->
     <noscript>
       <main style="max-width: 40rem; margin: 0 auto; padding: 4rem 1.5rem; color: #f5f5f5; font-family: system-ui, sans-serif; line-height: 1.6">

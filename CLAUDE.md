@@ -27,7 +27,7 @@ This repo uses npm. The scripts that exist in `package.json`:
 - `npm run lint` — ESLint with zero warnings allowed. Inline `eslint-disable` comments are turned off by config.
 - `npm run typecheck` — `tsc`, with `checkJs` on for every file and no exclusion list.
 - `npm test` — Vitest unit tests.
-- `npm run build` — Vite production build.
+- `npm run build` — Vite production build, then the server bundle (`dist-ssr/`), then `tools/prerender/prerender.mjs`, which writes every sitemap page to its own HTML in `dist/` and the shell to `dist/spa.html` (Phase 9). `npm run preview` answers like Vercel (`tools/prerender/vercelPreview.mjs`).
 - `npm run budget` — fails if the gzip size of the entry script, entry CSS, home chunk, renderer chunk or any other chunk passes its limit (`tools/budget/check.mjs`).
 - `npm run test:e2e` — Playwright browser tests, including accessibility (`e2e/a11y.spec.js`) and SEO (`e2e/seo.spec.js`). Run it whenever a change touches routes, scenes or the renderer. On a new machine, or after Playwright is updated, run `npx playwright install chromium` once first, or every test fails with "Executable doesn't exist".
 - `npm run excerpts:verify` — checks every code excerpt on the site still matches its source repo at the recorded commit.

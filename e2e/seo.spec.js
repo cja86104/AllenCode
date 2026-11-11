@@ -3,27 +3,7 @@ import { expect, test } from '@playwright/test';
 
 const SITE = 'https://www.allencodeco.com';
 
-test.describe('without JavaScript', () => {
-  test.use({ javaScriptEnabled: false });
-
-  test('with JavaScript disabled the static shell still has the title, description and canonical', async ({ page }) => {
-    await page.goto('/');
-    await expect(page).toHaveTitle(/Allen Code Co\./);
-    await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', /Custom development/);
-    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', `${SITE}/`);
-    await expect(page.locator('meta[property="og:image"]')).toHaveAttribute('content', `${SITE}/og-image.png`);
-    const jsonLd = JSON.parse((await page.locator('script[type="application/ld+json"]').textContent()) ?? '{}');
-    expect(jsonLd['@type']).toBe('Organization');
-  });
-
-  test('a reader without JavaScript still gets what the studio is and a link to every page', async ({ page }) => {
-    await page.goto('/');
-    await expect(page.getByRole('heading', { level: 1, name: 'Allen Code Co.' })).toBeVisible();
-    for (const path of ['/products', '/services', '/templates', '/about', '/contact']) {
-      await expect(page.locator(`noscript a[href="${path}"], main a[href="${path}"]`).first()).toBeAttached();
-    }
-  });
-});
+// What a reader without JavaScript gets, page by page, is in e2e/prerender.spec.js (Phase 9).
 
 const PAGES = [
   { path: '/', title: /Allen Code Co\. — Custom Software/ },

@@ -90,6 +90,8 @@ out
 # Nuxt.js build / generate output
 .nuxt
 dist
+# The server bundle the prerender step renders pages with (Phase 9)
+dist-ssr
 
 # Gatsby files
 .cache/
