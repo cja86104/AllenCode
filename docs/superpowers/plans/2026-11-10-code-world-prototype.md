@@ -81,8 +81,8 @@
 
 ### Task P5: Measure and decide
 
-- [ ] **Step 1:** Chris opens `/lab/world?meter=1` on his phone (deployed to a Vercel preview, since a phone cannot reach the local server) and on his desktop, scrolls top to bottom twice, and reports the median and p95 shown, plus the phone model.
-- [ ] **Step 2:** Record the numbers and Chris's verdict in the blueprint. Go: write the full "Code world" spec (both roads, every service, product and template landmark, the workshop, the idea, the plain-page ending, the prerender and fallback layers). No-go: record why and what would change it. Stop.
+- [x] **Step 1:** Chris opens `/lab/world?meter=1` on his phone (deployed to a Vercel preview, since a phone cannot reach the local server) and on his desktop, scrolls top to bottom twice, and reports the median and p95 shown, plus the phone model.
+- [x] **Step 2:** Record the numbers and Chris's verdict in the blueprint. Go: write the full "Code world" spec (both roads, every service, product and template landmark, the workshop, the idea, the plain-page ending, the prerender and fallback layers). No-go: record why and what would change it. Stop.
 
 ## Open questions for Chris (ask at Task P2's stop, not before)
 
@@ -118,3 +118,6 @@
 - Task P4 Ruling: the camera's last stop moved from (-5.2, 1.8, -50.5) to (-6, 1.8, -50.5), straight in front of the landmark — the unit test found the screen seen 0.8 units off-axis (projected aspect 1.53, not 1.6), so a flat real screen laid over it would not line up at its edges; facing it squarely, the two match.
 - Task P4 Ruling: the real screen sits above the dark fade under the stop's words (`z-[6]`, the fade is `z-[5]`, the words `z-10`), so the screen is never dimmed; checked in the screenshots for overlap with the words on desktop and phone.
 - Task P4 verification: `npm run verify` exit 0 (289/289 unit; entry script 146.21 kB; lab 8.08 of 40); `npm run test:e2e` 172/172. Synced 12 files (CRLF, hashes match; P3's files included, as Chris had not committed P3).
+- Task P5 measurements (Chris, 2026-11-10, on www.allencodeco.com/lab/world?meter=1, two full scrolls each): desktop "high · frames 2000 · median 10.0 ms · p95 10.1 ms"; newest iPhone (Safari) "low · frames 2000 · median 17.0ms" (p95 not reported yet). Chris's verdict: "looks good on both".
+- Task P5 Ruling: the frame meter measures the time between frames, which can never be shorter than the display's refresh, so the plan's desktop target (median at most 8 ms) could only be met on a display faster than 125 Hz. Desktop's 10.0 ms median with a 10.1 ms 95th percentile is a 100 Hz display holding every frame: a pass. The iPhone's 17.0 ms median is Safari's 60 frames a second (16.7 ms, with Safari's whole-millisecond timestamps rounding most frames to 17): at the display's cap, so the median target is met in substance; the go/no-go on the phone waits on its 95th percentile (target at most 25 ms). Both run on their tier's full budget: desktop `high` (40,000 glyphs), phone `low` (12,000; every screen under 768 px wide is `low`).
+- Task P5 result (Chris, 2026-11-10): iPhone 95th percentile "p95 17.0 phone", under the 25 ms target. GO: desktop median 10.0 ms / p95 10.1 ms, iPhone median 17.0 ms / p95 17.0 ms, both every frame at their display's refresh; Chris: "looks good on both". The full spec is `docs/superpowers/specs/2026-11-10-code-world-design.md` (draft, 2026-11-10).
