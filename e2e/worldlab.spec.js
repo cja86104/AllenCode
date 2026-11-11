@@ -54,6 +54,13 @@ test('scrolling moves the camera: the drawn frame changes between the top and th
   expect(Number(top)).toBeLessThan(0.05);
 });
 
+test('the journey is 7.2 screens of scroll (Chris, 2026-11-10: eight scrolls to the doors was long; 10 percent shorter)', async ({ page }) => {
+  await page.goto(LAB);
+  await page.locator('canvas[data-world][data-ready="true"]').waitFor();
+  const screens = await page.evaluate(() => document.documentElement.scrollHeight / window.innerHeight);
+  expect(screens).toBeCloseTo(7.2, 1);
+});
+
 test('?meter=1 shows the frame meter: frames, median and 95th percentile', async ({ page }) => {
   await page.goto(`${LAB}?meter=1`);
   const meter = page.locator('[data-frame-meter]');

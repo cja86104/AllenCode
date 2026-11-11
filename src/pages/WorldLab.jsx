@@ -25,6 +25,8 @@ const STOPS = Object.freeze([
 /** The world is built only from approved code (spec section 5). */
 const SOURCES_APPROVED = Boolean(gate.approved && ambient.approved && underfire.approved);
 const SIGN_LABELS = 'business/family/';
+/** The journey's length in screens of scroll. */
+const JOURNEY_SCREENS = 7.2;
 /** The field's device tiers, as the world's glyph budgets name them. */
 const TIERS = /** @type {const} */ ({ low: 'low', medium: 'mid', high: 'high' });
 
@@ -149,7 +151,8 @@ export default function WorldLab() {
   if (mode === 'plain') return <PlainLab />;
 
   return (
-    <div className="relative bg-night text-white" style={{ height: '800vh' }}>
+    // 7.2 screens of scroll (Chris, 2026-11-10: eight scrolls to the doors was long; 10 percent shorter).
+    <div className="relative bg-night text-white" style={{ height: `${JOURNEY_SCREENS * 100}vh` }}>
       {mode === 'world' && <canvas ref={canvasRef} data-world aria-hidden="true" className="fixed inset-0 h-screen w-screen" />}
       <header className="fixed left-6 top-6 z-10 space-y-2">
         <p className="mono text-xs tracking-widest text-ember">~/allencode/lab/world</p>

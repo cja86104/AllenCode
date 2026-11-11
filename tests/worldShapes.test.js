@@ -1,6 +1,6 @@
 // @ts-check
 import { describe, expect, it } from 'vitest';
-import { budgetFor, buildWorld, codeRoad, distanceToPath, editorSlab, forkSigns, screenSculpture } from '../src/world/shapes.js';
+import { budgetFor, buildWorld, codeRoad, distanceToPath, editorSlab, forkSigns, roadEdges, screenSculpture } from '../src/world/shapes.js';
 import gate from '../src/content/excerpts/gate.js';
 import ambient from '../src/content/excerpts/ambient.js';
 import underfire from '../src/content/excerpts/product-underfire-ai.js';
@@ -61,6 +61,36 @@ describe('world shapes (Code world prototype, Task P1)', () => {
     }
   });
 
+  it('writes the signposts’ words in white, so they read against the dark (Chris, 2026-11-10: "washed out")', () => {
+    const signs = forkSigns(['business/', 'family/'], { at: [0, 0, -40] }, 1);
+    const board = signs.glyphs.length - 2 * 11;
+    expect(board).toBe('business/family/'.length);
+    let words = 0;
+    for (let i = 0; i < signs.glyphs.length; i += 1) {
+      const [r, g, b, a] = signs.colors.subarray(i * 4, i * 4 + 4);
+      if (signs.positions[i * 3 + 1] < 2) continue; // the posts
+      words += 1;
+      expect(Math.min(r, g, b), String.fromCharCode(signs.glyphs[i])).toBeGreaterThan(0.95);
+      expect(a).toBe(1);
+    }
+    expect(words).toBe(board);
+  });
+
+  it('edges the road with a line of ember characters on both sides, evenly spaced (Chris, 2026-11-10)', () => {
+    const edges = roadEdges(ambient.code, { path: TRUNK, width: 4, spacing: 0.35 }, 1);
+    const length = 37;
+    expect(edges.glyphs.length).toBe(2 * (Math.floor(length / 0.35) + 1));
+    const allowed = charsIn(ambient.code);
+    for (let i = 0; i < edges.glyphs.length; i += 1) {
+      const x = edges.positions[i * 3];
+      const z = edges.positions[i * 3 + 2];
+      expect(Math.abs(distanceToPath([x, z], TRUNK) - 2)).toBeLessThanOrEqual(0.05 + F32);
+      expect(allowed.has(String.fromCharCode(edges.glyphs[i]))).toBe(true);
+      const [r, g, b] = edges.colors.subarray(i * 4, i * 4 + 3);
+      expect([r, g, b].map((v) => Math.round(v * 255))).toEqual([0xf9, 0x73, 0x16]);
+    }
+  });
+
   it('puts the landmark sculpture on its screen rectangle', () => {
     const s = screenSculpture(underfire.code, { width: 6, height: 3.75, center: [-6, 1.8, -58], count: 1500 }, 2);
     for (let i = 0; i < s.glyphs.length; i += 1) {
@@ -82,7 +112,17 @@ describe('world shapes (Code world prototype, Task P1)', () => {
       const world = buildWorld(tier, SOURCES, 1);
       const total = world.reduce((sum, part) => sum + part.shape.glyphs.length, 0);
       expect(total).toBeLessThanOrEqual(budgetFor(tier));
-      expect(world.map((p) => p.name).sort()).toEqual(['business-road', 'editor', 'family-road', 'landmark', 'signs', 'trunk-road']);
+      expect(world.map((p) => p.name).sort()).toEqual([
+        'business-edges',
+        'business-road',
+        'editor',
+        'family-edges',
+        'family-road',
+        'landmark',
+        'signs',
+        'trunk-edges',
+        'trunk-road',
+      ]);
     }
   });
 });

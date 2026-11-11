@@ -13,6 +13,7 @@
 /** Ember #f97316 and the pale code colour, as 0..1 rgb. */
 const EMBER = [0xf9 / 255, 0x73 / 255, 0x16 / 255];
 const PALE = [0.86, 0.86, 0.84];
+const WHITE = [1, 1, 1];
 
 /**
  * A small seeded random generator (mulberry32), so the same seed always builds the same world.
@@ -137,8 +138,49 @@ export function codeRoad(code, { path, width, count }, seed) {
 }
 
 /**
- * The fork's two signposts, built from their own labels: each label across a board, and its
- * characters repeated down a post. The first label stands on the left, the second on the right.
+ * The road's edges: a line of ember characters along each side of `path`, `spacing` apart, at half
+ * `width` from its centre, so the road reads as a road and not a scatter (Chris, 2026-11-10). The
+ * characters follow `code` in reading order.
+ * @param {string} code
+ * @param {{ path: ReadonlyArray<Point2>, width: number, spacing: number }} options
+ * @param {number} seed
+ * @returns {Shape}
+ */
+export function roadEdges(code, { path, width, spacing }, seed) {
+  const ink = inkOf(code);
+  const random = seeded(seed);
+  const segments = [];
+  let total = 0;
+  for (let i = 0; i < path.length - 1; i += 1) {
+    const length = Math.hypot(path[i + 1][0] - path[i][0], path[i + 1][1] - path[i][1]);
+    segments.push({ from: path[i], to: path[i + 1], start: total, length });
+    total += length;
+  }
+  const perSide = Math.floor(total / spacing) + 1;
+  const shape = emptyShape(perSide * 2, 0.1);
+  let i = 0;
+  for (const side of [-1, 1]) {
+    for (let k = 0; k < perSide; k += 1) {
+      const along = Math.min(total, k * spacing);
+      const segment = segments.find((s) => along <= s.start + s.length) ?? segments[segments.length - 1];
+      const t = segment.length === 0 ? 0 : (along - segment.start) / segment.length;
+      const dx = (segment.to[0] - segment.from[0]) / (segment.length || 1);
+      const dz = (segment.to[1] - segment.from[1]) / (segment.length || 1);
+      // A hair of jitter so the line looks drawn, never more than 2 cm off the edge.
+      const offset = side * (width / 2) + (random() - 0.5) * 0.04;
+      const x = segment.from[0] + (segment.to[0] - segment.from[0]) * t - dz * offset;
+      const z = segment.from[1] + (segment.to[1] - segment.from[1]) * t + dx * offset;
+      put(shape, i, x, 0.02, z, ink[(k + (side > 0 ? 7 : 0)) % ink.length], EMBER, 0.85);
+      i += 1;
+    }
+  }
+  return shape;
+}
+
+/**
+ * The fork's two signposts, built from their own labels: each label across a board in white, and
+ * its characters repeated down an ember post. The first label stands on the left, the second on
+ * the right.
  * @param {ReadonlyArray<string>} labels
  * @param {{ at: Vec3 }} options Where the road forks, on the ground.
  * @param {number} seed
@@ -156,7 +198,8 @@ export function forkSigns(labels, { at }, seed) {
     const x0 = at[0] + side * 3.2;
     const z0 = at[2] - 1;
     ink.forEach((char, j) => {
-      put(shape, i, x0 + (j - (ink.length - 1) / 2) * 0.3, at[1] + 2.2, z0, char, EMBER, 0.95);
+      // White, so the words read against the dark (Chris, 2026-11-10: ember letters "get washed out").
+      put(shape, i, x0 + (j - (ink.length - 1) / 2) * 0.3, at[1] + 2.2, z0, char, WHITE, 1);
       i += 1;
     });
     for (let k = 0; k < postGlyphs; k += 1) {
@@ -201,6 +244,9 @@ export function budgetFor(tier) {
   return { low: 12000, mid: 24000, high: 40000 }[tier];
 }
 
+/** Distance between the characters lining the road's edges, in world units. */
+const EDGE_SPACING = 0.35;
+
 /** The road's centre lines: the trunk to the fork, then a branch each way. */
 export const ROAD_PATHS = Object.freeze({
   trunk: /** @type {Array<Point2>} */ ([[0, -3], [0, -40]]),
@@ -210,7 +256,9 @@ export const ROAD_PATHS = Object.freeze({
 
 /**
  * The whole prototype stretch for a tier, within its budget: the empty file, the road and its two
- * branches, the signposts, and the UnderFire landmark at the end of the business road.
+ * branches with their ember edges, the signposts, and the UnderFire landmark at the end of the
+ * business road. The editor, signs and edges are exact; the rest of the budget is split between
+ * the road's scatter and the landmark.
  * @param {Tier} tier
  * @param {{ gate: string, road: string, landmark: string }} sources Approved excerpt code.
  * @param {number} seed
@@ -219,12 +267,21 @@ export const ROAD_PATHS = Object.freeze({
 export function buildWorld(tier, sources, seed) {
   const editor = editorSlab(sources.gate, seed);
   const signs = forkSigns(['business/', 'family/'], { at: [0, 0, -40] }, seed + 1);
-  const rest = budgetFor(tier) - editor.glyphs.length - signs.glyphs.length;
+  const edges = {
+    trunk: roadEdges(sources.road, { path: ROAD_PATHS.trunk, width: 4, spacing: EDGE_SPACING }, seed + 6),
+    business: roadEdges(sources.road, { path: ROAD_PATHS.business, width: 3.2, spacing: EDGE_SPACING }, seed + 7),
+    family: roadEdges(sources.road, { path: ROAD_PATHS.family, width: 3.2, spacing: EDGE_SPACING }, seed + 8),
+  };
+  const fixed = [editor, signs, edges.trunk, edges.business, edges.family].reduce((sum, shape) => sum + shape.glyphs.length, 0);
+  const rest = budgetFor(tier) - fixed;
   if (rest <= 0) throw new Error(`The ${tier} budget leaves no glyphs for the road.`);
   const share = (/** @type {number} */ fraction) => Math.floor(rest * fraction);
   return [
     { name: 'editor', shape: editor },
     { name: 'trunk-road', shape: codeRoad(sources.road, { path: ROAD_PATHS.trunk, width: 4, count: share(0.4) }, seed + 2) },
+    { name: 'trunk-edges', shape: edges.trunk },
+    { name: 'business-edges', shape: edges.business },
+    { name: 'family-edges', shape: edges.family },
     { name: 'business-road', shape: codeRoad(sources.road, { path: ROAD_PATHS.business, width: 3.2, count: share(0.2) }, seed + 3) },
     { name: 'family-road', shape: codeRoad(sources.road, { path: ROAD_PATHS.family, width: 3.2, count: share(0.15) }, seed + 4) },
     { name: 'signs', shape: signs },
