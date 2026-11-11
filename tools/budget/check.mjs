@@ -18,10 +18,12 @@ export const BUDGETS = Object.freeze([
   { name: 'entry CSS (every page)', limitKb: 9, match: (file, entry) => file === entry.style },
   { name: 'home page chunk', limitKb: 16, match: (file) => /^Home-.*\.js$/.test(file) },
   { name: 'renderer chunk (after first paint)', limitKb: 62, match: (file) => /^FieldScene-.*\.js$/.test(file) },
+  // The Code world prototype's lab page (/lab/world), which the site never loads (Task P2).
+  { name: 'code world lab (lab route only)', limitKb: 40, match: (file) => /^WorldLab-.*\.js$/.test(file) },
   {
     name: 'any other script chunk',
     limitKb: 12,
-    match: (file, entry) => file.endsWith('.js') && file !== entry.script && !/^(Home|FieldScene)-/.test(file),
+    match: (file, entry) => file.endsWith('.js') && file !== entry.script && !/^(Home|FieldScene|WorldLab)-/.test(file),
   },
 ]);
 

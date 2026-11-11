@@ -23,6 +23,10 @@ import RouteError from './pages/RouteError.jsx';
 // add nothing to the bundle the inner pages download (spec section 9).
 const Home = lazy(() => import('./pages/Home.jsx'));
 
+// The Code world prototype (docs/superpowers/plans/2026-11-10-code-world-prototype.md): unlinked,
+// noindex, outside the site's shell, and in its own chunk, so the site never downloads it.
+const WorldLab = lazy(() => import('./pages/WorldLab.jsx'));
+
 /**
  * The frame every page shares: the skip link, the code field behind everything (Chris, 2026-11-09:
  * on every page, not only the home page), the nav over the page, and the footer.
@@ -89,6 +93,15 @@ export function createRoutes(HomePage) {
         { path: '/checkout-success', element: <CheckoutSuccess /> },
         { path: '*', element: <NotFound /> },
       ],
+    },
+    {
+      path: '/lab/world',
+      errorElement: <RouteError />,
+      element: (
+        <Suspense fallback={<div aria-hidden="true" className="min-h-screen bg-night" />}>
+          <WorldLab />
+        </Suspense>
+      ),
     },
   ];
 }

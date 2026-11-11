@@ -21,11 +21,16 @@
 # genuine, separately fetchable URL and the sitemap lists all of them —
 # see the comment block in sitemap.xml for what's listed and why.
 
+# /lab/ holds unlinked prototypes (the Code world, 2026-11-10); they are
+# noindex as well, and never listed in the sitemap.
+
 User-agent: *
 Allow: /
+Disallow: /lab/
 
 User-agent: bingbot
 Allow: /
+Disallow: /lab/
 
 Sitemap: https://www.allencodeco.com/sitemap.xml
 Host: https://www.allencodeco.com
