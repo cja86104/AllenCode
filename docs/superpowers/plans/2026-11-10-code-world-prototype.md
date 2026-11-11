@@ -59,8 +59,8 @@
 - Produces `cameraAt(progress: number): { eye: [number, number, number], target: [number, number, number], fov: number }` (progress clamped to 0..1; Catmull-Rom through the keyframes of the table above).
 - Produces in `shapes.js`, each returning `{ positions: Float32Array, glyphs: Uint16Array, colors: Float32Array }` (xyz per glyph, atlas index per glyph, rgba per glyph), deterministic for a seed: `editorSlab(code, seed)`, `codeRoad(code, { length, width }, seed)`, `forkSigns(labels, seed)`, `screenSculpture(code, { width, height }, seed)`, and `budgetFor(tier: 'low' | 'mid' | 'high'): number` (12 000 / 24 000 / 40 000 glyphs).
 
-- [ ] **Step 1:** Tests: `cameraAt` is continuous (no jump > 0.5 world units between progress steps of 0.001), clamps outside 0..1, passes through each keyframe at its stop; every shape uses only characters of its source excerpt (no glyph index outside `collectGlyphs([code])`); same seed gives identical arrays; `codeRoad` points stay within its width; the sum of all shapes at each tier is ≤ `budgetFor(tier)`. Run: FAIL (modules missing).
-- [ ] **Step 2:** Implement. Run: PASS. `npm run verify`. Stop.
+- [x] **Step 1:** Tests: `cameraAt` is continuous (no jump > 0.5 world units between progress steps of 0.001), clamps outside 0..1, passes through each keyframe at its stop; every shape uses only characters of its source excerpt (no glyph index outside `collectGlyphs([code])`); same seed gives identical arrays; `codeRoad` points stay within its width; the sum of all shapes at each tier is ≤ `budgetFor(tier)`. Run: FAIL (modules missing).
+- [x] **Step 2:** Implement. Run: PASS. `npm run verify`. Stop.
 
 ### Task P2: Renderer and the lab route
 
@@ -88,3 +88,12 @@
 
 1. Which phone (model and browser) is the measuring phone?
 2. The rail's words: "empty file → shipped" or something in his voice?
+
+## Execution ledger
+
+- Task P1 (2026-11-10): `src/world/camera.js` (`CAMERA_KEYS`: seven stops at progress 0, 0.15, 0.3, 0.45, 0.6, 0.75, 1, named empty file, into the code, the road, the fork, first landmark; `cameraAt(progress)`: uniform Catmull-Rom through the stops, clamped, a pure function of progress) and `src/world/shapes.js` (`seeded` mulberry32; `editorSlab`, `codeRoad`, `forkSigns`, `screenSculpture`, `distanceToPath`, `budgetFor`, `ROAD_PATHS`, `buildWorld`). World units are about a metre: the empty file at z = 0, the fork at z = -40, the UnderFire landmark at (-6, 1.8, -58). Sources are the approved `gate`, `ambient` and `product-underfire-ai` excerpts. Tests: `tests/worldCamera.test.js` (5) and `tests/worldShapes.test.js` (7), red first (modules missing).
+- Task P1 Ruling: shapes carry the character itself (`glyphs`: UTF-16 codes), not an atlas index as the plan's interface said — a shape then does not depend on the atlas's order, and the renderer (Task P2) maps characters to atlas cells once; the test "only characters of its own source" checks the characters directly — cost if wrong: one lookup table in P2.
+- Task P1 Ruling: every shape also carries one `size` (glyph height in world units: editor 0.096, road 0.09, signs 0.26, landmark 0.07) — the signposts must read from far away and the road must not; per-shape rather than per-glyph keeps the buffer small — cost if wrong: a per-glyph size attribute in P2.
+- Task P1 Ruling: `buildWorld(tier, sources, seed)` added (not in the plan's interface list) so the budget test checks the real composition: editor and signs exact, then the rest of the tier's budget split road trunk 40 percent, business branch 20, family branch 15, landmark 25.
+- Task P1 Ruling: the shape tests compare positions to 1e-5, not 1e-9 — positions are 32-bit floats (what the GPU reads), and 1.8 + 1.875 stored as float32 is 3e-9 over; the code is unchanged.
+- Task P1 verification: `npm run verify` exit 0 (269/269 unit); the site's bundles are byte-identical (nothing imports `src/world/` yet). Synced 4 files (CRLF, hashes match).
