@@ -54,6 +54,13 @@ describe('server render', () => {
     expect(html).not.toContain('your-idea.txt');
   });
 
+  it('writes no NUL character into any page (React 18 streaming wrote two before a multi-byte "—" at its buffer edge)', async () => {
+    for (const path of Object.keys(TITLES)) {
+      const { html } = await render(path);
+      expect(html.includes('\u0000'), path).toBe(false);
+    }
+  });
+
   it('renders an unknown path as the 404 page', async () => {
     const { html, meta, status } = await render('/nope');
     expect(status).toBe(404);

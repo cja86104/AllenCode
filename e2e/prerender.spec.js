@@ -81,3 +81,10 @@ test('a prebuilt page arrives with its content, and its old addresses redirect t
     expect(response.headers()['location']).toBe('/about');
   }
 });
+
+test('no prebuilt page carries a NUL byte (found on the live /products/underfire-ai, Task 9.4)', async ({ request }) => {
+  for (const { path } of PAGES) {
+    const body = await (await request.get(path)).body();
+    expect(body.includes(0), path).toBe(false);
+  }
+});

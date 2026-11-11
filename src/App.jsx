@@ -57,33 +57,44 @@ function AppShell() {
   );
 }
 
-/** Every route the site serves, unchanged by the move to the data router. */
-export const routes = [
-  {
-    element: <AppShell />,
-    errorElement: <RouteError />,
-    children: [
-      {
-        path: '/',
-        element: (
-          // A screen's height while the home page's code arrives, so the footer never paints at the
-          // top and then jumps down (measured: CLS 0.59 on desktop before this).
-          <Suspense fallback={<div aria-hidden="true" className="min-h-screen" />}>
-            <Home />
-          </Suspense>
-        ),
-      },
-      { path: '/products', element: <Products /> },
-      { path: '/products/:slug', element: <ProductDetail /> },
-      { path: '/services', element: <Services /> },
-      { path: '/templates', element: <Templates /> },
-      { path: '/about', element: <About /> },
-      { path: '/contact', element: <Contact /> },
-      { path: '/checkout-success', element: <CheckoutSuccess /> },
-      { path: '*', element: <NotFound /> },
-    ],
-  },
-];
+/**
+ * Every route the site serves, unchanged by the move to the data router. `HomePage` is the home
+ * page's component: the browser passes the lazily loaded one (below); the build's server render
+ * passes it imported directly (src/entry-server.jsx), so the page renders in one synchronous pass.
+ * Both sit in the same Suspense boundary, so the HTML matches what the browser hydrates.
+ * @param {import('react').ComponentType} HomePage
+ */
+export function createRoutes(HomePage) {
+  return [
+    {
+      element: <AppShell />,
+      errorElement: <RouteError />,
+      children: [
+        {
+          path: '/',
+          element: (
+            // A screen's height while the home page's code arrives, so the footer never paints at the
+            // top and then jumps down (measured: CLS 0.59 on desktop before this).
+            <Suspense fallback={<div aria-hidden="true" className="min-h-screen" />}>
+              <HomePage />
+            </Suspense>
+          ),
+        },
+        { path: '/products', element: <Products /> },
+        { path: '/products/:slug', element: <ProductDetail /> },
+        { path: '/services', element: <Services /> },
+        { path: '/templates', element: <Templates /> },
+        { path: '/about', element: <About /> },
+        { path: '/contact', element: <Contact /> },
+        { path: '/checkout-success', element: <CheckoutSuccess /> },
+        { path: '*', element: <NotFound /> },
+      ],
+    },
+  ];
+}
+
+/** The routes the browser runs, with the home page loaded on demand. */
+export const routes = createRoutes(Home);
 
 export default function App() {
   // Created on first render, so the router starts from the address the page opened at.

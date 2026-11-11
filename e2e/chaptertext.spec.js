@@ -27,13 +27,21 @@ for (const chapter of CHAPTERS) {
       await page.setViewportSize(screen);
       await openWithDoor(page, chapter.door);
       const section = page.locator(chapter.section);
-      await page.evaluate((selector) => {
-        const el = document.querySelector(selector);
-        if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY, behavior: 'instant' });
-      }, chapter.section);
-      await expect(section.locator('h2')).toBeVisible();
+      // The remembered door applies just after the page hydrates, so the chapter may not exist yet.
+      await section.waitFor({ state: 'attached' });
       // The pinned frame is laid out from the measured window once the page has hydrated.
       await page.waitForLoadState('networkidle');
+      // Scroll to the chapter's top until it is there (the scroll engine can still be settling).
+      await expect
+        .poll(() =>
+          section.evaluate((el) => {
+            const top = el.getBoundingClientRect().top;
+            if (Math.abs(top) > 2) window.scrollTo({ top: top + window.scrollY, behavior: 'instant' });
+            return Math.abs(el.getBoundingClientRect().top) <= 2;
+          }),
+        )
+        .toBe(true);
+      await expect(section.locator('h2')).toBeVisible();
       const m = await section.evaluate((el) => {
         const title = /** @type {HTMLElement} */ (el.querySelector('h2'));
         const box = /** @type {HTMLElement} */ (title.parentElement).getBoundingClientRect();
