@@ -12,6 +12,8 @@ import DoneForYou from '../scenes/DoneForYou.jsx';
 import Builder from '../scenes/Builder.jsx';
 import IdeaSketch from '../scenes/IdeaSketch.jsx';
 import BriefChapter from '../scenes/BriefChapter.jsx';
+import WorldJourney from '../scenes/WorldJourney.jsx';
+import { useWorldHome } from '../world/worldSwitch.js';
 
 /**
  * The home page: the Source to Screen experience (spec section 4). The shared opening and the fork;
@@ -25,15 +27,23 @@ export default function Home() {
     'Custom development, web design, UI/UX, and AI integration — built around your business. Tailored work for small business owners and founders.',
   );
   const { door } = useDoor();
+  // The Code World journey replaces the gate and the fork behind `/?world=1` (Code World W1.3).
+  const world = useWorldHome();
 
   return (
     <>
-      <Gate includeDrafts={false} />
+      {world ? (
+        <WorldJourney />
+      ) : (
+        <>
+          <Gate includeDrafts={false} />
 
-      <section className="relative z-10 mx-auto flex max-w-5xl flex-col items-center justify-center px-6 py-16 lg:px-10 lg:py-20">
-        <p className="mono mb-6 self-start text-xs uppercase tracking-[0.3em] text-ember">Pick a file to open</p>
-        <Fork />
-      </section>
+          <section className="relative z-10 mx-auto flex max-w-5xl flex-col items-center justify-center px-6 py-16 lg:px-10 lg:py-20">
+            <p className="mono mb-6 self-start text-xs uppercase tracking-[0.3em] text-ember">Pick a file to open</p>
+            <Fork />
+          </section>
+        </>
+      )}
 
       {door === 'a' && (
         <>

@@ -5,6 +5,18 @@ import { vercelPreview } from './tools/prerender/vercelPreview.mjs';
 export default defineConfig({
   // vercelPreview: `vite preview` answers like Vercel for the prebuilt pages (Phase 9, vercel.json).
   plugins: [react(), vercelPreview()],
+  build: {
+    rollupOptions: {
+      output: {
+        // GSAP and Lenis in one named chunk, shared by the code field and the Code World, so each has a
+        // stable budget line (Code World W1.3). Neither is loaded before first paint.
+        manualChunks(id) {
+          if (/node_modules\/(gsap|lenis)\//.test(id)) return 'vendor-scroll';
+          return undefined;
+        },
+      },
+    },
+  },
   // The year a prebuilt page's footer shows until it hydrates (src/ssr/buildYear.js); the same value in
   // the browser bundle and the server bundle, so the two agree.
   define: {

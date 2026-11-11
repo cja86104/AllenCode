@@ -17,13 +17,18 @@ export const BUDGETS = Object.freeze([
   { name: 'entry script (every page)', limitKb: 152, match: (file, entry) => file === entry.script },
   { name: 'entry CSS (every page)', limitKb: 9, match: (file, entry) => file === entry.style },
   { name: 'home page chunk', limitKb: 16, match: (file) => /^Home-.*\.js$/.test(file) },
-  { name: 'renderer chunk (after first paint)', limitKb: 62, match: (file) => /^FieldScene-.*\.js$/.test(file) },
+  // Code World W1.3: GSAP and Lenis moved into their own named chunk (vendor-scroll), shared by the
+  // code field and the Code World, so the field's renderer chunk is now only its own code. Limits as
+  // Phase 8: measured (renderer 4.66 kB, vendor 51.15 kB, world canvas 6.34 kB) plus about 5 percent.
+  { name: 'renderer chunk (after first paint)', limitKb: 5, match: (file) => /^FieldScene-.*\.js$/.test(file) },
+  { name: 'scroll vendor: GSAP and Lenis (after first paint)', limitKb: 54, match: (file) => /^vendor-scroll-.*\.js$/.test(file) },
+  { name: 'code world canvas (world only)', limitKb: 7, match: (file) => /^WorldCanvas-.*\.js$/.test(file) },
   // The Code world prototype's lab page (/lab/world), which the site never loads (Task P2).
   { name: 'code world lab (lab route only)', limitKb: 40, match: (file) => /^WorldLab-.*\.js$/.test(file) },
   {
     name: 'any other script chunk',
     limitKb: 12,
-    match: (file, entry) => file.endsWith('.js') && file !== entry.script && !/^(Home|FieldScene|WorldLab)-/.test(file),
+    match: (file, entry) => file.endsWith('.js') && file !== entry.script && !/^(Home|FieldScene|WorldLab|WorldCanvas|vendor-scroll)-/.test(file),
   },
 ]);
 

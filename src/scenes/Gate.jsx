@@ -25,7 +25,7 @@ import {
 const gateKey = (w, h) => `gate:${w}x${h}`;
 
 /** Approved copy (spec section 4). */
-const GATE_LINE = 'It all starts with an empty file…';
+export const GATE_LINE = 'It all starts with an empty file…';
 const TITLE_BAR_HEIGHT = 30;
 
 /**

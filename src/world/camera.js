@@ -41,17 +41,19 @@ const curve3 = (a, b, c, d, t) => [catmullRom(a[0], b[0], c[0], d[0], t), catmul
  * progress. A pure function of progress, so any jump (a flick, a link to the end) gives the right
  * frame with nothing carried over.
  * @param {number} progress 0 at the top of the journey, 1 at its end; clamped.
+ * @param {ReadonlyArray<CameraKey>} [keys] The journey's keys (`buildJourney` in journey.js); the
+ *   prototype's own stops when left out.
  * @returns {{ eye: Vec3, target: Vec3, fov: number }}
  */
-export function cameraAt(progress) {
+export function cameraAt(progress, keys = CAMERA_KEYS) {
   const p = Math.min(1, Math.max(0, Number.isFinite(progress) ? progress : 0));
-  const last = CAMERA_KEYS.length - 1;
+  const last = keys.length - 1;
   let i = 0;
-  while (i < last - 1 && p > CAMERA_KEYS[i + 1].at) i += 1;
-  const k0 = CAMERA_KEYS[Math.max(0, i - 1)];
-  const k1 = CAMERA_KEYS[i];
-  const k2 = CAMERA_KEYS[i + 1];
-  const k3 = CAMERA_KEYS[Math.min(last, i + 2)];
+  while (i < last - 1 && p > keys[i + 1].at) i += 1;
+  const k0 = keys[Math.max(0, i - 1)];
+  const k1 = keys[i];
+  const k2 = keys[i + 1];
+  const k3 = keys[Math.min(last, i + 2)];
   const t = (p - k1.at) / (k2.at - k1.at);
   return {
     eye: curve3(k0.eye, k1.eye, k2.eye, k3.eye, t),

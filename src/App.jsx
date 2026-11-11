@@ -18,6 +18,7 @@ import Contact from './pages/Contact';
 import CheckoutSuccess from './pages/CheckoutSuccess';
 import NotFound from './pages/NotFound';
 import RouteError from './pages/RouteError.jsx';
+import { useWorldHome } from './world/worldSwitch.js';
 
 // The home page is the Source to Screen experience. It loads on demand so its scenes and excerpts
 // add nothing to the bundle the inner pages download (spec section 9).
@@ -26,12 +27,15 @@ const Home = lazy(() => import('./pages/Home.jsx'));
 // The Code world prototype (docs/superpowers/plans/2026-11-10-code-world-prototype.md): unlinked,
 // noindex, outside the site's shell, and in its own chunk, so the site never downloads it.
 const WorldLab = lazy(() => import('./pages/WorldLab.jsx'));
+// The Code World on the home page behind `/?world=1` (Code World W1.3), loaded only when switched on.
+const WorldLayer = lazy(() => import('./world/WorldLayer.jsx'));
 
 /**
  * The frame every page shares: the skip link, the code field behind everything (Chris, 2026-11-09:
  * on every page, not only the home page), the nav over the page, and the footer.
  */
 function AppShell() {
+  const world = useWorldHome();
   return (
     <DoorProvider>
       {/* The first thing a keyboard reaches: straight past the nav and the pinned scenes' chrome. */}
@@ -45,7 +49,13 @@ function AppShell() {
       <ScrollToTop />
       <Noise />
       <CustomCursor />
-      <FieldLayer />
+      {world ? (
+        <Suspense fallback={null}>
+          <WorldLayer />
+        </Suspense>
+      ) : (
+        <FieldLayer />
+      )}
       {/* The shell is clear so the fixed field behind it shows through, and uses overflow-x: clip,
           because overflow-x: hidden makes the shell a scroll container and breaks position: sticky
           in the pinned chapters. */}
