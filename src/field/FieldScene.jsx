@@ -2,13 +2,11 @@
 // Self-hosted faces the field draws with (OFL-1.1). They load with this lazy chunk only, so pages
 // without the field are unaffected, and the field never depends on a third-party font CDN.
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import CssField from './CssField.jsx';
 import FieldStage from './FieldStage.jsx';
 import ScrollEngine from '../scroll/ScrollEngine.jsx';
 import { detectCapabilities } from './capabilities.js';
 import { readCapabilityEnv, usePrefersReducedMotion } from './environment.js';
 import { fieldBus } from './fieldBus.js';
-import { getExcerpt } from '../content/excerpts/index.js';
 
 /**
  * Restarts allowed after lost GPU contexts in one visit. A device that keeps losing its context
@@ -31,7 +29,6 @@ export default function FieldScene({ includeDrafts }) {
   const onRestart = useCallback(() => setRestarts((count) => count + 1), []);
   // Reduced motion gets the static field and code-beside-result chapters (spec section 8).
   const useWebGL = capabilities.webgl2 && !webglFailed && !reducedMotion && restarts <= MAX_FIELD_RESTARTS;
-  const ambient = useMemo(() => getExcerpt('ambient', { includeDrafts }), [includeDrafts]);
 
   useEffect(() => {
     if (!useWebGL) fieldBus.set({ mode: 'static' });
@@ -41,8 +38,9 @@ export default function FieldScene({ includeDrafts }) {
   return (
     <>
       <ScrollEngine enabled={!reducedMotion} />
-      {useWebGL ? (
-        // A new key mounts a new canvas, so a restart always gets a fresh GPU context.
+      {/* Without WebGL the static texture FieldLayer painted with the page shows (Task 9.3b). A new
+          key mounts a new canvas, so a restart always gets a fresh GPU context. */}
+      {useWebGL && (
         <FieldStage
           key={restarts}
           capabilities={capabilities}
@@ -50,8 +48,6 @@ export default function FieldScene({ includeDrafts }) {
           onFailure={onFailure}
           onRestart={onRestart}
         />
-      ) : (
-        <CssField code={ambient ? ambient.code : null} />
       )}
     </>
   );

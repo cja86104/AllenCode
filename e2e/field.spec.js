@@ -21,7 +21,7 @@ test('with getContext patched to return null the CSS field renders and the page 
     });
   });
   await page.goto(HOME);
-  await expect(page.locator('[data-field="css"]')).toHaveCount(1);
+  await expect(page.locator('[data-field="css"]')).toBeVisible();
   await expect(page.locator('canvas[data-field="webgl"]')).toHaveCount(0);
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 });
@@ -67,14 +67,14 @@ test('a lost WebGL context that the browser restores comes back on a fresh canva
   await restoreFieldContext(page);
   await expect(page.locator(freshCanvas)).toHaveCount(1);
   await expect(page.locator('canvas')).toHaveCount(1);
-  await expect(page.locator('[data-field="css"]')).toHaveCount(0);
+  await expect(page.locator('[data-field="css"]')).toBeHidden();
 });
 
 test('a lost WebGL context that never comes back restarts on a fresh canvas after the wait', async ({ page }) => {
   await page.goto(HOME);
   await loseFieldContext(page);
   await expect(page.locator(freshCanvas)).toHaveCount(1, { timeout: 6000 });
-  await expect(page.locator('[data-field="css"]')).toHaveCount(0);
+  await expect(page.locator('[data-field="css"]')).toBeHidden();
 });
 
 test('when the GPU cannot give a new context, the page falls back to the static field', async ({ page }) => {
@@ -91,7 +91,7 @@ test('when the GPU cannot give a new context, the page falls back to the static 
     });
   });
   await loseFieldContext(page);
-  await expect(page.locator('[data-field="css"]')).toHaveCount(1, { timeout: 6000 });
+  await expect(page.locator('[data-field="css"]')).toBeVisible({ timeout: 6000 });
   await expect(page.locator('canvas[data-field="webgl"]')).toHaveCount(0);
   await expect(page.locator('[data-code-beside]')).toBeVisible();
 });
@@ -105,7 +105,7 @@ test('after three restarts in one visit the page settles on the static field', a
   }
   await loseFieldContext(page);
   await restoreFieldContext(page);
-  await expect(page.locator('[data-field="css"]')).toHaveCount(1);
+  await expect(page.locator('[data-field="css"]')).toBeVisible();
   await expect(page.locator('canvas[data-field="webgl"]')).toHaveCount(0);
 });
 
@@ -139,7 +139,7 @@ test('an inner page shows its content before, and without, the renderer', async 
   await page.route(/FieldScene-[^/]*\.js$/, (route) => route.abort());
   await page.goto('/about');
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-  await expect(page.locator('[data-field="css"]')).toHaveCount(1);
+  await expect(page.locator('[data-field="css"]')).toBeVisible();
   await expect(page.locator('canvas')).toHaveCount(0);
 });
 
@@ -176,4 +176,36 @@ test('with WebGL2 unavailable the CSS field shows real code and the chapter show
   await page.goto(HOME);
   await expect(page.locator('[data-field="css"] pre')).toContainText('usePageMeta');
   await expect(page.locator('[data-code-beside]')).toBeVisible();
+});
+
+test('the texture painted with the page is the same element while the renderer draws and after it falls back (Task 9.3b)', async ({ page }) => {
+  // A new texture element after the renderer loads would be a new, late largest paint (Task 9.3 Step 3).
+  await page.goto(HOME, { waitUntil: 'domcontentloaded' });
+  const texture = page.locator('[data-field="css"]');
+  await expect(texture.locator('pre')).toContainText('usePageMeta');
+  await texture.evaluate((el) => el.setAttribute('data-first-paint', ''));
+  await expect(page.locator('canvas[data-field="webgl"][data-ready="true"]')).toHaveCount(1);
+  await expect(page.locator('[data-field="css"][data-first-paint]')).toHaveCount(1);
+  await expect(texture).toBeHidden();
+  await page.evaluate(() => {
+    const original = HTMLCanvasElement.prototype.getContext;
+    Object.defineProperty(HTMLCanvasElement.prototype, 'getContext', {
+      configurable: true,
+      value(/** @type {string} */ type, /** @type {unknown[]} */ ...rest) {
+        if (type === 'webgl2' && !this.hasAttribute('data-before-loss')) return null;
+        return Reflect.apply(original, this, [type, ...rest]);
+      },
+    });
+  });
+  await loseFieldContext(page);
+  await expect(page.locator('canvas[data-field="webgl"]')).toHaveCount(0, { timeout: 6000 });
+  await expect(page.locator('[data-field="css"][data-first-paint]')).toBeVisible();
+  await expect(page.locator('[data-field="css"]')).toHaveCount(1);
+});
+
+test('the prebuilt page carries the texture with real code, before any script runs (Task 9.3b)', async ({ request }) => {
+  for (const path of ['/', '/about']) {
+    const body = await (await request.get(path)).text();
+    expect(body).toMatch(/data-field="css"[^>]*><pre>[^<]*usePageMeta/);
+  }
 });

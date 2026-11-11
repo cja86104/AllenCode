@@ -7,6 +7,7 @@ import { useField } from '../field/fieldBus.js';
 import { usePrefersReducedMotion } from '../field/environment.js';
 import MediaLoop from '../components/MediaLoop.jsx';
 import { chapterTimeline } from './chapterTimeline.js';
+import { CHAPTER_BODY, CHAPTER_GRID, CHAPTER_LABEL, CHAPTER_TITLE } from './chapterType.js';
 import { useSectionProgress } from './useSectionProgress.js';
 import { DESKTOP_MIN_WIDTH, EditorPanel, FlightEditor, flightGeometry, useImageFlight } from './flight.jsx';
 
@@ -24,14 +25,14 @@ function IntroText({ compact = false }) {
   const body = compact ? DOOR_B_INTRO.body.slice(0, 1) : DOOR_B_INTRO.body;
   return (
     <div>
-      <p className="mono text-[11px] uppercase tracking-[0.3em] text-ember">{DOOR_B_INTRO.eyebrow}</p>
-      <h2 className="mt-4 font-serif-display text-4xl italic leading-tight text-white sm:text-5xl">{DOOR_B_INTRO.title}</h2>
+      <p className={`tracking-[0.3em] text-ember ${CHAPTER_LABEL}`}>{DOOR_B_INTRO.eyebrow}</p>
+      <h2 className={`mt-4 ${CHAPTER_TITLE}`}>{DOOR_B_INTRO.title}</h2>
       {body.map((paragraph) => (
-        <p key={paragraph} className="mt-5 max-w-xl text-white/70">
+        <p key={paragraph} className={`mt-5 max-w-xl lg:max-w-none ${CHAPTER_BODY}`}>
           {paragraph}
         </p>
       ))}
-      {!compact && <p className="mono mt-6 text-xs uppercase tracking-[0.2em] text-white/60">{DOOR_B_INTRO.note}</p>}
+      {!compact && <p className={`mt-6 tracking-[0.2em] text-white/60 ${CHAPTER_LABEL}`}>{DOOR_B_INTRO.note}</p>}
     </div>
   );
 }
@@ -101,7 +102,7 @@ export default function DoorBIntro({ includeDrafts }) {
   return (
     <section
       data-door-b-intro
-      className="relative z-10 mx-auto grid max-w-6xl gap-10 px-6 py-16 lg:grid-cols-[0.85fr_1.15fr] lg:items-center lg:px-10"
+      className={`relative z-10 mx-auto grid max-w-6xl gap-10 px-6 py-16 ${CHAPTER_GRID} lg:items-center lg:px-10`}
     >
       <IntroText />
       <div className="min-w-0 space-y-6">

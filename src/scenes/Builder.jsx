@@ -5,6 +5,7 @@ import { useField } from '../field/fieldBus.js';
 import { usePrefersReducedMotion } from '../field/environment.js';
 import { getExcerpt } from '../content/excerpts/index.js';
 import { chapterTimeline } from './chapterTimeline.js';
+import { CHAPTER_BODY, CHAPTER_GRID, CHAPTER_LABEL, CHAPTER_TITLE } from './chapterType.js';
 import { useSectionProgress } from './useSectionProgress.js';
 import { DESKTOP_MIN_WIDTH, EditorPanel, FlightEditor, flightGeometry, useImageFlight } from './flight.jsx';
 import { BUILDER } from '../content/builderStory.js';
@@ -15,16 +16,14 @@ export { BUILDER };
 function BuilderText({ compact = false }) {
   return (
     <div>
-      <p className="mono text-xs uppercase tracking-[0.3em] text-ember">{BUILDER.eyebrow}</p>
-      <h2
-        className={`mt-4 font-serif-display italic leading-tight text-white ${compact ? 'text-3xl' : 'text-4xl sm:text-5xl'}`}
-      >
+      <p className={`tracking-[0.3em] text-ember ${CHAPTER_LABEL}`}>{BUILDER.eyebrow}</p>
+      <h2 className={`mt-4 ${compact ? 'font-serif-display text-3xl italic leading-tight text-white' : CHAPTER_TITLE}`}>
         {BUILDER.title}
       </h2>
-      <p className={`max-w-xl text-white/70 ${compact ? 'mt-3 text-sm' : 'mt-6'}`}>{BUILDER.body}</p>
+      <p className={`max-w-xl ${compact ? 'mt-3 text-sm text-white/70' : `mt-6 lg:max-w-none ${CHAPTER_BODY}`}`}>{BUILDER.body}</p>
       <Link
         to="/about"
-        className="mono mt-5 inline-flex text-xs uppercase tracking-widest text-white hover:text-ember focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember"
+        className={`mt-5 inline-flex tracking-widest text-white hover:text-ember ${CHAPTER_LABEL} focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember`}
       >
         {BUILDER.link} <span aria-hidden="true">&nbsp;→</span>
       </Link>
@@ -70,7 +69,7 @@ export default function Builder() {
     return (
       <section
         data-chapter="builder"
-        className="relative z-10 mx-auto grid max-w-6xl gap-10 px-6 py-16 lg:grid-cols-[1fr_1fr] lg:items-center lg:px-10"
+        className={`relative z-10 mx-auto grid max-w-6xl gap-10 px-6 py-16 ${CHAPTER_GRID} lg:items-center lg:px-10`}
       >
         <BuilderText />
         <div className="min-w-0 space-y-6">

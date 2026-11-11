@@ -1,13 +1,21 @@
 // @ts-check
 import { Component, lazy, Suspense, useEffect, useState } from 'react';
 import CssField from './CssField.jsx';
+import { useField } from './fieldBus.js';
+import ambient from '../content/excerpts/ambient.js';
 
 const FieldScene = lazy(() => import('./FieldScene.jsx'));
 
 /**
+ * The texture's code: the ambient excerpt, imported on its own so the excerpt registry stays out of
+ * the main bundle, and only once Chris has approved it (the rule `getExcerpt` applies; spec section 5).
+ */
+const TEXTURE_CODE = ambient.approved ? ambient.code : null;
+
+/**
  * If the renderer's code cannot load (a dropped connection, or a page left open across a deploy
- * whose files have since changed), the page keeps its content and shows the static field instead
- * of failing.
+ * whose files have since changed), the page keeps its content and the static texture, which is
+ * already on the page, instead of failing.
  * @extends {Component<{ children: import('react').ReactNode }, { failed: boolean }>}
  */
 class FieldBoundary extends Component {
@@ -22,7 +30,7 @@ class FieldBoundary extends Component {
   }
 
   render() {
-    return this.state.failed ? <CssField /> : this.props.children;
+    return this.state.failed ? null : this.props.children;
   }
 }
 
@@ -60,17 +68,25 @@ export function useAfterFirstPaint() {
 
 /**
  * Mounted once above the routes and kept across page changes, so the code field behind every page
- * (Chris, 2026-11-09) loads once and never restarts on navigation. It starts after the first paint,
- * with the static field shown until then. Draft excerpts are never shown.
+ * (Chris, 2026-11-09) loads once and never restarts on navigation. The static texture is painted with
+ * the page, prebuilt HTML included, and stays the same element for the whole visit (Task 9.3b): a
+ * new texture element after the renderer loaded was a new, late largest paint, and Lighthouse charged
+ * the whole script to it. The renderer starts after the first paint and hides the texture while it
+ * draws. Draft excerpts are never shown.
  */
 export default function FieldLayer() {
   const ready = useAfterFirstPaint();
-  if (!ready) return <CssField />;
+  const { mode } = useField();
   return (
-    <FieldBoundary>
-      <Suspense fallback={<CssField />}>
-        <FieldScene includeDrafts={false} />
-      </Suspense>
-    </FieldBoundary>
+    <>
+      <CssField code={TEXTURE_CODE} hidden={mode === 'webgl'} />
+      {ready && (
+        <FieldBoundary>
+          <Suspense fallback={null}>
+            <FieldScene includeDrafts={false} />
+          </Suspense>
+        </FieldBoundary>
+      )}
+    </>
   );
 }
