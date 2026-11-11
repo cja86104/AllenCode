@@ -94,3 +94,99 @@ test('without WebGL2 the lab is the same plain page', async ({ page }) => {
   await expect(page.locator('canvas')).toHaveCount(0);
   await expect(page.getByText('The road', { exact: true })).toBeVisible();
 });
+
+/** @param {import('@playwright/test').Page} page @param {number} progress */
+async function scrollToProgress(page, progress) {
+  await page.evaluate((p) => window.scrollTo(0, (document.documentElement.scrollHeight - window.innerHeight) * p), progress);
+}
+
+test.describe('scroll, stops and the rail (Task P3)', () => {
+  test('each part of the journey names its stop', async ({ page }) => {
+    await page.goto(LAB);
+    await page.locator('canvas[data-world][data-ready="true"]').waitFor();
+    await expect(page.locator('html')).toHaveAttribute('data-scroll-engine', 'on');
+    for (const [progress, name] of /** @type {Array<[number, string]>} */ ([
+      [0, 'Empty file'],
+      [0.2, 'Into the code'],
+      [0.45, 'The road'],
+      [0.68, 'The fork'],
+      [0.9, 'First landmark'],
+    ])) {
+      await scrollToProgress(page, progress);
+      await expect(page.locator('[data-active-stop]')).toHaveAttribute('data-active-stop', name);
+      await expect(page.locator('[data-active-stop] h2')).toHaveText(name);
+      await expect(page.locator('[data-rail] [aria-current="step"]')).toHaveText(name);
+    }
+  });
+
+  test('jumping straight to the end shows the last stop, with nothing carried over', async ({ page }) => {
+    await page.goto(LAB);
+    await page.locator('canvas[data-world][data-ready="true"]').waitFor();
+    await scrollToProgress(page, 1);
+    await expect(page.locator('[data-active-stop]')).toHaveAttribute('data-active-stop', 'First landmark');
+    await expect.poll(async () => Number(await page.locator('canvas[data-world]').getAttribute('data-progress'))).toBeGreaterThan(0.98);
+  });
+
+  test('the rail runs from "empty file" to "shipped"', async ({ page }) => {
+    await page.goto(LAB);
+    const rail = page.locator('[data-rail]');
+    await expect(rail).toContainText('empty file');
+    await expect(rail).toContainText('shipped');
+    await expect(rail.locator('li')).toHaveCount(5);
+  });
+
+  test('resizing from desktop to a phone mid-journey keeps the canvas at the window size', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(LAB);
+    await page.locator('canvas[data-world][data-ready="true"]').waitFor();
+    await scrollToProgress(page, 0.5);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect
+      .poll(() => page.locator('canvas[data-world]').evaluate((c) => [c.clientWidth, c.clientHeight, /** @type {HTMLCanvasElement} */ (c).width]))
+      .toEqual([390, 844, 390 * (await page.evaluate(() => Math.min(window.devicePixelRatio || 1, 2)))]);
+  });
+
+  test('leaving the lab removes the world, its rail and its stops', async ({ page }) => {
+    await page.goto(LAB);
+    await page.locator('canvas[data-world][data-ready="true"]').waitFor();
+    await page.getByRole('link', { name: /allencodeco\.com/ }).click();
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page.locator('canvas[data-world]')).toHaveCount(0);
+    await expect(page.locator('[data-rail], [data-active-stop]')).toHaveCount(0);
+  });
+});
+
+test.describe('the landmark resolves into its real screen (Task P4)', () => {
+  /** @param {import('@playwright/test').Page} page */
+  const screen = (page) => page.locator('[data-landmark-screen]');
+  /** @param {import('@playwright/test').Page} page */
+  const opacity = (page) => screen(page).evaluate((el) => Number(getComputedStyle(el).opacity));
+  /** @param {import('@playwright/test').Page} page */
+  const playing = (page) => screen(page).locator('video').evaluate((v) => !(/** @type {HTMLVideoElement} */ (v).paused));
+
+  test('halfway along the road the real screen is not shown and its loop is still', async ({ page }) => {
+    await page.goto(LAB);
+    await page.locator('canvas[data-world][data-ready="true"]').waitFor();
+    await scrollToProgress(page, 0.5);
+    await expect.poll(() => opacity(page)).toBe(0);
+    expect(await playing(page)).toBe(false);
+    await expect(page.locator('canvas[data-world]')).toHaveAttribute('data-landmark-fade', '1.00');
+  });
+
+  test('at the end the sculpture has handed over: the real screen is in view, large, and its loop plays', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(LAB);
+    await page.locator('canvas[data-world][data-ready="true"]').waitFor();
+    await scrollToProgress(page, 1);
+    await expect.poll(() => opacity(page)).toBe(1);
+    await expect(page.locator('canvas[data-world]')).toHaveAttribute('data-landmark-fade', '0.00');
+    const box = await screen(page).boundingBox();
+    expect(box).not.toBeNull();
+    if (!box) return;
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(1440);
+    expect(box.width).toBeGreaterThan(1440 * 0.3);
+    await expect.poll(() => playing(page)).toBe(true);
+    await expect(screen(page).locator('img, video').first()).toHaveAttribute('alt', /UnderFire AI/);
+  });
+});

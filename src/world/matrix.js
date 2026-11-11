@@ -71,3 +71,18 @@ export function transformPoint(m, p) {
   const at = (row) => m[row] * p[0] + m[4 + row] * p[1] + m[8 + row] * p[2] + m[12 + row];
   return [at(0), at(1), at(2), at(3)];
 }
+
+/** The world's clipping planes, shared by the renderer and anything placed over it. */
+export const NEAR = 0.1;
+export const FAR = 120;
+
+/**
+ * The view-projection a camera draws the world with. The renderer and the DOM laid over the canvas
+ * both use it, so what the page places lands exactly where the world draws it (Task P4).
+ * @param {{ eye: Vec3, target: Vec3, fov: number }} camera
+ * @param {number} aspect Width over height.
+ * @returns {Mat4}
+ */
+export function viewProjectionFor(camera, aspect) {
+  return multiply(perspective(camera.fov, aspect, NEAR, FAR), lookAt(camera.eye, camera.target));
+}

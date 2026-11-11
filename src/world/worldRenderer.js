@@ -1,7 +1,7 @@
 // @ts-check
 import { GLYPH_FRAGMENT_SHADER } from '../field/shaders.js';
 import { WORLD_VERTEX_SHADER } from './worldShaders.js';
-import { lookAt, multiply, perspective } from './matrix.js';
+import { viewProjectionFor } from './matrix.js';
 
 /** @typedef {import('./shapes.js').Shape} Shape */
 /** @typedef {import('../field/glyphAtlas.js').Atlas} Atlas */
@@ -10,8 +10,6 @@ import { lookAt, multiply, perspective } from './matrix.js';
 /** Where the world fades out: glyphs farther than FOG_FAR are not drawn. */
 const FOG_NEAR = 14;
 const FOG_FAR = 46;
-const NEAR = 0.1;
-const FAR = 120;
 /** Floats per glyph: x, y, z, atlas cell, r, g, b, a, size. */
 const STRIDE = 9;
 
@@ -35,15 +33,19 @@ function compile(gl, type, source) {
 
 /**
  * Packs shapes into one interleaved array for one draw. Characters the atlas lacks are left out.
+ * `ranges` gives each shape's first glyph and glyph count in the packed buffer.
  * @param {ReadonlyArray<Shape>} shapes
  * @param {(char: string) => number} indexOf
- * @returns {{ data: Float32Array, count: number }}
+ * @returns {{ data: Float32Array, count: number, ranges: Array<{ start: number, count: number }> }}
  */
 export function packShapes(shapes, indexOf) {
   const total = shapes.reduce((sum, shape) => sum + shape.glyphs.length, 0);
   const data = new Float32Array(total * STRIDE);
   let count = 0;
+  /** @type {Array<{ start: number, count: number }>} */
+  const ranges = [];
   for (const shape of shapes) {
+    const start = count;
     for (let i = 0; i < shape.glyphs.length; i += 1) {
       const cell = indexOf(String.fromCharCode(shape.glyphs[i]));
       if (cell < 0) continue;
@@ -56,8 +58,9 @@ export function packShapes(shapes, indexOf) {
       data[o + 8] = shape.size;
       count += 1;
     }
+    ranges.push({ start, count: count - start });
   }
-  return { data: data.subarray(0, count * STRIDE), count };
+  return { data: data.subarray(0, count * STRIDE), count, ranges };
 }
 
 /**
@@ -90,6 +93,9 @@ export function createWorldRenderer(canvas, atlas) {
     time: uniform('uTime'),
     fogNear: uniform('uFogNear'),
     fogFar: uniform('uFogFar'),
+    fadeFrom: uniform('uFadeFrom'),
+    fadeTo: uniform('uFadeTo'),
+    fadeAmount: uniform('uFadeAmount'),
   };
 
   const texture = gl.createTexture();
@@ -132,13 +138,17 @@ export function createWorldRenderer(canvas, atlas) {
   let pixelRatio = 1;
 
   return {
-    /** Replaces everything drawn. @param {ReadonlyArray<Shape>} shapes @returns {number} glyphs uploaded */
+    /**
+     * Replaces everything drawn. Returns each shape's place in the buffer, for `render`'s fade.
+     * @param {ReadonlyArray<Shape>} shapes
+     * @returns {Array<{ start: number, count: number }>}
+     */
     setShapes(shapes) {
-      const { data, count } = packShapes(shapes, atlas.indexOf);
+      const { data, count, ranges } = packShapes(shapes, atlas.indexOf);
       gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
       gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
       glyphCount = count;
-      return count;
+      return ranges;
     },
     /** @param {number} w CSS pixels @param {number} h CSS pixels @param {number} dpr */
     resize(w, h, dpr) {
@@ -149,12 +159,18 @@ export function createWorldRenderer(canvas, atlas) {
       canvas.height = Math.round(height * dpr);
       gl.viewport(0, 0, canvas.width, canvas.height);
     },
-    /** @param {Camera} camera @param {number} time ms */
-    render(camera, time) {
-      const projection = perspective(camera.fov, width / height, NEAR, FAR);
+    /**
+     * @param {Camera} camera
+     * @param {number} time ms
+     * @param {{ start: number, count: number, amount: number }} [fade] One range of glyphs drawn at `amount` of their alpha.
+     */
+    render(camera, time, fade) {
       gl.useProgram(program);
-      gl.uniformMatrix4fv(u.viewProjection, false, multiply(projection, lookAt(camera.eye, camera.target)));
-      gl.uniform1f(u.projScale, projection[5]);
+      gl.uniformMatrix4fv(u.viewProjection, false, viewProjectionFor(camera, width / height));
+      gl.uniform1f(u.projScale, 1 / Math.tan((camera.fov * Math.PI) / 360));
+      gl.uniform1i(u.fadeFrom, fade ? fade.start : 0);
+      gl.uniform1i(u.fadeTo, fade ? fade.start + fade.count : 0);
+      gl.uniform1f(u.fadeAmount, fade ? fade.amount : 1);
       gl.uniform1f(u.viewportHeight, height);
       gl.uniform1f(u.pixelRatio, pixelRatio);
       gl.uniform1f(u.time, time);

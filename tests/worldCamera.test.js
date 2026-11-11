@@ -41,3 +41,42 @@ describe('cameraAt (Code world prototype, Task P1)', () => {
     }
   });
 });
+
+describe('frameCamera: narrow screens see the whole scene (Task P3; P2 found the empty file wider than a phone)', () => {
+  it('fits the empty file’s full width on a 390 x 844 phone at the start', async () => {
+    const { frameCamera } = await import('../src/world/camera.js');
+    const { editorSlab } = await import('../src/world/shapes.js');
+    const { lookAt, multiply, perspective, transformPoint } = await import('../src/world/matrix.js');
+    const gate = (await import('../src/content/excerpts/gate.js')).default;
+    const aspect = 390 / 844;
+    const slab = editorSlab(gate.code, 1);
+    let minX = Infinity;
+    let maxX = -Infinity;
+    for (let i = 0; i < slab.glyphs.length; i += 1) {
+      minX = Math.min(minX, slab.positions[i * 3]);
+      maxX = Math.max(maxX, slab.positions[i * 3]);
+    }
+    for (const progress of [0, 0.1]) {
+      const { eye, target, fov } = frameCamera(cameraAt(progress), aspect);
+      const vp = multiply(perspective(fov, aspect, 0.1, 120), lookAt(eye, target));
+      for (const x of [minX, maxX]) {
+        const [cx, , , w] = transformPoint(vp, [x, 1.6, 0]);
+        expect(Math.abs(cx / w), `progress ${progress}, x ${x}`).toBeLessThanOrEqual(0.96);
+      }
+    }
+  });
+
+  it('leaves a wide screen’s camera exactly as it was', async () => {
+    const { frameCamera } = await import('../src/world/camera.js');
+    for (const progress of [0, 0.5, 1]) expect(frameCamera(cameraAt(progress), 16 / 9)).toEqual(cameraAt(progress));
+  });
+
+  it('keeps looking at the same point and never widens past 70 degrees', async () => {
+    const { frameCamera } = await import('../src/world/camera.js');
+    for (const progress of [0, 0.3, 0.6, 1]) {
+      const framed = frameCamera(cameraAt(progress), 0.4);
+      expect(framed.target).toEqual(cameraAt(progress).target);
+      expect(framed.fov).toBeLessThanOrEqual(70);
+    }
+  });
+});

@@ -1,4 +1,5 @@
 // @ts-check
+import { LANDMARK } from './landmark.js';
 
 /**
  * The prototype world, generated in code from real approved excerpts (no models, nothing invented).
@@ -287,7 +288,11 @@ export function buildWorld(tier, sources, seed) {
     { name: 'signs', shape: signs },
     {
       name: 'landmark',
-      shape: screenSculpture(sources.landmark, { width: 6, height: 3.75, center: [-6, 1.8, -58], count: share(0.25) }, seed + 5),
+      shape: screenSculpture(
+        sources.landmark,
+        { width: LANDMARK.width, height: LANDMARK.height, center: LANDMARK.center, count: share(0.25) },
+        seed + 5,
+      ),
     },
   ];
 }

@@ -3,7 +3,7 @@
 /**
  * The code world: every glyph is a point in 3D (Code world prototype, Task P2). Its on-screen size
  * follows its distance, it fades into the dark with distance (fog) and very close to the camera,
- * and ember sparks twinkle. The fragment shader is the field's (src/field/shaders.js): characters
+ * and ember sparks twinkle; one range of glyphs can fade on its own (Task P4). The fragment shader is the field's (src/field/shaders.js): characters
  * stay characters.
  */
 export const WORLD_VERTEX_SHADER = `#version 300 es
@@ -21,6 +21,9 @@ uniform float uPixelRatio;
 uniform float uTime;
 uniform float uFogNear;
 uniform float uFogFar;
+uniform int uFadeFrom;
+uniform int uFadeTo;
+uniform float uFadeAmount;
 
 out float vGlyph;
 out float vAlpha;
@@ -41,7 +44,9 @@ void main() {
   float twinkle = mix(1.0, 0.55 + 0.45 * sin(uTime * 0.002 + seed * 6.2831), ember);
 
   vGlyph = aGlyph;
-  vAlpha = aColor.a * fog * near * twinkle * step(0.0, clip.w);
+  // One range of glyphs (the landmark) can fade on its own as it hands over to the real screen.
+  float handover = (gl_VertexID >= uFadeFrom && gl_VertexID < uFadeTo) ? uFadeAmount : 1.0;
+  vAlpha = aColor.a * fog * near * twinkle * handover * step(0.0, clip.w);
   vColor = aColor.rgb;
 }
 `;

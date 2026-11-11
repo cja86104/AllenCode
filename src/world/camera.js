@@ -6,7 +6,9 @@
 /**
  * The prototype's camera stops (docs/superpowers/plans/2026-11-10-code-world-prototype.md), in world
  * units (about a metre each; y is up, the road runs toward -z). The empty file sits at z = 0, the
- * road starts behind it, the fork is at z = -40 and the UnderFire landmark at (-6, 1.8, -58).
+ * road starts behind it, the fork is at z = -40 and the UnderFire landmark at (-6, 1.8, -58). The
+ * last stop faces the landmark squarely, so its real screen, laid over the canvas, lines up with the
+ * sculpture exactly (Task P4).
  * @type {ReadonlyArray<CameraKey>}
  */
 export const CAMERA_KEYS = Object.freeze(
@@ -17,7 +19,7 @@ export const CAMERA_KEYS = Object.freeze(
     { at: 0.45, stop: 'the road', eye: [0, 1.2, -15], target: [0, 0.8, -27], fov: 55 },
     { at: 0.6, stop: 'the fork', eye: [0, 1.5, -30], target: [0, 1, -42], fov: 52 },
     { at: 0.75, stop: 'the fork', eye: [-1.6, 1.6, -41], target: [-5, 1.4, -52], fov: 50 },
-    { at: 1, stop: 'first landmark', eye: [-5.2, 1.8, -50.5], target: [-6, 1.8, -58], fov: 48 },
+    { at: 1, stop: 'first landmark', eye: [-6, 1.8, -50.5], target: [-6, 1.8, -58], fov: 48 },
   ]).map((key) => Object.freeze(key)),
 );
 
@@ -55,5 +57,32 @@ export function cameraAt(progress) {
     eye: curve3(k0.eye, k1.eye, k2.eye, k3.eye, t),
     target: curve3(k0.target, k1.target, k2.target, k3.target, t),
     fov: catmullRom(k0.fov, k1.fov, k2.fov, k3.fov, t),
+  };
+}
+
+/** The widest field of view a narrow screen may get, in degrees; past it the world distorts. */
+const MAX_NARROW_FOV = 70;
+/** How much wider than the stop's own field of view a narrow screen may look. */
+const NARROW_WIDEN = 1.35;
+
+/**
+ * Frames a camera for the screen's shape. A screen at least as wide as it is tall sees the stop as
+ * designed. A narrower one (a phone held upright) would cut the sides off, so it sees at least
+ * what a square screen sees: the field of view widens (up to 70 degrees), then the camera steps back
+ * along its line of sight for the rest, still looking at the same point (Task P3).
+ * @param {{ eye: Vec3, target: Vec3, fov: number }} camera
+ * @param {number} aspect Width over height.
+ * @returns {{ eye: Vec3, target: Vec3, fov: number }}
+ */
+export function frameCamera(camera, aspect) {
+  if (!(aspect > 0) || aspect >= 1) return camera;
+  const halfTan = (/** @type {number} */ degrees) => Math.tan((degrees * Math.PI) / 360);
+  const fov = Math.min(camera.fov * NARROW_WIDEN, MAX_NARROW_FOV);
+  const back = Math.max(1, halfTan(camera.fov) / (halfTan(fov) * aspect));
+  const { eye, target } = camera;
+  return {
+    eye: [target[0] + (eye[0] - target[0]) * back, target[1] + (eye[1] - target[1]) * back, target[2] + (eye[2] - target[2]) * back],
+    target,
+    fov,
   };
 }
