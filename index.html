@@ -45,6 +45,19 @@
       actual profiles. Add sameAs with the real URLs whenever they're
       confirmed.
     -->
+    <!--
+      Without JavaScript (Phase 9): content that waits for JavaScript to fade in is shown, the gate's
+      decorative editor and its scroll prompt (which only animate with JavaScript) are hidden, and the
+      gate is not pinned, so a prebuilt page reads as a plain page.
+    -->
+    <noscript>
+      <style>
+        [data-reveal] { opacity: 1 !important; transform: none !important; }
+        [data-noscript-hide] { display: none !important; }
+        [data-noscript-unpin] { height: auto !important; }
+      </style>
+    </noscript>
+
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",

@@ -78,10 +78,11 @@ describe('applyHead', () => {
 });
 
 describe('injectApp', () => {
-  it("puts the page's HTML in #root, drops the no-JavaScript reader block and keeps the JSON-LD", () => {
+  it("puts the page's HTML in #root, drops the no-JavaScript reader block, keeps the no-JavaScript style and the JSON-LD", () => {
     const html = injectApp(template, '<main id="main"><h1>Hello</h1></main>');
     expect(html).toContain('<div id="root"><main id="main"><h1>Hello</h1></main></div>');
-    expect(html).not.toContain('<noscript>');
+    expect(html).not.toMatch(/<noscript>\s*<main/);
+    expect(html).toMatch(/<noscript>\s*<style>[\s\S]*\[data-reveal\]/);
     expect(html).toContain('"@type": "Organization"');
   });
 

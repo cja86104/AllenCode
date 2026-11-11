@@ -8,6 +8,7 @@ import CodeLines from '../field/CodeLines.jsx';
 import { getExcerpt } from '../content/excerpts/index.js';
 import { gateTimeline } from './gateTimeline.js';
 import { useSectionProgress } from './useSectionProgress.js';
+import { useHydrated } from '../ssr/useHydrated.js';
 import {
   HEADLINE_COLOR,
   HEADLINE_FONT_SIZE_CSS,
@@ -53,6 +54,35 @@ function editorBox(code, width, height) {
 }
 
 /**
+ * The gate's editor, its code and the line above it placed for any screen in CSS: `editorBox` and
+ * `editorScale` written with `100vw` and `100dvh` (what `window.innerWidth` and `innerHeight`
+ * measure, and the pinned frame's height). The prebuilt page and the browser's first pass use these,
+ * so a phone's first paint is laid out for the phone before the scripts run (Phase 9); once the page
+ * has hydrated the measured numbers take over, at the same places.
+ * @param {string} code
+ */
+export function editorCss(code) {
+  const full = editorSize(code);
+  const room = 'calc(100vw - 48px)';
+  /** A length that is `px` at full size and shrinks with the screen as `editorScale` does. @param {number} px */
+  const scaled = (px) => `min(${px}px, calc(${room} * ${px / full.w}))`;
+  const w = `min(${full.w}px, ${room})`;
+  const h = scaled(full.h);
+  const x = `max(24px, calc((100vw - ${w}) / 2))`;
+  const y = `max(${24 + TITLE_BAR_HEIGHT}px, calc((100dvh - ${h}) / 2))`;
+  return {
+    line: { left: x, top: `max(8px, calc(${y} - ${TITLE_BAR_HEIGHT + 56}px))` },
+    frame: { left: x, top: `calc(${y} - ${TITLE_BAR_HEIGHT}px)`, width: w, height: `calc(${h} + ${TITLE_BAR_HEIGHT}px)` },
+    code: {
+      left: `calc(${x} + ${scaled(EDITOR_PADDING)})`,
+      top: `calc(${y} + ${scaled(EDITOR_PADDING)})`,
+      fontSize: scaled(CODE_FONT_SIZE),
+      lineHeight: scaled(CODE_LINE_HEIGHT),
+    },
+  };
+}
+
+/**
  * The approved headline as the page's h1. The lines keep a space between them so its accessible
  * name reads as one sentence.
  * @param {{ opacity: number, sized: boolean }} props
@@ -60,6 +90,8 @@ function editorBox(code, width, height) {
 function Headline({ opacity, sized }) {
   return (
     <h1
+      // Pinned, it waits for the scroll to appear; without JavaScript index.html's <noscript> style shows it.
+      data-reveal={sized ? true : undefined}
       style={sized ? { opacity, fontSize: HEADLINE_FONT_SIZE_CSS, lineHeight: HEADLINE_LINE_HEIGHT } : { opacity }}
       className={`text-center font-serif-display italic text-white ${sized ? '' : 'text-4xl leading-tight sm:text-5xl lg:text-left'}`}
     >
@@ -87,6 +119,7 @@ export default function Gate({ includeDrafts }) {
   const isStatic = reducedMotion || mode === 'static' || !excerpt;
   const sectionRef = useRef(/** @type {HTMLElement | null} */ (null));
   const { progress, visible, viewport } = useSectionProgress(sectionRef, !isStatic);
+  const hydrated = useHydrated();
 
   // The transformation exists only while the gate is on screen.
   useEffect(() => {
@@ -131,6 +164,8 @@ export default function Gate({ includeDrafts }) {
 
   const scale = editorScale(excerpt.code, viewport.w);
   const box = editorBox(excerpt.code, viewport.w, viewport.h);
+  // Until the page has hydrated the viewport is not measured yet, so the layout is CSS (editorCss).
+  const css = hydrated ? null : editorCss(excerpt.code);
   const typed = Math.round(timeline.typed * excerpt.code.length);
   // Once the flight starts the renderer draws these characters in the same places, so the DOM copy
   // steps aside; until the renderer is running it stays.
@@ -138,10 +173,10 @@ export default function Gate({ includeDrafts }) {
   const frameOpacity = 1 - Math.min(1, timeline.flight * 4);
 
   return (
-    <section ref={sectionRef} data-chapter="gate" className="relative h-[280vh]">
+    <section ref={sectionRef} data-chapter="gate" data-noscript-unpin className="relative h-[280vh]">
       <div className="pin-frame sticky top-0 overflow-hidden">
         <p
-          style={{ opacity: timeline.intro, left: box.x, top: Math.max(8, box.y - TITLE_BAR_HEIGHT - 56) }}
+          style={{ opacity: timeline.intro, ...(css ? css.line : { left: box.x, top: Math.max(8, box.y - TITLE_BAR_HEIGHT - 56) }) }}
           className="mono absolute text-xs uppercase tracking-[0.3em] text-ember"
         >
           {GATE_LINE}
@@ -150,12 +185,12 @@ export default function Gate({ includeDrafts }) {
         <div
           aria-hidden="true"
           data-editor-frame
+          data-noscript-hide
           style={{
             opacity: frameOpacity,
-            left: box.x,
-            top: box.y - TITLE_BAR_HEIGHT,
-            width: box.w,
-            height: box.h + TITLE_BAR_HEIGHT,
+            ...(css
+              ? css.frame
+              : { left: box.x, top: box.y - TITLE_BAR_HEIGHT, width: box.w, height: box.h + TITLE_BAR_HEIGHT }),
           }}
           className="absolute rounded-xl border border-white/10 bg-night/70"
         >
@@ -169,13 +204,18 @@ export default function Gate({ includeDrafts }) {
 
         <pre
           data-editor-code
+          data-noscript-hide
           aria-hidden="true"
           style={{
             opacity: codeOpacity,
-            left: box.x + EDITOR_PADDING * scale,
-            top: box.y + EDITOR_PADDING * scale,
-            fontSize: CODE_FONT_SIZE * scale,
-            lineHeight: `${CODE_LINE_HEIGHT * scale}px`,
+            ...(css
+              ? css.code
+              : {
+                  left: box.x + EDITOR_PADDING * scale,
+                  top: box.y + EDITOR_PADDING * scale,
+                  fontSize: CODE_FONT_SIZE * scale,
+                  lineHeight: `${CODE_LINE_HEIGHT * scale}px`,
+                }),
           }}
           className="mono absolute m-0 whitespace-pre [font-variant-ligatures:none]"
         >
@@ -188,6 +228,7 @@ export default function Gate({ includeDrafts }) {
         </div>
 
         <p
+          data-noscript-hide
           style={{ opacity: timeline.intro }}
           className="mono absolute bottom-8 left-0 right-0 text-center text-xs uppercase tracking-[0.35em] text-white/80"
         >
