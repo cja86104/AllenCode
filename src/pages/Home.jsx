@@ -1,4 +1,5 @@
 // @ts-check
+import { lazy, Suspense } from 'react';
 import usePageMeta from '../hooks/usePageMeta.js';
 import Gate from '../scenes/Gate.jsx';
 import Fork from '../door/Fork.jsx';
@@ -12,7 +13,9 @@ import DoneForYou from '../scenes/DoneForYou.jsx';
 import Builder from '../scenes/Builder.jsx';
 import IdeaSketch from '../scenes/IdeaSketch.jsx';
 import BriefChapter from '../scenes/BriefChapter.jsx';
-import WorldJourney from '../scenes/WorldJourney.jsx';
+
+// The Code World journey loads only when the switch is on (its own chunk; W2.5).
+const WorldJourney = lazy(() => import('../scenes/WorldJourney.jsx'));
 import { useWorldHome } from '../world/worldSwitch.js';
 
 /**
@@ -30,22 +33,24 @@ export default function Home() {
   // The Code World journey replaces the gate and the fork behind `/?world=1` (Code World W1.3).
   const world = useWorldHome();
 
+  const opening = (
+    <>
+      <Gate includeDrafts={false} />
+
+      <section className="relative z-10 mx-auto flex max-w-5xl flex-col items-center justify-center px-6 py-16 lg:px-10 lg:py-20">
+        <p className="mono mb-6 self-start text-xs uppercase tracking-[0.3em] text-ember">Pick a file to open</p>
+        <Fork />
+      </section>
+    </>
+  );
+
   return (
     <>
-      {world ? (
-        <WorldJourney />
-      ) : (
-        <>
-          <Gate includeDrafts={false} />
+      {/* While the journey's chunk loads, the opening the prebuilt page painted stays, so nothing blanks. */}
+      {world ? <Suspense fallback={opening}><WorldJourney /></Suspense> : opening}
 
-          <section className="relative z-10 mx-auto flex max-w-5xl flex-col items-center justify-center px-6 py-16 lg:px-10 lg:py-20">
-            <p className="mono mb-6 self-start text-xs uppercase tracking-[0.3em] text-ember">Pick a file to open</p>
-            <Fork />
-          </section>
-        </>
-      )}
-
-      {door === 'a' && (
+      {/* In the world the business road carries the services, products and how I work (W2.5). */}
+      {door === 'a' && !world && (
         <>
           <ServiceChapters includeDrafts={false} />
           <ProductChapters includeDrafts={false} />

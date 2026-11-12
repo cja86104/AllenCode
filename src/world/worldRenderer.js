@@ -96,6 +96,11 @@ export function createWorldRenderer(canvas, atlas) {
     fadeFrom: uniform('uFadeFrom'),
     fadeTo: uniform('uFadeTo'),
     fadeAmount: uniform('uFadeAmount'),
+    hideFrom: uniform('uHideFrom'),
+    hideTo: uniform('uHideTo'),
+    cursorIndex: uniform('uCursorIndex'),
+    cursorPosition: uniform('uCursorPosition'),
+    cursorOn: uniform('uCursorOn'),
   };
 
   const texture = gl.createTexture();
@@ -163,14 +168,23 @@ export function createWorldRenderer(canvas, atlas) {
      * @param {Camera} camera
      * @param {number} time ms
      * @param {{ start: number, count: number, amount: number }} [fade] One range of glyphs drawn at `amount` of their alpha.
+     * @param {{ index: number, position: [number, number, number], visible: boolean }} [cursor] One glyph (by its
+     *   place in the buffer) drawn at `position`, shown or hidden: an unfinished file's blinking cursor.
+     * @param {{ start: number, count: number }} [hidden] A second range of glyphs not drawn: an unfinished
+     *   file's code not typed yet, hidden while another landmark uses `fade`.
      */
-    render(camera, time, fade) {
+    render(camera, time, fade, cursor, hidden) {
       gl.useProgram(program);
       gl.uniformMatrix4fv(u.viewProjection, false, viewProjectionFor(camera, width / height));
       gl.uniform1f(u.projScale, 1 / Math.tan((camera.fov * Math.PI) / 360));
       gl.uniform1i(u.fadeFrom, fade ? fade.start : 0);
       gl.uniform1i(u.fadeTo, fade ? fade.start + fade.count : 0);
       gl.uniform1f(u.fadeAmount, fade ? fade.amount : 1);
+      gl.uniform1i(u.hideFrom, hidden ? hidden.start : 0);
+      gl.uniform1i(u.hideTo, hidden ? hidden.start + hidden.count : 0);
+      gl.uniform1i(u.cursorIndex, cursor ? cursor.index : -1);
+      gl.uniform3f(u.cursorPosition, cursor ? cursor.position[0] : 0, cursor ? cursor.position[1] : 0, cursor ? cursor.position[2] : 0);
+      gl.uniform1f(u.cursorOn, cursor && cursor.visible ? 1 : 0);
       gl.uniform1f(u.viewportHeight, height);
       gl.uniform1f(u.pixelRatio, pixelRatio);
       gl.uniform1f(u.time, time);

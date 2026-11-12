@@ -23,18 +23,27 @@ export function resolveAt(progress) {
   return t * t * (3 - 2 * t);
 }
 
+/** The way the prototype's landmark faces: straight back up the road (+z). */
+const FACING_BACK = /** @type {Vec3} */ ([0, 0, 1]);
+
 /**
- * Where the landmark's screen appears on the page, in CSS pixels: the box around its four corners
- * as the camera sees them. Not visible when any corner is behind the camera.
+ * Where a landmark's screen appears on the page, in CSS pixels: the box around its four corners
+ * as the camera sees them. Not visible when any corner is behind the camera. The landmark is
+ * upright, its face looking along `facing` (on the ground); the prototype's when left out.
  * @param {{ eye: Vec3, target: Vec3, fov: number }} camera The camera as drawn (already framed).
  * @param {{ width: number, height: number }} viewport
+ * @param {{ center: Vec3, width: number, height: number, facing?: Vec3 }} [landmark]
  * @returns {{ left: number, top: number, width: number, height: number, visible: boolean }}
  */
-export function landmarkRect(camera, viewport) {
+export function landmarkRect(camera, viewport, landmark = LANDMARK) {
   const viewProjection = viewProjectionFor(camera, viewport.width / viewport.height);
-  const [cx, cy, cz] = LANDMARK.center;
-  const hw = LANDMARK.width / 2;
-  const hh = LANDMARK.height / 2;
+  const [cx, cy, cz] = landmark.center;
+  const facing = landmark.facing ?? FACING_BACK;
+  // The face's right-hand direction, seen from in front: across the face, on the ground.
+  const rx = facing[2];
+  const rz = -facing[0];
+  const hw = landmark.width / 2;
+  const hh = landmark.height / 2;
   const xs = [];
   const ys = [];
   for (const [dx, dy] of [
@@ -43,7 +52,7 @@ export function landmarkRect(camera, viewport) {
     [hw, hh],
     [-hw, hh],
   ]) {
-    const [x, y, , w] = transformPoint(viewProjection, [cx + dx, cy + dy, cz]);
+    const [x, y, , w] = transformPoint(viewProjection, [cx + rx * dx, cy + dy, cz + rz * dx]);
     if (w <= 0) return { left: 0, top: 0, width: 0, height: 0, visible: false };
     xs.push(((x / w + 1) / 2) * viewport.width);
     ys.push(((1 - y / w) / 2) * viewport.height);

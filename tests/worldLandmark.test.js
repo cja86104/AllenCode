@@ -68,3 +68,19 @@ describe('packShapes tells where each shape sits in the buffer (Task P4: the lan
     ]);
   });
 });
+
+describe('landmarkRect for any landmark (Code World W2.2)', () => {
+  it('for a landmark facing straight back up the road, equals the prototype’s box', () => {
+    const camera = frameCamera(cameraAt(1), 1440 / 900);
+    const viewport = { width: 1440, height: 900 };
+    expect(landmarkRect(camera, viewport, { ...LANDMARK, facing: [0, 0, 1] })).toEqual(landmarkRect(camera, viewport));
+  });
+
+  it('turns with the landmark: one facing along x, seen from along x, keeps its shape', () => {
+    const landmark = { center: /** @type {[number, number, number]} */ ([10, 1.8, 0]), facing: /** @type {[number, number, number]} */ ([1, 0, 0]), width: 6, height: 3.75 };
+    const camera = { eye: /** @type {[number, number, number]} */ ([17.5, 1.8, 0]), target: landmark.center, fov: 52 };
+    const rect = landmarkRect(camera, { width: 1440, height: 900 }, landmark);
+    expect(rect.visible).toBe(true);
+    expect(rect.width / rect.height).toBeCloseTo(1.6, 2);
+  });
+});

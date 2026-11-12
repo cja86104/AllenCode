@@ -34,7 +34,7 @@ const NAV_ROOM = 72;
  * part of the title not yet typed and the text not yet in are only made invisible.
  * @param {{ principle: (typeof PRINCIPLES)[number], state: CommitState, live: boolean, compact: boolean }} props
  */
-function Entry({ principle, state, live, compact }) {
+export function CommitEntry({ principle, state, live, compact }) {
   const shown = Math.round(state.typed * principle.title.length);
   const typing = live && state.typed > 0 && state.typed < 1;
   return (
@@ -123,7 +123,7 @@ export default function HowIWork() {
         </p>
         <ol className="divide-y divide-white/10">
           {PRINCIPLES.map((principle, i) => (
-            <Entry key={principle.n} principle={principle} state={states[i]} live={live} compact={compact} />
+            <CommitEntry key={principle.n} principle={principle} state={states[i]} live={live} compact={compact} />
           ))}
         </ol>
       </div>

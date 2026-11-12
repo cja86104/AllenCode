@@ -23,12 +23,14 @@ export const BUDGETS = Object.freeze([
   { name: 'renderer chunk (after first paint)', limitKb: 5, match: (file) => /^FieldScene-.*\.js$/.test(file) },
   { name: 'scroll vendor: GSAP and Lenis (after first paint)', limitKb: 54, match: (file) => /^vendor-scroll-.*\.js$/.test(file) },
   { name: 'code world canvas (world only)', limitKb: 7, match: (file) => /^WorldCanvas-.*\.js$/.test(file) },
+  // The home's journey with its road stops, real screens and phone fitting (W2.5): 3.71 kB measured, plus 5 %.
+  { name: 'code world journey (world only)', limitKb: 3.9, match: (file) => /^WorldJourney-.*\.js$/.test(file) },
   // The Code world prototype's lab page (/lab/world), which the site never loads (Task P2).
   { name: 'code world lab (lab route only)', limitKb: 40, match: (file) => /^WorldLab-.*\.js$/.test(file) },
   {
     name: 'any other script chunk',
     limitKb: 12,
-    match: (file, entry) => file.endsWith('.js') && file !== entry.script && !/^(Home|FieldScene|WorldLab|WorldCanvas|vendor-scroll)-/.test(file),
+    match: (file, entry) => file.endsWith('.js') && file !== entry.script && !/^(Home|FieldScene|WorldLab|WorldCanvas|WorldJourney|vendor-scroll)-/.test(file),
   },
 ]);
 

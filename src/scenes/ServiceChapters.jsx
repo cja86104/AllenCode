@@ -36,7 +36,7 @@ function css(color) {
  * `compact` leaves out the scope list, for a pinned chapter on a phone.
  * @param {{ service: Service, compact?: boolean }} props
  */
-function ServiceText({ service, compact = false }) {
+export function ServiceText({ service, compact = false }) {
   return (
     <div>
       <h2 className={CHAPTER_TITLE}>{service.name}</h2>
@@ -117,21 +117,14 @@ function StaticChapter({ service, excerpt, screen }) {
 }
 
 /**
- * The audit chapter (spec section 4, step 4): the code stays put and its lines are checked one by
- * one as the visitor scrolls. Static: the code is shown without the checking.
- * @param {{ service: Service, excerpt: Excerpt | null, animate: boolean }} props
+ * The audit's file with its lines checked: the first `checked` lines carry an ember ✓, and line
+ * `current` is the one being checked. Shared by the audit chapter and the world's audit landmark,
+ * which shows it with every line checked (Code World W2.5).
+ * @param {{ excerpt: Excerpt, checked: number, current?: number, fontSize: number | string }} props
  */
-function AuditChapter({ service, excerpt, animate }) {
-  const sectionRef = useRef(/** @type {HTMLElement | null} */ (null));
-  const live = animate && excerpt !== null;
-  const { progress, viewport } = useSectionProgress(sectionRef, live);
-  const lines = excerpt ? excerpt.code.split('\n') : [];
-  const checked = live ? auditTimeline(progress, lines.length) : 0;
-  const longest = Math.max(1, ...lines.map((line) => line.length));
-  const panelWidth = viewport.w >= DESKTOP_MIN_WIDTH ? viewport.w * 0.5 : viewport.w - 48;
-  const fontSize = Math.min(CODE_FONT_SIZE, (panelWidth - 2 * EDITOR_PADDING - 24) / (longest * 0.6));
-
-  const panel = excerpt && (
+export function AuditPanel({ excerpt, checked, current = -1, fontSize }) {
+  const lines = excerpt.code.split('\n');
+  return (
     <figure className="overflow-hidden rounded-xl border border-white/10 bg-night/80">
       <figcaption className="sr-only">
         {`Code from ${excerpt.file} (${excerpt.repo}), which becomes ${excerpt.becomes}.`}
@@ -145,7 +138,7 @@ function AuditChapter({ service, excerpt, animate }) {
       >
         {lines.map((line, row) => {
           const isChecked = row < checked;
-          const isCurrent = live && row === checked - 1;
+          const isCurrent = row === current;
           return (
             <div
               key={row}
@@ -170,6 +163,24 @@ function AuditChapter({ service, excerpt, animate }) {
       </pre>
     </figure>
   );
+}
+
+/**
+ * The audit chapter (spec section 4, step 4): the code stays put and its lines are checked one by
+ * one as the visitor scrolls. Static: the code is shown without the checking.
+ * @param {{ service: Service, excerpt: Excerpt | null, animate: boolean }} props
+ */
+function AuditChapter({ service, excerpt, animate }) {
+  const sectionRef = useRef(/** @type {HTMLElement | null} */ (null));
+  const live = animate && excerpt !== null;
+  const { progress, viewport } = useSectionProgress(sectionRef, live);
+  const lines = excerpt ? excerpt.code.split('\n') : [];
+  const checked = live ? auditTimeline(progress, lines.length) : 0;
+  const longest = Math.max(1, ...lines.map((line) => line.length));
+  const panelWidth = viewport.w >= DESKTOP_MIN_WIDTH ? viewport.w * 0.5 : viewport.w - 48;
+  const fontSize = Math.min(CODE_FONT_SIZE, (panelWidth - 2 * EDITOR_PADDING - 24) / (longest * 0.6));
+
+  const panel = excerpt && <AuditPanel excerpt={excerpt} checked={checked} current={live ? checked - 1 : -1} fontSize={fontSize} />;
 
   if (!live) {
     return (

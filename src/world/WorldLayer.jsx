@@ -7,7 +7,7 @@ import { fieldBus } from '../field/fieldBus.js';
 import { detectCapabilities } from '../field/capabilities.js';
 import { readCapabilityEnv } from '../field/environment.js';
 import WorldCanvas, { WORLD_SOURCES_APPROVED } from './WorldCanvas.jsx';
-import { buildJourney } from './journey.js';
+import { routeFor } from './route.js';
 import { journeyProgress } from './journeyProgress.js';
 import { markWorldFailed } from './worldSwitch.js';
 
@@ -23,7 +23,8 @@ const TIERS = /** @type {const} */ ({ low: 'low', medium: 'mid', high: 'high' })
  */
 export default function WorldLayer() {
   const { door } = useDoor();
-  const journey = useMemo(() => buildJourney(door), [door]);
+  // The route for the door taken (W2.4): the business road with its stops; built once per door.
+  const route = useMemo(() => routeFor(door), [door]);
   const [tier] = useState(() => TIERS[detectCapabilities(readCapabilityEnv()).tier]);
   const [searchParams] = useSearchParams();
   const showMeter = searchParams.get('meter') === '1';
@@ -39,7 +40,7 @@ export default function WorldLayer() {
   return (
     <>
       <ScrollEngine enabled />
-      <WorldCanvas getProgress={journeyProgress} tier={tier} keys={journey.keys} onMeter={showMeter ? setReport : undefined} onFail={markWorldFailed} />
+      <WorldCanvas getProgress={journeyProgress} tier={tier} route={route} onMeter={showMeter ? setReport : undefined} onFail={markWorldFailed} />
       {showMeter && (
         <p
           data-frame-meter

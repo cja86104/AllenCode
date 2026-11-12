@@ -88,7 +88,7 @@ function Status({ product }) {
  * `compact` leaves out the tagline, for a pinned chapter on a phone.
  * @param {{ product: Product, countT: number, compact?: boolean }} props
  */
-function ProductText({ product, countT, compact = false }) {
+export function ProductText({ product, countT, compact = false }) {
   const stats = (product.stats ?? []).slice(0, COUNTERS_SHOWN);
   return (
     <div>
@@ -115,7 +115,7 @@ function ProductText({ product, countT, compact = false }) {
 }
 
 /** @param {Product} product */
-function loopOf(product) {
+export function loopOf(product) {
   if (!product.previewVideo || !product.poster) return null;
   return {
     src: product.previewVideo,

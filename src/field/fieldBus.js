@@ -72,5 +72,14 @@ export const fieldBus = createFieldBus();
  * @returns {FieldState}
  */
 export function useField() {
-  return useSyncExternalStore(fieldBus.subscribe, fieldBus.get, fieldBus.get);
+  // The server snapshot is the state every page is prebuilt with. While hydrating, React reads it,
+  // so a component that hydrates late (inside the lazily loaded home page) matches the prebuilt HTML
+  // even when the field has already decided its mode; React re-renders it with the live state right
+  // after. Reading the live state here gave a hydration mismatch whenever the field decided first.
+  return useSyncExternalStore(fieldBus.subscribe, fieldBus.get, getPrebuiltState);
+}
+
+/** @returns {FieldState} */
+function getPrebuiltState() {
+  return INITIAL_STATE;
 }

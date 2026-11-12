@@ -2,11 +2,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDoor } from '../door/DoorProvider.jsx';
 import { DOORS } from '../door/Fork.jsx';
-import { branchForGesture, buildJourney } from '../world/journey.js';
+import { branchForGesture } from '../world/journey.js';
+import { routeFor } from '../world/route.js';
 import { glideTo } from '../scroll/glide.js';
 import { journeyProgress } from '../world/journeyProgress.js';
 import { GATE_LINE } from './Gate.jsx';
 import { HEADLINE_LINES } from './headline.js';
+import { worldFrame } from '../world/worldFrame.js';
+import RoadStop from './RoadStop.jsx';
+import WorldScreen from './WorldScreen.jsx';
 
 /** Each stop's line under its name; the first stop carries the approved line and headline instead. */
 const STOP_LINES = Object.freeze({
@@ -14,6 +18,37 @@ const STOP_LINES = Object.freeze({
   'the-road': 'A road made of this site’s code, running into the dark.',
   'the-fork': 'Two roads from here: business/ for a product or a company, family/ for a site of your own.',
 });
+
+/** Room kept between the real screen and its words, and below the words, in CSS pixels. */
+const WORDS_GAP = 12;
+const WORDS_BOTTOM = 24;
+/** The words never shrink below this, however tall. */
+const WORDS_MIN_SCALE = 0.6;
+
+/**
+ * On a screen taller than wide the words stand below the real screen; when a stop's words (all of
+ * them, as the spec names them) are taller than the room left, they scale down to fit, from their
+ * bottom left, as How I work's pinned chapter does. Elsewhere they keep their size.
+ * @param {Map<string, HTMLDivElement>} words
+ * @param {import('../world/worldFrame.js').WorldFrame} frame
+ */
+function fitWords(words, frame) {
+  const handover = frame.handover;
+  const narrow = window.innerWidth < window.innerHeight;
+  for (const [id, el] of words) {
+    let scale = 1;
+    if (narrow && handover && handover.stopId === id && handover.rect.visible) {
+      const room = window.innerHeight - WORDS_BOTTOM - (handover.rect.top + handover.rect.height + WORDS_GAP);
+      const height = el.offsetHeight;
+      if (height > room) scale = Math.max(WORDS_MIN_SCALE, room / height);
+    }
+    const transform = scale < 1 ? `scale(${scale.toFixed(4)})` : '';
+    if (el.style.transform !== transform) {
+      el.style.transform = transform;
+      el.style.transformOrigin = 'bottom left';
+    }
+  }
+}
 
 /**
  * The top of the home page as the Code World journey (Code World W1.3): one tall section the world
@@ -23,18 +58,33 @@ const STOP_LINES = Object.freeze({
  */
 export default function WorldJourney() {
   const { door, setDoor } = useDoor();
-  const journey = useMemo(() => buildJourney(door), [door]);
+  // The same route the canvas draws (W2.4), so the page's length and the camera agree.
+  const route = useMemo(() => routeFor(door), [door]);
+  const journey = route.journey;
+  const roadStops = route.road?.stops ?? [];
+  // How many of how I work's commits the camera has passed, as the canvas reports it (W2.5).
+  const [commits, setCommits] = useState(0);
+  /** Each road stop's words, by stop id, to fit them under the real screen on a phone. */
+  const wordsRef = useRef(/** @type {Map<string, HTMLDivElement>} */ (new Map()));
+  useEffect(
+    () =>
+      worldFrame.subscribe((frame) => {
+        setCommits(frame.commits);
+        fitWords(wordsRef.current, frame);
+      }),
+    [],
+  );
   const [stopId, setStopId] = useState(journey.stops[0].id);
   const sectionRef = useRef(/** @type {HTMLElement | null} */ (null));
   // Set when the visitor takes a road here, so the page glides down it once the journey has grown.
   const glidePending = useRef(false);
   const atFork = stopId === 'the-fork';
 
-  /** Glides the page to just inside the journey's last stop: the road taken. */
+  /** Glides the page to just inside the road taken: its own stop, where the camera turns onto it. */
   const glideDownRoad = useCallback(() => {
     const section = sectionRef.current;
-    if (!section) return;
-    const road = journey.stops[journey.stops.length - 1];
+    const road = journey.stops.find((stop) => stop.id === 'business-road' || stop.id === 'family-road');
+    if (!section || !road) return;
     const top = section.getBoundingClientRect().top + window.scrollY;
     glideTo(top + (section.offsetHeight - window.innerHeight) * (road.from + 0.02));
   }, [journey]);
@@ -150,6 +200,33 @@ export default function WorldJourney() {
   }, [journey]);
 
   const branch = door ? DOORS.find((option) => option.door === door) : null;
+  const landmarkOf = (/** @type {string} */ id) => journey.landmarks.find((landmark) => landmark.stopId === id);
+  const onRoad = (/** @type {string} */ id) => roadStops.some((stop) => stop.id === id);
+  const openingStops = journey.stops.filter((stop) => !onRoad(stop.id));
+
+  /** The marks every stop carries: its place on the journey (0..1), for its words and for tests. */
+  const marks = (/** @type {import('../world/journey.js').JourneyStop} */ stop) => ({
+    'data-active-stop': stop.id === stopId ? stop.name : undefined,
+    'data-stop-id': stop.id,
+    'data-from': stop.from,
+    'data-to': stop.to,
+    'data-arrive': landmarkOf(stop.id)?.arriveAt,
+    'data-hold': landmarkOf(stop.id)?.holdAt,
+  });
+
+  /**
+   * Keyboard visitors reach a stop's links while the stop is off screen (every stop's words stay in
+   * the page): focus there glides the page to that stop, so focus is never on something unseen.
+   * @param {import('../world/journey.js').JourneyStop} stop
+   */
+  const goToStop = (stop) => {
+    const section = sectionRef.current;
+    if (!section || stop.id === stopId) return;
+    const landmark = landmarkOf(stop.id);
+    const at = landmark ? (landmark.arriveAt + landmark.holdAt) / 2 : (stop.from + stop.to) / 2;
+    const top = section.getBoundingClientRect().top + window.scrollY;
+    glideTo(top + (section.offsetHeight - window.innerHeight) * at);
+  };
 
   return (
     <section
@@ -165,12 +242,12 @@ export default function WorldJourney() {
       <div className="pin-frame pointer-events-none sticky top-0 overflow-hidden">
         <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-[45vh] bg-gradient-to-t from-night via-night/80 to-transparent" />
         <div className="absolute bottom-24 left-6 right-16 max-w-xl sm:left-10">
-          {journey.stops.map((stop) => {
+          {openingStops.map((stop) => {
             const active = stop.id === stopId;
             return (
               <div
                 key={stop.id}
-                data-active-stop={active ? stop.name : undefined}
+                {...marks(stop)}
                 style={{ opacity: active ? 1 : 0, transition: 'opacity 600ms ease' }}
                 className="absolute bottom-0 left-0 right-0"
               >
@@ -219,7 +296,30 @@ export default function WorldJourney() {
             );
           })}
         </div>
+        {/* The road's stops: below the landmark on a phone, left of it on a screen wider than tall,
+            where the camera sets the landmark to the right (W2.5). */}
+        {roadStops.map((roadStop) => {
+          const stop = journey.stops.find((s) => s.id === roadStop.id);
+          if (!stop) return null;
+          const active = stop.id === stopId;
+          return (
+            <div
+              key={stop.id}
+              ref={(el) => {
+                if (el) wordsRef.current.set(stop.id, el);
+                else wordsRef.current.delete(stop.id);
+              }}
+              {...marks(stop)}
+              onFocusCapture={() => goToStop(stop)}
+              style={{ opacity: active ? 1 : 0, transition: 'opacity 600ms ease' }}
+              className={`absolute inset-x-6 bottom-6 sm:inset-x-10 wide:bottom-auto wide:right-auto wide:top-1/2 wide:w-[min(35vw,34rem)] wide:-translate-y-1/2 ${active ? 'pointer-events-auto' : ''}`}
+            >
+              <RoadStop stop={roadStop} commits={commits} />
+            </div>
+          );
+        })}
       </div>
+      {route.road && <WorldScreen stops={route.road.stops} />}
     </section>
   );
 }

@@ -80,3 +80,34 @@ describe('frameCamera: narrow screens see the whole scene (Task P3; P2 found the
     }
   });
 });
+
+describe('still keys (Code World W2.2)', () => {
+  /** @type {import('../src/world/camera.js').CameraKey[]} */
+  const keys = [
+    { at: 0, stop: 'a', eye: [0, 1, 10], target: [0, 1, 0], fov: 50 },
+    { at: 0.4, stop: 'b', eye: [2, 1, 4], target: [2, 1, -4], fov: 52, still: true },
+    { at: 0.6, stop: 'b', eye: [2, 1, 4], target: [2, 1, -4], fov: 52, still: true },
+    { at: 1, stop: 'c', eye: [-4, 1, -8], target: [-4, 1, -16], fov: 50 },
+  ];
+
+  it('between two still keys the camera does not move at all', () => {
+    const held = cameraAt(0.4, keys);
+    for (const p of [0.45, 0.5, 0.55, 0.6]) expect(cameraAt(p, keys)).toEqual(held);
+  });
+
+  it('eases into a still key: the step just before it is smaller than the steps before that', () => {
+    const step = (/** @type {number} */ p) => {
+      const a = cameraAt(p, keys).eye;
+      const b = cameraAt(p + 0.01, keys).eye;
+      return Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+    };
+    expect(step(0.39)).toBeLessThan(step(0.2) / 4);
+  });
+
+  it('keys without the mark curve exactly as before', () => {
+    const plain = keys.map(({ still, ...key }) => (void still, key));
+    const reference = [0.1, 0.3, 0.5, 0.8].map((p) => cameraAt(p, plain));
+    expect(reference.every((c) => Number.isFinite(c.eye[0]))).toBe(true);
+    expect(cameraAt(0.5, CAMERA_KEYS)).toEqual(cameraAt(0.5));
+  });
+});

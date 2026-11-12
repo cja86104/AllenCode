@@ -1,6 +1,22 @@
 // @ts-check
 import { describe, expect, it } from 'vitest';
-import { budgetFor, buildWorld, codeRoad, distanceToPath, editorSlab, forkSigns, roadEdges, screenSculpture } from '../src/world/shapes.js';
+import {
+  budgetFor,
+  buildRoadWorld,
+  buildWorld,
+  codeRoad,
+  commitMarks,
+  distanceToPath,
+  editorSlab,
+  forkSigns,
+  roadEdges,
+  screenSculpture,
+  slabCaret,
+  unfinishedSlab,
+} from '../src/world/shapes.js';
+import { businessRoadStops } from '../src/world/roads.js';
+import { layoutRoad, roadSizes } from '../src/world/roadLayout.js';
+import { getExcerpt } from '../src/content/excerpts/index.js';
 import gate from '../src/content/excerpts/gate.js';
 import ambient from '../src/content/excerpts/ambient.js';
 import underfire from '../src/content/excerpts/product-underfire-ai.js';
@@ -123,6 +139,105 @@ describe('world shapes (Code world prototype, Task P1)', () => {
         'trunk-edges',
         'trunk-road',
       ]);
+    }
+  });
+});
+
+describe('the business road’s shapes (Code World W2.3)', () => {
+  /** @type {[number, number, number]} */
+  const sideways = [1, 0, 0];
+
+  it('facing straight back, the sculpture and the slab are exactly today’s', () => {
+    const options = { width: 6, height: 3.75, center: /** @type {[number, number, number]} */ ([-6, 1.8, -58]), count: 800 };
+    const before = screenSculpture(underfire.code, options, 4);
+    const after = screenSculpture(underfire.code, { ...options, facing: [0, 0, 1] }, 4);
+    expect([...after.positions]).toEqual([...before.positions]);
+    expect([...editorSlab(gate.code, 1, { facing: [0, 0, 1] }).positions]).toEqual([...editorSlab(gate.code, 1).positions]);
+  });
+
+  it('turned, every glyph lies in the landmark’s own plane, across its facing', () => {
+    /** @type {[number, number, number]} */
+    const center = [10, 2, -5];
+    const shapes = [
+      screenSculpture(underfire.code, { width: 6, height: 3.75, center, count: 800, facing: sideways }, 4),
+      editorSlab(gate.code, 1, { center, facing: sideways }),
+    ];
+    for (const shape of shapes) {
+      let spread = 0;
+      for (let i = 0; i < shape.glyphs.length; i += 1) {
+        const depth = shape.positions[i * 3] - center[0];
+        expect(Math.abs(depth)).toBeLessThanOrEqual(0.21);
+        spread = Math.max(spread, Math.abs(shape.positions[i * 3 + 2] - center[2]));
+      }
+      expect(spread).toBeGreaterThan(1);
+    }
+  });
+
+  it('an unfinished slab ends in one ember cursor, and the caret follows the typing', () => {
+    const code = 'ab\ncd';
+    /** @type {[number, number, number]} */
+    const center = [0, 0, 0];
+    const slab = unfinishedSlab(code, { center, facing: [0, 0, 1] }, 1);
+    expect(slab.glyphs.length).toBe(5);
+    expect(slab.cursor).toBe(4);
+    expect(String.fromCharCode(slab.glyphs[slab.cursor])).toBe('▌');
+    const [r, g, b] = slab.colors.subarray(slab.cursor * 4, slab.cursor * 4 + 3);
+    expect([r, g, b].map((c) => Math.round(c * 255))).toEqual([0xf9, 0x73, 0x16]);
+    const first = [...slab.positions.subarray(0, 3)];
+    slabCaret(code, 0, { center, facing: [0, 0, 1] }).forEach((v, i) => expect(v).toBeCloseTo(first[i], 5));
+    const last = [...slab.positions.subarray(3 * 3, 3 * 3 + 3)];
+    const end = slabCaret(code, code.length, { center, facing: [0, 0, 1] });
+    expect(end[0]).toBeGreaterThan(last[0]);
+    expect(end[1]).toBeCloseTo(last[1], 5);
+    const sideCaret = slabCaret(code, 1, { center, facing: sideways });
+    expect(sideCaret[0]).toBeCloseTo(0, 9);
+  });
+
+  it('marks each commit with a tight ember cluster of the road’s own characters', () => {
+    /** @type {Array<[number, number]>} */
+    const points = [
+      [0, 0],
+      [0, -4],
+      [0, -8],
+    ];
+    const marks = commitMarks(ambient.code, points, 2);
+    expect(marks.glyphs.length).toBeGreaterThanOrEqual(3 * 12);
+    const allowed = charsIn(ambient.code);
+    for (const c of charsOf(marks)) expect(allowed.has(c), c).toBe(true);
+    for (let i = 0; i < marks.glyphs.length; i += 1) {
+      const nearest = Math.min(...points.map(([x, z]) => Math.hypot(marks.positions[i * 3] - x, marks.positions[i * 3 + 2] - z)));
+      expect(nearest).toBeLessThanOrEqual(0.4);
+      expect(marks.colors[i * 4]).toBeCloseTo(0xf9 / 255, 5);
+    }
+  });
+
+  it('builds the whole road within every tier’s budget, from real code only, a part per stop', () => {
+    const stops = businessRoadStops();
+    /** @type {Record<string, string>} */
+    const stopSources = {};
+    for (const stop of stops) {
+      const excerpt = stop.excerptId ? getExcerpt(stop.excerptId) : null;
+      if (excerpt && stop.excerptId) stopSources[stop.excerptId] = excerpt.code;
+    }
+    const layout = layoutRoad(stops, 'a', roadSizes(stops, stopSources));
+    for (const tier of /** @type {const} */ (['low', 'mid', 'high'])) {
+      const parts = buildRoadWorld(tier, { gate: gate.code, road: ambient.code, stops: stopSources }, 1, { stops, layout });
+      const total = parts.reduce((sum, part) => sum + part.shape.glyphs.length, 0);
+      expect(total).toBeLessThanOrEqual(budgetFor(tier));
+      expect(parts.some((part) => part.name === 'landmark')).toBe(false);
+      for (const stop of stops.filter((s) => s.kind !== 'commits')) {
+        const part = parts.find((p) => p.stopId === stop.id);
+        expect(part, stop.id).toBeDefined();
+        const code = stopSources[/** @type {string} */ (stop.excerptId)];
+        const allowed = new Set([...charsIn(code), '▌']);
+        for (const c of charsOf(/** @type {NonNullable<typeof part>} */ (part).shape)) expect(allowed.has(c), `${stop.id}: ${c}`).toBe(true);
+        if (stop.kind === 'product' || stop.kind === 'service') {
+          expect(/** @type {NonNullable<typeof part>} */ (part).shape.glyphs.length).toBeGreaterThanOrEqual(400);
+        }
+      }
+      const crew = parts.find((p) => p.stopId === 'crew-advisors');
+      expect(crew?.cursor).toBe((crew?.shape.glyphs.length ?? 0) - 1);
+      expect(parts.find((p) => p.name === 'commits')).toBeDefined();
     }
   });
 });
