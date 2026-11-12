@@ -30,24 +30,37 @@ export default function WorldJourney() {
   const glidePending = useRef(false);
   const atFork = stopId === 'the-fork';
 
-  /** Takes a road at the split (Code World W1.4): the door is stored as the fork stores it. */
+  /** Glides the page to just inside the journey's last stop: the road taken. */
+  const glideDownRoad = useCallback(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+    const road = journey.stops[journey.stops.length - 1];
+    const top = section.getBoundingClientRect().top + window.scrollY;
+    glideTo(top + (section.offsetHeight - window.innerHeight) * (road.from + 0.02));
+  }, [journey]);
+
+  /**
+   * Takes a road at the split (Code World W1.4): the door is stored as the fork stores it. Choosing
+   * the road already taken runs down it again; a new road first grows the journey, then glides.
+   */
   const take = useCallback(
     (/** @type {'a' | 'b'} */ road) => {
+      if (road === door) {
+        glideDownRoad();
+        return;
+      }
       glidePending.current = true;
       setDoor(road);
     },
-    [setDoor],
+    [door, glideDownRoad, setDoor],
   );
 
   // Once the journey has grown down the road just taken, glide to where that road begins.
   useEffect(() => {
-    const section = sectionRef.current;
-    if (!glidePending.current || !door || !section) return;
+    if (!glidePending.current || !door) return;
     glidePending.current = false;
-    const road = journey.stops[journey.stops.length - 1];
-    const top = section.getBoundingClientRect().top + window.scrollY;
-    glideTo(top + (section.offsetHeight - window.innerHeight) * (road.from + 0.02));
-  }, [journey, door]);
+    glideDownRoad();
+  }, [glideDownRoad, door]);
 
   // At the split: ← and →, a sideways drag or swipe toward the road wanted (finger or mouse
   // moving left takes business/), sideways wheel and trackpad scrolling (scrolling right takes
@@ -84,6 +97,10 @@ export default function WorldJourney() {
         take(event.clientX < window.innerWidth / 2 ? 'a' : 'b');
       }
     };
+    // The browser cancels a touch it takes over (an up-and-down scroll): that touch takes nothing.
+    const onCancel = () => {
+      start = null;
+    };
     const onWheel = (/** @type {WheelEvent} */ event) => {
       wheel = { dx: wheel.dx + event.deltaX, dy: wheel.dy + event.deltaY };
       window.clearTimeout(wheelTimer);
@@ -99,12 +116,14 @@ export default function WorldJourney() {
     window.addEventListener('keydown', onKey);
     window.addEventListener('pointerdown', onDown);
     window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onCancel);
     window.addEventListener('wheel', onWheel, { passive: true });
     return () => {
       window.clearTimeout(wheelTimer);
       window.removeEventListener('keydown', onKey);
       window.removeEventListener('pointerdown', onDown);
       window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onCancel);
       window.removeEventListener('wheel', onWheel);
     };
   }, [atFork, take]);
@@ -138,9 +157,12 @@ export default function WorldJourney() {
       data-world-journey
       data-chapter="world-journey"
       className="relative"
-      style={{ height: `${(journey.screens + 1) * 100}vh` }}
+      // At the split a sideways swipe is the visitor choosing a road, so the browser keeps only
+      // up-and-down panning. Set here, on the element touches land on: the frame above it lets
+      // touches through and its own setting would never apply.
+      style={{ height: `${(journey.screens + 1) * 100}vh`, touchAction: atFork ? 'pan-y' : undefined }}
     >
-      <div className="pin-frame pointer-events-none sticky top-0 overflow-hidden" style={atFork ? { touchAction: 'pan-y' } : undefined}>
+      <div className="pin-frame pointer-events-none sticky top-0 overflow-hidden">
         <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-[45vh] bg-gradient-to-t from-night via-night/80 to-transparent" />
         <div className="absolute bottom-24 left-6 right-16 max-w-xl sm:left-10">
           {journey.stops.map((stop) => {

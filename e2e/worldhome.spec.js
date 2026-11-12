@@ -127,6 +127,26 @@ test.describe('taking a road at the split (Code World W1.4)', () => {
     await expect(page.locator('[data-door-b-intro]')).toBeAttached();
   });
 
+  test('back at the split, choosing the road already taken runs down it again', async ({ page }) => {
+    await atTheFork(page);
+    await page.getByRole('button', { name: /business\// }).click();
+    await expect.poll(() => page.locator('[data-active-stop]').getAttribute('data-active-stop'), { timeout: 8000 }).toBe('business/');
+    await page.waitForFunction(() => !document.documentElement.classList.contains('lenis-smooth'), undefined, { timeout: 8000 });
+    await scrollJourney(page, 0.6);
+    await expect(page.locator('[data-active-stop]')).toHaveAttribute('data-active-stop', 'The fork');
+    await page.getByRole('button', { name: /business\// }).click();
+    await expect.poll(() => page.locator('[data-active-stop]').getAttribute('data-active-stop'), { timeout: 8000 }).toBe('business/');
+  });
+
+  test('at the split the screen under a finger keeps sideways swipes for the page', async ({ page }) => {
+    await atTheFork(page);
+    const touchAction = await page.evaluate(() => {
+      const hit = document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 3);
+      return hit ? getComputedStyle(/** @type {Element} */ (hit.closest('[data-world-journey]') ?? hit)).touchAction : null;
+    });
+    expect(touchAction).toBe('pan-y');
+  });
+
   test('a returning visitor with a road stored starts at the empty file, with that road ahead', async ({ page }) => {
     await page.addInitScript(() => window.sessionStorage.setItem('allencode:door', 'a'));
     await page.goto('/?world=1');
