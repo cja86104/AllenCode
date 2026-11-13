@@ -22,8 +22,12 @@ const FIRST_AT = 7;
 const ROAD_HALF_WIDTH = 1.6;
 /** The three commits of how I work, this far apart along the edge. */
 const COMMIT_GAP = 4;
-/** How far the road runs on past its last stop. */
-const RUN_ON = 14;
+/** How far the road runs on past its last stop: past the fog's far edge (46) seen from the camera's
+ * last rest, so it fades out instead of ending in front of the camera (Chris, 2026-11-12: "messed up
+ * at the end"). */
+export const RUN_ON = 60;
+/** A side path stops this far short of its landmark's foot, just before the stand's near post. */
+const SPUR_SHORT = 0.6;
 /** The camera's eye height along the road. */
 export const EYE_HEIGHT = 1.6;
 /** A landmark stands this share of its height above eye height, so the camera, resting level with
@@ -85,9 +89,10 @@ function branchEnd() {
  * @param {ReadonlyArray<RoadStop>} stops
  * @param {'a' | 'b'} door
  * @param {Readonly<Record<string, { width: number, height: number }>>} sizes From `roadSizes`.
- * @returns {{ path: Point2[], landmarks: Landmark[], commits: Point2[], along: number[], origin: Point2, direction: Point2 }}
+ * @returns {{ path: Point2[], landmarks: Landmark[], commits: Point2[], along: number[], origin: Point2, direction: Point2, spurs: Array<{ stopId: string, path: Point2[] }> }}
  *   `along` is each stop's distance along the road past the branch's end; `origin` and `direction`
- *   the straight road's start and heading (mirrored for the family road).
+ *   the straight road's start and heading (mirrored for the family road); `spurs` the side path to
+ *   each landmark (`spurPaths`).
  */
 export function layoutRoad(stops, door, sizes) {
   const { end, direction } = branchEnd();
@@ -129,7 +134,31 @@ export function layoutRoad(stops, door, sizes) {
       landmark.center[0] = -landmark.center[0];
       landmark.facing[0] = -landmark.facing[0];
     }
-    return { path: path.map(flip), landmarks, commits: commits.map(flip), along, origin: flip(origin), direction: flip(heading) };
+    const mirrored = { path: path.map(flip), landmarks, commits: commits.map(flip), along, origin: flip(origin), direction: flip(heading) };
+    return { ...mirrored, spurs: spurPaths(mirrored) };
   }
-  return { path, landmarks, commits, along, origin, direction: heading };
+  const business = { path, landmarks, commits, along, origin, direction: heading };
+  return { ...business, spurs: spurPaths(business) };
+}
+
+/**
+ * A side path from the road to each landmark (Chris, 2026-11-12: "side sections that run to the
+ * screens"): straight, square off the road at the landmark's place along it, on its side, from the
+ * road's centre line to `SPUR_SHORT` short of the landmark's foot (its centre on the ground). How I
+ * work has no landmark, so no side path. Works for either door's layout.
+ * @param {{ landmarks: ReadonlyArray<Landmark>, origin: Point2, direction: Point2 }} layout From `layoutRoad`.
+ * @returns {Array<{ stopId: string, path: Point2[] }>}
+ */
+export function spurPaths(layout) {
+  const [ox, oz] = layout.origin;
+  const [dx, dz] = layout.direction;
+  return layout.landmarks.map((landmark) => {
+    const foot = /** @type {Point2} */ ([landmark.center[0], landmark.center[2]]);
+    const along = (foot[0] - ox) * dx + (foot[1] - oz) * dz;
+    const from = /** @type {Point2} */ ([ox + dx * along, oz + dz * along]);
+    const length = Math.hypot(foot[0] - from[0], foot[1] - from[1]);
+    const reach = (length - SPUR_SHORT) / length;
+    const to = /** @type {Point2} */ ([from[0] + (foot[0] - from[0]) * reach, from[1] + (foot[1] - from[1]) * reach]);
+    return { stopId: landmark.stopId, path: [from, to] };
+  });
 }

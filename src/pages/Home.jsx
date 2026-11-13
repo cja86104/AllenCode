@@ -13,6 +13,7 @@ import DoneForYou from '../scenes/DoneForYou.jsx';
 import Builder from '../scenes/Builder.jsx';
 import IdeaSketch from '../scenes/IdeaSketch.jsx';
 import BriefChapter from '../scenes/BriefChapter.jsx';
+import WorldRoadChapters from '../scenes/WorldRoadChapters.jsx';
 
 // The Code World journey loads only when the switch is on (its own chunk; W2.5).
 const WorldJourney = lazy(() => import('../scenes/WorldJourney.jsx'));
@@ -30,7 +31,7 @@ export default function Home() {
     'Custom development, web design, UI/UX, and AI integration — built around your business. Tailored work for small business owners and founders.',
   );
   const { door } = useDoor();
-  // The Code World journey replaces the gate and the fork behind `/?world=1` (Code World W1.3).
+  // Behind `/?world=1` the Code World follows the gate (Code World W1.3; W2 revised, R4).
   const world = useWorldHome();
 
   const opening = (
@@ -46,17 +47,33 @@ export default function Home() {
 
   return (
     <>
-      {/* While the journey's chunk loads, the opening the prebuilt page painted stays, so nothing blanks. */}
-      {world ? <Suspense fallback={opening}><WorldJourney /></Suspense> : opening}
-
-      {/* In the world the business road carries the services, products and how I work (W2.5). */}
-      {door === 'a' && !world && (
+      {world ? (
+        // The Code World (W2 revised, R4): it starts as today does, with the gate's empty file; then the
+        // world opening, from the file into the world, down the road to the fork. While the opening's
+        // chunk loads, a screen of room holds its place.
         <>
-          <ServiceChapters includeDrafts={false} />
-          <ProductChapters includeDrafts={false} />
-          <HowIWork />
+          <div data-world-segment="gate">
+            <Gate includeDrafts={false} />
+          </div>
+          <Suspense fallback={<div aria-hidden="true" className="h-screen" />}>
+            <WorldJourney />
+          </Suspense>
         </>
+      ) : (
+        opening
       )}
+
+      {/* Door A's chapters: in the world, today's chapters along the business road, products first. */}
+      {door === 'a' &&
+        (world ? (
+          <WorldRoadChapters includeDrafts={false} />
+        ) : (
+          <>
+            <ServiceChapters includeDrafts={false} />
+            <ProductChapters includeDrafts={false} />
+            <HowIWork />
+          </>
+        ))}
       {door === 'b' && (
         <>
           <DoorBIntro includeDrafts={false} />

@@ -155,6 +155,7 @@ function FlightProductChapter({ product, excerpt, loop }) {
           frameOpacity={frameOpacity}
         />
         <div
+          data-world-target
           style={{ opacity: timeline.handoff, left: targetBox.x, top: targetBox.y, width: targetBox.w, height: targetBox.h }}
           className="absolute"
         >
@@ -196,7 +197,7 @@ function ComingSoonChapter({ product, excerpt, animate }) {
   const body = (
     <div className={`relative z-10 mx-auto grid w-full max-w-6xl gap-10 px-6 ${CHAPTER_GRID} lg:items-center lg:px-10`}>
       <ProductText product={product} countT={1} />
-      <div className="min-w-0">
+      <div data-world-target className="min-w-0">
         {excerpt && <EditorPanel excerpt={excerpt} visible={Math.round(excerpt.code.length * typed)} cursor />}
       </div>
     </div>
@@ -221,24 +222,28 @@ function ComingSoonChapter({ product, excerpt, animate }) {
  * @param {{ includeDrafts: boolean }} props Whether unapproved excerpts may show (the public site passes false).
  */
 export default function ProductChapters({ includeDrafts }) {
+  return (
+    <>
+      {products.map((product) => (
+        <ProductChapterFor key={product.slug} product={product} includeDrafts={includeDrafts} />
+      ))}
+    </>
+  );
+}
+
+/**
+ * One product's chapter, as door A shows it: still being written, flying onto its loop, or beside it.
+ * The Code World's business road places each on its own (W2 revised, R4).
+ * @param {{ product: Product, includeDrafts: boolean }} props
+ */
+export function ProductChapterFor({ product, includeDrafts }) {
   const reducedMotion = usePrefersReducedMotion();
   const { mode } = useField();
   const flights = !reducedMotion && mode === 'webgl';
-
-  return (
-    <>
-      {products.map((product) => {
-        const excerptId = PRODUCT_EXCERPTS[product.slug];
-        const excerpt = excerptId ? getExcerpt(excerptId, { includeDrafts }) : null;
-        if (product.status !== 'live') {
-          return <ComingSoonChapter key={product.slug} product={product} excerpt={excerpt} animate={!reducedMotion} />;
-        }
-        const loop = loopOf(product);
-        if (flights && excerpt && loop) {
-          return <FlightProductChapter key={product.slug} product={product} excerpt={excerpt} loop={loop} />;
-        }
-        return <StaticProductChapter key={product.slug} product={product} excerpt={excerpt} loop={loop} />;
-      })}
-    </>
-  );
+  const excerptId = PRODUCT_EXCERPTS[product.slug];
+  const excerpt = excerptId ? getExcerpt(excerptId, { includeDrafts }) : null;
+  if (product.status !== 'live') return <ComingSoonChapter product={product} excerpt={excerpt} animate={!reducedMotion} />;
+  const loop = loopOf(product);
+  if (flights && excerpt && loop) return <FlightProductChapter product={product} excerpt={excerpt} loop={loop} />;
+  return <StaticProductChapter product={product} excerpt={excerpt} loop={loop} />;
 }

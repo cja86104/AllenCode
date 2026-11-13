@@ -3,94 +3,10 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 
 /**
- * Scrolls the page so the journey is at `progress` (0..1).
- * @param {import('@playwright/test').Page} page @param {number} progress
+ * Code World, W2 revised (R4): today's home page plays inside the world. The gate starts it; the
+ * world opening follows; with business/ taken, today's chapters run along the road, each resting at
+ * its landmark while its code flies into its picture.
  */
-async function scrollJourney(page, progress) {
-  // The journey comes in its own chunk (W2.5): the canvas can be ready a moment before it is.
-  await page.locator('[data-world-journey]').waitFor();
-  await page.evaluate((p) => {
-    const journey = /** @type {HTMLElement} */ (document.querySelector('[data-world-journey]'));
-    const top = journey.getBoundingClientRect().top + window.scrollY;
-    window.scrollTo(0, top + (journey.offsetHeight - window.innerHeight) * p);
-  }, progress);
-}
-
-/**
- * A stop's places on the journey, as the page marks them (0..1).
- * @param {import('@playwright/test').Page} page @param {string} id
- * @returns {Promise<{ from: number, to: number, arrive: number | null, hold: number | null }>}
- */
-async function stopAt(page, id) {
-  return page.evaluate((stopId) => {
-    const el = /** @type {HTMLElement} */ (document.querySelector(`[data-stop-id="${stopId}"]`));
-    const num = (/** @type {string | undefined} */ v) => (v === undefined ? null : Number(v));
-    return { from: Number(el.dataset.from), to: Number(el.dataset.to), arrive: num(el.dataset.arrive), hold: num(el.dataset.hold) };
-  }, id);
-}
-
-/** Takes the business road at the split and waits for the glide to end. @param {import('@playwright/test').Page} page */
-async function takeBusiness(page) {
-  await page.goto('/?world=1');
-  await page.locator('canvas[data-world][data-ready="true"]').waitFor();
-  await scrollJourney(page, 1);
-  await expect(page.locator('[data-active-stop]')).toHaveAttribute('data-active-stop', 'The fork');
-  await page.getByRole('button', { name: /business\// }).click();
-  await expect(page.locator('canvas[data-world]')).toHaveAttribute('data-road', 'a');
-  await page.waitForFunction(() => !document.documentElement.classList.contains('lenis-smooth'), undefined, { timeout: 8000 });
-}
-
-/** Scrolls to a progress and waits for the canvas to have drawn it. @param {import('@playwright/test').Page} page @param {number} progress */
-async function goTo(page, progress) {
-  await scrollJourney(page, progress);
-  await expect
-    .poll(async () => Math.abs(Number(await page.locator('canvas[data-world]').getAttribute('data-progress')) - progress), { timeout: 5000 })
-    .toBeLessThan(0.002);
-}
-
-const HANDING_OVER = ['my-teachers-toolbox', 'underfire-ai', 'founders-helm', 'mvp-sprints', 'custom-saas-builds', 'ai-integration', 'technical-audits'];
-
-test.describe('the canvas draws the business road (Code World W2.4)', () => {
-  test('each product and service hands over fully while the camera rests at it', async ({ page }) => {
-    await takeBusiness(page);
-    const canvas = page.locator('canvas[data-world]');
-    for (const id of HANDING_OVER) {
-      const stop = await stopAt(page, id);
-      if (stop.arrive === null || stop.hold === null) throw new Error(`${id} has no rest`);
-      await goTo(page, (stop.arrive + stop.hold) / 2);
-      await expect(canvas).toHaveAttribute('data-handover-stop', id);
-      await expect(canvas).toHaveAttribute('data-handover', '1.00');
-    }
-  });
-
-  test('Crew Advisors types as the visitor scrolls, never past 0.65, and never hands over', async ({ page }) => {
-    await takeBusiness(page);
-    const canvas = page.locator('canvas[data-world]');
-    const stop = await stopAt(page, 'crew-advisors');
-    /** @type {number[]} */
-    const typed = [];
-    for (const t of [0.1, 0.5, 0.9]) {
-      await goTo(page, stop.from + (stop.to - stop.from) * t);
-      typed.push(Number(await canvas.getAttribute('data-typed')));
-      expect(await canvas.getAttribute('data-handover-stop')).toBeNull();
-    }
-    expect(typed[1]).toBeGreaterThan(typed[0]);
-    expect(typed[2]).toBeGreaterThan(typed[1]);
-    expect(typed[2]).toBeLessThanOrEqual(0.65);
-  });
-
-  test('switching to family in the nav mid-road leaves the business road behind', async ({ page }) => {
-    await takeBusiness(page);
-    const canvas = page.locator('canvas[data-world]');
-    const stop = await stopAt(page, 'underfire-ai');
-    if (stop.arrive === null || stop.hold === null) throw new Error('no rest');
-    await goTo(page, (stop.arrive + stop.hold) / 2);
-    await expect(canvas).toHaveAttribute('data-handover-stop', 'underfire-ai');
-    await page.getByRole('group', { name: 'Show the site for' }).first().getByRole('button', { name: 'Family' }).click();
-    await expect(canvas).not.toHaveAttribute('data-road', 'a');
-    await expect(canvas).not.toHaveAttribute('data-handover-stop', /.+/);
-  });
-});
 
 const ROAD = [
   'my-teachers-toolbox',
@@ -104,196 +20,237 @@ const ROAD = [
   'how-i-work',
 ];
 const PRODUCTS = ['my-teachers-toolbox', 'underfire-ai', 'founders-helm'];
-const SERVICE_SCREENS = /** @type {const} */ ({
-  'mvp-sprints': '/media/services/underfire-landing.jpg',
-  'custom-saas-builds': '/media/services/founders-helm-dashboard.jpg',
-  'ai-integration': '/media/services/openrouter-usage.jpg',
-});
+const SERVICES = ['mvp-sprints', 'custom-saas-builds', 'ai-integration'];
 
-/** Scrolls to the middle of a stop's rest (or of the stop, if it has none). @param {import('@playwright/test').Page} page @param {string} id */
-async function restAt(page, id) {
-  const stop = await stopAt(page, id);
-  const p = stop.arrive !== null && stop.hold !== null ? (stop.arrive + stop.hold) / 2 : (stop.from + stop.to) / 2;
-  await goTo(page, p);
-  return p;
+/** @param {import('@playwright/test').Page} page */
+const canvas = (page) => page.locator('canvas[data-world]');
+
+/** @param {import('@playwright/test').Page} page */
+async function open(page) {
+  await page.goto('/?world=1');
+  await canvas(page).and(page.locator('[data-ready="true"]')).waitFor();
+  await page.locator('[data-world-journey]').waitFor();
 }
 
-/** The canvas's box for the landmark handing over, in CSS pixels. @param {import('@playwright/test').Page} page */
-async function handoverRect(page) {
-  const value = await page.locator('canvas[data-world]').getAttribute('data-handover-rect');
-  if (!value) throw new Error('no handover rect');
+/** Scrolls to `y` and waits for the canvas to have drawn there. @param {import('@playwright/test').Page} page @param {number} y */
+async function scrollTo(page, y) {
+  await page.evaluate((top) => window.scrollTo(0, top), y);
+  await expect.poll(() => page.evaluate(() => window.scrollY), { timeout: 5000 }).toBeGreaterThan(y - 3);
+  await page.waitForTimeout(250);
+}
+
+/** The scroll span a section's frame is pinned for (from its top until its last screen). @param {import('@playwright/test').Page} page @param {string} selector */
+async function spanOf(page, selector) {
+  return page.evaluate((sel) => {
+    const el = /** @type {HTMLElement} */ (document.querySelector(sel));
+    const rect = el.getBoundingClientRect();
+    const from = rect.top + window.scrollY;
+    return { from, to: from + rect.height - window.innerHeight };
+  }, selector);
+}
+
+/** Scrolls to a share (0..1) of a road chapter's pinned span. @param {import('@playwright/test').Page} page @param {string} id @param {number} share */
+async function inChapter(page, id, share) {
+  const span = await spanOf(page, `[data-world-stop="${id}"]`);
+  await scrollTo(page, span.from + (span.to - span.from) * share);
+}
+
+/** Takes business/ at the fork and waits for the glide to end. @param {import('@playwright/test').Page} page */
+async function takeBusiness(page) {
+  const journey = await spanOf(page, '[data-world-journey]');
+  await scrollTo(page, journey.to);
+  await expect(page.locator('[data-active-stop]')).toHaveAttribute('data-active-stop', 'The fork');
+  await page.getByRole('button', { name: /business\// }).click();
+  await expect(canvas(page)).toHaveAttribute('data-road', 'a');
+  await page.waitForFunction(() => !document.documentElement.classList.contains('lenis-smooth'), undefined, { timeout: 8000 });
+}
+
+/** The canvas's box for the resting landmark, in CSS pixels. @param {import('@playwright/test').Page} page */
+async function restRect(page) {
+  const value = await canvas(page).getAttribute('data-rest-rect');
+  if (!value) throw new Error('no rest rect');
   const [left, top, width, height] = value.split(',').map(Number);
   return { left, top, width, height };
 }
 
-/** Whether `box` lies within 3 % (of the rect's size) of `rect`. */
+/** Whether a box lies within 3 % (of the rect's size) of the rect. */
 function near(/** @type {{ x: number, y: number, width: number, height: number }} */ box, /** @type {{ left: number, top: number, width: number, height: number }} */ rect) {
   const dx = 0.03 * rect.width;
   const dy = 0.03 * rect.height;
-  return (
-    Math.abs(box.x - rect.left) <= dx &&
-    Math.abs(box.y - rect.top) <= dy &&
-    Math.abs(box.width - rect.width) <= dx &&
-    Math.abs(box.height - rect.height) <= dy
-  );
+  return Math.abs(box.x - rect.left) <= dx && Math.abs(box.y - rect.top) <= dy && Math.abs(box.width - rect.width) <= dx && Math.abs(box.height - rect.height) <= dy;
 }
 
-test.describe('each stop’s words and its real thing (Code World W2.5)', () => {
-  test('the road names every stop in order as the visitor reaches it', async ({ page }) => {
-    await takeBusiness(page);
-    const ids = await page.locator('[data-world-journey] [data-stop-id]').evaluateAll((els) => els.map((el) => /** @type {HTMLElement} */ (el).dataset.stopId));
-    expect(ids.slice(-ROAD.length)).toEqual(ROAD);
-    for (const id of ROAD) {
-      await restAt(page, id);
-      await expect(page.locator('[data-active-stop]')).toHaveAttribute('data-stop-id', id);
-    }
+test.describe('the world starts as today does (Code World R4)', () => {
+  test('the gate’s empty file types and flies into the headline, drawn by the world; the world’s own file stays hidden until then', async ({ page }) => {
+    await open(page);
+    await expect(canvas(page)).toHaveAttribute('data-section', 'gate');
+    await expect(page.locator('[data-chapter="gate"] [data-editor-frame]')).toBeVisible();
+    await expect(canvas(page)).toHaveAttribute('data-editor', '0.00');
+    const gate = await spanOf(page, '[data-world-segment="gate"]');
+    await scrollTo(page, gate.from + (gate.to - gate.from) * 0.75);
+    await expect(canvas(page)).toHaveAttribute('data-flight', /^gate:/);
+    await expect(canvas(page)).toHaveAttribute('data-editor', '0.00');
+    await scrollTo(page, gate.to);
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+    const journey = await spanOf(page, '[data-world-journey]');
+    await scrollTo(page, journey.from + 50);
+    await expect.poll(async () => Number(await canvas(page).getAttribute('data-editor'))).toBeGreaterThan(0.9);
   });
 
-  test('each product resolves into its real loop, laid over its sculpture, playing alone, linking to its page', async ({ page }) => {
+  test('taking business/ lays today’s chapters along the road, products first', async ({ page }) => {
+    await open(page);
     await takeBusiness(page);
-    for (const slug of PRODUCTS) {
-      await restAt(page, slug);
-      const screen = page.locator(`[data-world-screen="${slug}"]`);
-      await expect(screen).toBeVisible();
-      const box = await screen.boundingBox();
-      if (!box) throw new Error('no box');
-      expect(near(box, await handoverRect(page)), `${slug} over its sculpture`).toBe(true);
-      const video = screen.locator('video');
-      await expect(video).toHaveAttribute('src', `/media/products/${slug}.mp4`);
-      await expect.poll(() => video.evaluate((el) => !(/** @type {HTMLVideoElement} */ (el).paused) && /** @type {HTMLVideoElement} */ (el).currentTime > 0), { timeout: 8000 }).toBe(true);
-      const others = await page.locator('video').evaluateAll((els, mine) => els.filter((el) => !el.closest(`[data-world-screen="${mine}"]`)).map((el) => /** @type {HTMLVideoElement} */ (el).paused), slug);
-      expect(others.every(Boolean)).toBe(true);
-      await expect(screen.getByRole('link')).toHaveAttribute('href', `/products/${slug}`);
-    }
-  });
-
-  test('each service resolves into its real screen, and the audit into its file with every line checked', async ({ page }) => {
-    await takeBusiness(page);
-    for (const [slug, src] of Object.entries(SERVICE_SCREENS)) {
-      await restAt(page, slug);
-      const screen = page.locator(`[data-world-screen="${slug}"]`);
-      await expect(screen).toBeVisible();
-      await expect(screen.locator('img')).toHaveAttribute('src', src);
-      const box = await screen.boundingBox();
-      if (!box) throw new Error('no box');
-      expect(near(box, await handoverRect(page)), `${slug} over its sculpture`).toBe(true);
-    }
-    await restAt(page, 'technical-audits');
-    const audit = page.locator('[data-world-screen="technical-audits"]');
-    await expect(audit).toBeVisible();
-    const lines = audit.locator('[data-audit-line]');
-    expect(await lines.count()).toBeGreaterThan(10);
-    expect(await audit.locator('[data-audit-line]:not([data-checked="true"])').count()).toBe(0);
-  });
-
-  test('Crew Advisors never resolves: no real screen while it types', async ({ page }) => {
-    await takeBusiness(page);
-    await restAt(page, 'crew-advisors');
-    await expect(page.locator('[data-world-screen]')).toHaveCount(0);
-    await expect(page.locator('[data-active-stop]')).toContainText('Coming soon');
-  });
-
-  test('how I work marks each commit shipped as the camera passes it', async ({ page }) => {
-    await takeBusiness(page);
-    const stop = await stopAt(page, 'how-i-work');
-    const panel = page.locator('[data-stop-id="how-i-work"]');
-    const shipped = () => panel.locator('[data-shipped="true"]').count();
-    await goTo(page, stop.from + 0.001);
-    expect(await shipped()).toBe(0);
-    /** @type {number[]} */
-    const seen = [];
-    for (let t = 0.05; t <= 1.0001; t += 0.05) {
-      await goTo(page, Math.min(1, stop.from + (stop.to - stop.from) * t));
-      const n = await shipped();
-      if (seen[seen.length - 1] !== n) seen.push(n);
-    }
-    expect(seen).toEqual([0, 1, 2, 3].slice(seen[0]));
-    expect(seen[seen.length - 1]).toBe(3);
-  });
-
-  test('every stop’s heading and words are in the page throughout, and the door chapters give way to the journey', async ({ page }) => {
-    await takeBusiness(page);
-    for (const name of ['My Teachers Toolbox', 'UnderFire AI', 'Founders Helm', 'Crew Advisors', 'MVP Sprints', 'Custom SaaS Builds', 'AI Integration & OpenRouter Routing', 'Technical Audits', 'How I work']) {
-      await expect(page.locator('[data-world-journey]').getByRole('heading', { name, exact: true })).toHaveCount(1);
-    }
-    await expect(page.locator('[data-world-journey]')).toContainText('AI tools for K-5 teachers');
-    await expect(page.locator('[data-product], [data-chapter="mvp-sprints"], [data-chapter="how-i-work"]')).toHaveCount(0);
-    await expect(page.locator('[data-chapter="builder"], section:has-text("Read the full story")').first()).toBeAttached();
-  });
-
-  test('a jump straight to a stop shows only that stop’s real thing', async ({ page }) => {
-    await takeBusiness(page);
-    await restAt(page, 'founders-helm');
-    await expect(page.locator('[data-world-screen]')).toHaveCount(1);
-    await expect(page.locator('[data-world-screen="founders-helm"]')).toBeVisible();
-    await restAt(page, 'mvp-sprints');
-    await expect(page.locator('[data-world-screen]')).toHaveCount(1);
-    await expect(page.locator('[data-world-screen="mvp-sprints"]')).toBeVisible();
-  });
-
-  test('turning the phone from desktop keeps the real screen over its sculpture, and the words clear of it', async ({ page }) => {
-    await takeBusiness(page);
-    const p = await restAt(page, 'underfire-ai');
-    await page.setViewportSize({ width: 393, height: 852 });
-    await goTo(page, p);
-    const screen = page.locator('[data-world-screen="underfire-ai"]');
-    await expect.poll(async () => {
-      const box = await screen.boundingBox();
-      return box ? near(box, await handoverRect(page)) : false;
-    }).toBe(true);
-  });
-
-  test('on a phone, at every product and service, the words and the real screen do not overlap and the words fit', async ({ page }) => {
-    await page.setViewportSize({ width: 393, height: 852 });
-    await takeBusiness(page);
-    for (const id of [...PRODUCTS, ...Object.keys(SERVICE_SCREENS)]) {
-      await restAt(page, id);
-      const screen = await page.locator(`[data-world-screen="${id}"]`).boundingBox();
-      const words = await page.locator(`[data-stop-id="${id}"]`).boundingBox();
-      if (!screen || !words) throw new Error(`no box for ${id}`);
-      expect(words.y, `${id}: words below the screen`).toBeGreaterThanOrEqual(screen.y + screen.height);
-      expect(words.y + words.height, `${id}: words on screen`).toBeLessThanOrEqual(852);
-    }
-  });
-
-  test('on a desktop the words stand left of the real screen', async ({ page }) => {
-    await page.setViewportSize({ width: 1440, height: 900 });
-    await takeBusiness(page);
-    for (const id of [...PRODUCTS, ...Object.keys(SERVICE_SCREENS)]) {
-      await restAt(page, id);
-      const screen = await page.locator(`[data-world-screen="${id}"]`).boundingBox();
-      const words = await page.locator(`[data-stop-id="${id}"]`).boundingBox();
-      if (!screen || !words) throw new Error(`no box for ${id}`);
-      expect(words.x + words.width, `${id}: words left of the screen`).toBeLessThanOrEqual(screen.x);
-      expect(words.y + words.height).toBeLessThanOrEqual(900);
-    }
+    const ids = await page.locator('[data-world-stop]').evaluateAll((els) => els.map((el) => /** @type {HTMLElement} */ (el).dataset.worldStop));
+    expect(ids).toEqual(ROAD);
   });
 });
 
-test('reduced motion with the switch and the business door: today’s chapters, no canvas, no world screen', async ({ page }) => {
+test.describe('each chapter plays at its landmark (Code World R4)', () => {
+  test('each product types, flies into its landmark in the world, then its loop takes over exactly there', async ({ page }) => {
+    test.setTimeout(90000);
+    await open(page);
+    await takeBusiness(page);
+    for (const slug of PRODUCTS) {
+      await inChapter(page, slug, 0.15);
+      await expect(canvas(page)).toHaveAttribute('data-section', `rest:${slug}`);
+      await expect(page.locator(`[data-product="${slug}"] pre`).first()).toBeVisible();
+      await inChapter(page, slug, 0.5);
+      await expect(canvas(page)).toHaveAttribute('data-flight', new RegExp(`^${slug}:`));
+      await inChapter(page, slug, 0.97);
+      const target = page.locator(`[data-world-stop="${slug}"] [data-world-target]`);
+      await expect(target).toHaveCSS('opacity', '1');
+      const box = await target.boundingBox();
+      if (!box) throw new Error('no box');
+      expect(near(box, await restRect(page)), `${slug}: the loop over its landmark`).toBe(true);
+      const video = target.locator('video');
+      await expect.poll(() => video.evaluate((el) => !(/** @type {HTMLVideoElement} */ (el).paused) && /** @type {HTMLVideoElement} */ (el).currentTime > 0), { timeout: 8000 }).toBe(true);
+    }
+  });
+
+  test('each service flies into its landmark, then its screen takes over exactly there', async ({ page }) => {
+    test.setTimeout(90000);
+    await open(page);
+    await takeBusiness(page);
+    for (const slug of SERVICES) {
+      await inChapter(page, slug, 0.5);
+      await expect(canvas(page)).toHaveAttribute('data-flight', new RegExp(`^${slug}:`));
+      await inChapter(page, slug, 0.97);
+      const target = page.locator(`[data-world-stop="${slug}"] [data-world-target]`);
+      await expect(target).toHaveCSS('opacity', '1');
+      const box = await target.boundingBox();
+      if (!box) throw new Error('no box');
+      expect(near(box, await restRect(page)), `${slug}: the screen over its landmark`).toBe(true);
+    }
+  });
+
+  test('Crew Advisors has its editor box, typing unfinished with its cursor, and no flight', async ({ page }) => {
+    await open(page);
+    await takeBusiness(page);
+    await inChapter(page, 'crew-advisors', 0.6);
+    await expect(canvas(page)).toHaveAttribute('data-section', 'rest:crew-advisors');
+    const box = page.locator('[data-world-stop="crew-advisors"] [data-world-target] figure');
+    await expect(box).toBeVisible();
+    await expect(box).toContainText('crew-advisors.ts');
+    await expect(page.locator('[data-world-stop="crew-advisors"]')).toContainText('Coming soon');
+    expect(await canvas(page).getAttribute('data-flight')).toBeNull();
+  });
+
+  test('the audit checks its lines one by one, and How I work ships its commits', async ({ page }) => {
+    test.setTimeout(60000);
+    await open(page);
+    await takeBusiness(page);
+    const checked = () => page.locator('[data-world-stop="technical-audits"] [data-checked="true"]').count();
+    await inChapter(page, 'technical-audits', 0.2);
+    const early = await checked();
+    await inChapter(page, 'technical-audits', 0.8);
+    expect(await checked()).toBeGreaterThan(early);
+    const shipped = () => page.locator('[data-world-stop="how-i-work"] [data-shipped="true"]').count();
+    await inChapter(page, 'how-i-work', 0.05);
+    const before = await shipped();
+    await inChapter(page, 'how-i-work', 0.95);
+    expect(await shipped()).toBeGreaterThan(before);
+  });
+
+  test('landmarks passed show their picture; ahead they are still code', async ({ page }) => {
+    await open(page);
+    await takeBusiness(page);
+    await inChapter(page, 'underfire-ai', 0.5);
+    await expect.poll(() => canvas(page).getAttribute('data-landed'), { timeout: 8000 }).toContain('my-teachers-toolbox');
+    expect(await canvas(page).getAttribute('data-landed')).not.toContain('underfire-ai');
+    await inChapter(page, 'founders-helm', 0.5);
+    await expect.poll(() => canvas(page).getAttribute('data-landed')).toContain('underfire-ai');
+    expect(await canvas(page).getAttribute('data-landed')).not.toContain('founders-helm');
+  });
+
+  test('arriving straight at Founders Helm (a returning visitor): the two before have landed, its flight follows its scroll', async ({ page }) => {
+    await page.addInitScript(() => window.sessionStorage.setItem('allencode:door', 'a'));
+    await open(page);
+    await expect(page.locator('[data-world-stop="founders-helm"]')).toBeAttached();
+    await inChapter(page, 'founders-helm', 0.5);
+    await expect.poll(() => canvas(page).getAttribute('data-landed'), { timeout: 8000 }).toBe('my-teachers-toolbox,underfire-ai');
+    await expect(canvas(page)).toHaveAttribute('data-flight', /^founders-helm:/);
+  });
+
+  test('turning the phone mid-chapter keeps the real screen on its landmark', async ({ page }) => {
+    await open(page);
+    await takeBusiness(page);
+    await inChapter(page, 'underfire-ai', 0.97);
+    await page.setViewportSize({ width: 393, height: 852 });
+    await page.waitForTimeout(600);
+    await inChapter(page, 'underfire-ai', 0.97);
+    const target = page.locator('[data-world-stop="underfire-ai"] [data-world-target]');
+    await expect
+      .poll(async () => {
+        const box = await target.boundingBox();
+        return box ? near(box, await restRect(page)) : false;
+      })
+      .toBe(true);
+  });
+
+  test('switching to family in the nav mid-road leaves the business road behind', async ({ page }) => {
+    await open(page);
+    await takeBusiness(page);
+    await inChapter(page, 'underfire-ai', 0.5);
+    await page.getByRole('group', { name: 'Show the site for' }).first().getByRole('button', { name: 'Family' }).click();
+    await expect(page.locator('[data-world-stop]')).toHaveCount(0);
+    await expect(canvas(page)).not.toHaveAttribute('data-road', 'a');
+    await expect(canvas(page)).not.toHaveAttribute('data-flight', /.+/);
+  });
+
+  test('the scrim is behind a resting chapter’s words, and gone on the road between', async ({ page }) => {
+    await open(page);
+    await takeBusiness(page);
+    const scrim = page.locator('[data-world-scrim]');
+    await inChapter(page, 'underfire-ai', 0.5);
+    await expect(scrim).toHaveCSS('opacity', '1');
+    const rest = await spanOf(page, '[data-world-stop="founders-helm"]');
+    await scrollTo(page, rest.from - 400);
+    await expect(canvas(page)).toHaveAttribute('data-section', 'road');
+    await expect(scrim).toHaveCSS('opacity', '0');
+  });
+});
+
+test('reduced motion with the switch: today’s page, no world', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.addInitScript(() => window.sessionStorage.setItem('allencode:door', 'a'));
   await page.goto('/?world=1');
   await expect(page.locator('[data-chapter="mvp-sprints"]')).toBeAttached();
   await expect(page.locator('[data-product="underfire-ai"]')).toBeAttached();
   await expect(page.locator('canvas[data-world]')).toHaveCount(0);
-  await expect(page.locator('[data-world-screen]')).toHaveCount(0);
+  await expect(page.locator('[data-world-stop]')).toHaveCount(0);
 });
 
-test('the journey has no accessibility violations at the fork, at a product and at how I work', async ({ page }) => {
-  await page.goto('/?world=1');
-  await page.locator('canvas[data-world][data-ready="true"]').waitFor();
-  await scrollJourney(page, 1);
-  await expect(page.locator('[data-active-stop]')).toHaveAttribute('data-active-stop', 'The fork');
+test('no accessibility violations at the gate, at a product chapter and at How I work', async ({ page }) => {
+  test.setTimeout(60000);
+  await open(page);
   const check = async () => {
-    const results = await new AxeBuilder({ page }).include('[data-world-journey]').analyze();
+    const results = await new AxeBuilder({ page }).analyze();
     expect(results.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`)).toEqual([]);
   };
   await check();
-  await page.getByRole('button', { name: /business\// }).click();
-  await page.waitForFunction(() => !document.documentElement.classList.contains('lenis-smooth'), undefined, { timeout: 8000 });
-  await restAt(page, 'underfire-ai');
+  await takeBusiness(page);
+  await inChapter(page, 'underfire-ai', 0.97);
   await check();
-  await restAt(page, 'how-i-work');
+  await inChapter(page, 'how-i-work', 0.5);
   await check();
 });

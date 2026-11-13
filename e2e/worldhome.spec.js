@@ -33,13 +33,15 @@ test('without the switch the home page is today’s: no world, and its prebuilt 
   await expect(page.locator('canvas[data-world]')).toHaveCount(0);
 });
 
-test('with ?world=1 the home page is the journey: one world canvas, the approved words, the stops as it scrolls', async ({ page }) => {
+test('with ?world=1 the home page starts with the gate, then the journey: one world canvas, the approved words, the stops as it scrolls', async ({ page }) => {
   await page.goto('/?world=1');
   await expect(page.locator('canvas[data-world][data-ready="true"]')).toHaveCount(1);
   await expect(page.locator('canvas')).toHaveCount(1);
   await expect(page.getByText('It all starts with an empty file…')).toBeVisible();
+  // The gate plays first, as today (W2 revised, R4), and carries the page's one h1.
+  await expect(page.locator('[data-chapter="gate"]')).toHaveCount(1);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(/Welcome to Allen Code Co\..*What would you like.*to build today\?/);
-  await expect(page.locator('[data-chapter="gate"]')).toHaveCount(0);
   for (const [progress, name] of /** @type {Array<[number, string]>} */ ([
     [0, 'Empty file'],
     [0.55, 'Into the code'],
@@ -94,7 +96,7 @@ test.describe('taking a road at the split (Code World W1.4)', () => {
 
   test('before a road is taken the journey ends at the split, with no door’s chapters below', async ({ page }) => {
     await atTheFork(page);
-    await expect(page.locator('[data-chapter="mvp-sprints"], [data-door-b-intro], [data-stop-id="my-teachers-toolbox"]')).toHaveCount(0);
+    await expect(page.locator('[data-chapter="mvp-sprints"], [data-door-b-intro], [data-world-stop]')).toHaveCount(0);
     await expect(page.getByRole('button', { name: /business\// })).toBeVisible();
     await expect(page.getByRole('button', { name: /family\// })).toBeVisible();
   });
@@ -102,8 +104,8 @@ test.describe('taking a road at the split (Code World W1.4)', () => {
   test('clicking the business/ signpost takes the business road and the journey runs down it', async ({ page }) => {
     await atTheFork(page);
     await page.getByRole('button', { name: /business\// }).click();
-    // In the world the business road carries door A's chapters (W2.5): its first stop is there.
-    await expect(page.locator('[data-stop-id="my-teachers-toolbox"]')).toBeAttached();
+    // In the world today's chapters run along the business road (R4): its first is there.
+    await expect(page.locator('[data-world-stop="my-teachers-toolbox"]')).toBeAttached();
     await expect.poll(() => page.locator('[data-active-stop]').getAttribute('data-active-stop'), { timeout: 8000 }).toBe('business/');
   });
 
@@ -117,17 +119,17 @@ test.describe('taking a road at the split (Code World W1.4)', () => {
     await atTheFork(page);
     await drag(page, 30, 0);
     await drag(page, 10, -160);
-    await expect(page.locator('[data-chapter="mvp-sprints"], [data-door-b-intro], [data-stop-id="my-teachers-toolbox"]')).toHaveCount(0);
+    await expect(page.locator('[data-chapter="mvp-sprints"], [data-door-b-intro], [data-world-stop]')).toHaveCount(0);
     await drag(page, -120, 6);
-    // In the world the business road carries door A's chapters (W2.5): its first stop is there.
-    await expect(page.locator('[data-stop-id="my-teachers-toolbox"]')).toBeAttached();
+    // In the world today's chapters run along the business road (R4): its first is there.
+    await expect(page.locator('[data-world-stop="my-teachers-toolbox"]')).toBeAttached();
   });
 
   test('back at the split the other road can be taken', async ({ page }) => {
     await atTheFork(page);
     await page.getByRole('button', { name: /business\// }).click();
-    // In the world the business road carries door A's chapters (W2.5): its first stop is there.
-    await expect(page.locator('[data-stop-id="my-teachers-toolbox"]')).toBeAttached();
+    // In the world today's chapters run along the business road (R4): its first is there.
+    await expect(page.locator('[data-world-stop="my-teachers-toolbox"]')).toBeAttached();
     await expect.poll(() => page.locator('[data-active-stop]').getAttribute('data-active-stop'), { timeout: 8000 }).toBe('business/');
     // The road stop comes on mid-glide. A visitor's own scroll goes through Lenis and takes over
     // from the glide; the direct scrollTo below does not, so wait for Lenis's glide to end first.

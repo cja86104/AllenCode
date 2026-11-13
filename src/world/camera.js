@@ -5,15 +5,8 @@
  * A camera key. `still` gives the key a zero tangent: the camera eases to rest there, and between
  * two still keys it does not move at all, so a landmark's real screen can be laid exactly over it
  * (Code World W2.2). Keys without it curve as uniform Catmull-Rom, as in the prototype.
- * `aside`, on a key resting at a landmark: across the ground, the landmark's right-hand direction
- * scaled to half its width; upward, how far the landmark stands above the camera's eye (raised so a
- * phone has room for its words below it). On a screen wider than tall, `frameCamera` slides the
- * camera so the landmark sits on the right, level and centred, with its words on the left (W2.5).
- * @typedef {{ at: number, eye: Vec3, target: Vec3, fov: number, stop: string, still?: boolean, aside?: Vec3 }} CameraKey
+ * @typedef {{ at: number, eye: Vec3, target: Vec3, fov: number, stop: string, still?: boolean }} CameraKey
  */
-
-/** No sideways slide. */
-const NO_ASIDE = /** @type {Vec3} */ ([0, 0, 0]);
 
 /**
  * The prototype's camera stops (docs/superpowers/plans/2026-11-10-code-world-prototype.md), in world
@@ -64,6 +57,9 @@ function hermite(p1, p2, m1, m2, t) {
  */
 function between(p0, p1, p2, p3, t, still1, still2) {
   if (!still1 && !still2) return catmullRom(p0, p1, p2, p3, t);
+  // Between two still keys at the same place the camera is exactly there, not there give or take a
+  // rounding error.
+  if (still1 && still2 && p1 === p2) return p1;
   return hermite(p1, p2, still1 ? 0 : (p2 - p0) / 2, still2 ? 0 : (p3 - p1) / 2, t);
 }
 
@@ -99,24 +95,12 @@ export function cameraAt(progress, keys = CAMERA_KEYS) {
   const t = (p - k1.at) / (k2.at - k1.at);
   const still1 = k1.still === true;
   const still2 = k2.still === true;
-  /** @type {{ eye: Vec3, target: Vec3, fov: number, aside?: Vec3 }} */
-  const camera = {
+  return {
     eye: curve3(k0.eye, k1.eye, k2.eye, k3.eye, t, still1, still2),
     target: curve3(k0.target, k1.target, k2.target, k3.target, t, still1, still2),
     fov: between(k0.fov, k1.fov, k2.fov, k3.fov, t, still1, still2),
   };
-  // Keys without `aside` (the prototype's, the opening's) slide nothing and add nothing.
-  if (k0.aside || k1.aside || k2.aside || k3.aside) {
-    const of = (/** @type {CameraKey} */ key) => key.aside ?? NO_ASIDE;
-    camera.aside = curve3(of(k0), of(k1), of(k2), of(k3), t, still1, still2);
-  }
-  return camera;
 }
-
-/** On a wide screen, where a resting landmark's centre goes across the screen (-1 left, 1 right). */
-const ASIDE_CENTER = 0.38;
-/** And the most of the screen's half-width half the landmark may take; past it the camera steps back. */
-const ASIDE_HALF_WIDTH = 0.56;
 
 /** The widest field of view a narrow screen may get, in degrees; past it the world distorts. */
 const MAX_NARROW_FOV = 70;
@@ -133,47 +117,14 @@ const NARROW_WIDEN = 1.35;
  * @returns {{ eye: Vec3, target: Vec3, fov: number }}
  */
 export function frameCamera(camera, aspect) {
+  if (!(aspect > 0) || aspect >= 1) return camera;
   const halfTan = (/** @type {number} */ degrees) => Math.tan((degrees * Math.PI) / 360);
-  if (aspect >= 1) return asideFor(camera, aspect, halfTan(camera.fov) * aspect);
-  if (!(aspect > 0)) return camera;
   const fov = Math.min(camera.fov * NARROW_WIDEN, MAX_NARROW_FOV);
   const back = Math.max(1, halfTan(camera.fov) / (halfTan(fov) * aspect));
   const { eye, target } = camera;
   return {
     eye: [target[0] + (eye[0] - target[0]) * back, target[1] + (eye[1] - target[1]) * back, target[2] + (eye[2] - target[2]) * back],
     target,
-    fov,
-  };
-}
-
-/**
- * On a screen at least as wide as it is tall, a camera resting at a landmark (its `aside`) slides
- * sideways and up to the landmark's level, eye and target together so it stays square on, until the
- * landmark's centre is at `ASIDE_CENTER` across the screen and level with the camera; if the landmark would then run off the right edge it first steps
- * back along its line of sight. The words have the left of the screen, as in today's chapters
- * (W2.5). Without `aside` the camera is left exactly as it was.
- * @param {{ eye: Vec3, target: Vec3, fov: number, aside?: Vec3 }} camera
- * @param {number} aspect
- * @param {number} halfWidthTan The tangent of half the horizontal field of view.
- * @returns {{ eye: Vec3, target: Vec3, fov: number }}
- */
-function asideFor(camera, aspect, halfWidthTan) {
-  const { eye, target, fov, aside } = camera;
-  const reach = aside ? Math.hypot(aside[0], aside[2]) : 0;
-  if (!aside || reach === 0 || !(aspect > 0)) return aside ? { eye, target, fov } : camera;
-  // Up to the landmark's level: the words are beside it here, so it need not stand above them.
-  const lift = aside[1];
-  const toTarget = /** @type {Vec3} */ ([target[0] - eye[0], target[1] - eye[1], target[2] - eye[2]]);
-  const distance = Math.hypot(toTarget[0], toTarget[1], toTarget[2]);
-  // Step back when the landmark would be too wide for the right of the screen.
-  const needed = reach / (ASIDE_HALF_WIDTH * halfWidthTan);
-  const back = Math.max(1, needed / distance);
-  const from = /** @type {Vec3} */ ([target[0] - toTarget[0] * back, target[1] - toTarget[1] * back, target[2] - toTarget[2] * back]);
-  // Then slide left (against the landmark's right-hand direction) so it sits right of centre.
-  const slide = (ASIDE_CENTER * halfWidthTan * distance * back) / reach;
-  return {
-    eye: [from[0] - aside[0] * slide, from[1] + lift, from[2] - aside[2] * slide],
-    target: [target[0] - aside[0] * slide, target[1] + lift, target[2] - aside[2] * slide],
     fov,
   };
 }

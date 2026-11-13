@@ -1,6 +1,6 @@
 // @ts-check
 import { describe, expect, it } from 'vitest';
-import { layoutRoad, roadSizes, ROAD_STEP, LATERAL } from '../src/world/roadLayout.js';
+import { layoutRoad, roadSizes, spurPaths, ROAD_STEP, LATERAL } from '../src/world/roadLayout.js';
 import { businessRoadStops } from '../src/world/roads.js';
 import { getExcerpt } from '../src/content/excerpts/index.js';
 import { distanceToPath } from '../src/world/shapes.js';
@@ -91,4 +91,40 @@ describe('layoutRoad (Code World W2.2)', () => {
       expect(landmark.facing[0]).toBeCloseTo(-business.facing[0], 9);
     });
   });
+});
+
+describe('the road runs on, and a side path leads to each landmark (Code World R5)', () => {
+  for (const door of /** @type {const} */ (['a', 'b'])) {
+    const road = layoutRoad(stops, door, sizes);
+    const last = road.path[road.path.length - 1];
+    const lastStop = road.along[road.along.length - 1];
+
+    it(`door ${door}: runs on past How I work beyond the fog’s far edge (46) from its rest`, () => {
+      const past = (last[0] - road.origin[0]) * road.direction[0] + (last[1] - road.origin[1]) * road.direction[1];
+      expect(past - lastStop).toBeGreaterThanOrEqual(46 + 10);
+    });
+
+    it(`door ${door}: one straight spur per landmark, square off the road on its side, from the centre line to just short of its foot`, () => {
+      const spurs = spurPaths(road);
+      expect(spurs.map((s) => s.stopId)).toEqual(road.landmarks.map((l) => l.stopId));
+      expect(spurs.some((s) => s.stopId === 'how-i-work')).toBe(false);
+      spurs.forEach((spur, k) => {
+        const landmark = road.landmarks[k];
+        expect(spur.path).toHaveLength(2);
+        const [from, to] = spur.path;
+        expect(distanceToPath(from, road.path)).toBeLessThan(1e-9);
+        const dx = to[0] - from[0];
+        const dz = to[1] - from[1];
+        const length = Math.hypot(dx, dz);
+        // Perpendicular to the road.
+        expect(Math.abs((dx * road.direction[0] + dz * road.direction[1]) / length)).toBeLessThan(1e-9);
+        // On the landmark's side, toward its foot.
+        const toFoot = [landmark.center[0] - from[0], landmark.center[2] - from[1]];
+        expect(dx * toFoot[0] + dz * toFoot[1]).toBeGreaterThan(0);
+        const short = Math.hypot(landmark.center[0] - to[0], landmark.center[2] - to[1]);
+        expect(short).toBeGreaterThanOrEqual(0.6 - 1e-9);
+        expect(short).toBeLessThanOrEqual(1.0);
+      });
+    });
+  }
 });

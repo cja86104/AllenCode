@@ -11,7 +11,7 @@ import { EYE_HEIGHT, LOOK_BELOW, layoutRoad } from './roadLayout.js';
 
 /**
  * A camera key placed in screens of scroll from the top, before the journey is scaled to 0..1.
- * @typedef {{ screens: number, stop: string, eye: Vec3, target: Vec3, fov: number, still?: boolean, aside?: Vec3 }} PlacedKey
+ * @typedef {{ screens: number, stop: string, eye: Vec3, target: Vec3, fov: number, still?: boolean }} PlacedKey
  */
 
 /**
@@ -124,7 +124,6 @@ export function buildJourney(door, roadStops = [], sizes = {}) {
     /** @type {CameraKey} */
     const camera = { at: key.screens / screens, stop: key.stop, eye: key.eye, target: key.target, fov: key.fov };
     if (key.still) camera.still = true;
-    if (key.aside) camera.aside = key.aside;
     return camera;
   });
   keys[keys.length - 1].at = 1;
@@ -205,21 +204,13 @@ function placeRoad(door, roadStops, sizes, start, placed) {
     const eye = /** @type {Vec3} */ ([look[0] + landmark.facing[0] * distance, look[1], look[2] + landmark.facing[2] * distance]);
     const arriveAt = from + ARRIVE_SCREENS;
     const holdAt = from + HOLD_SCREENS;
-    // The landmark's right-hand direction at half its width, and how far it stands above the eye: a
-    // wide screen slides the camera by them, to set the landmark right of its words and level (W2.5).
-    const aside = /** @type {Vec3} */ ([(landmark.facing[2] * landmark.width) / 2, LOOK_BELOW * landmark.height, (-landmark.facing[0] * landmark.width) / 2]);
-    for (const screens of [arriveAt, holdAt]) placed.push({ screens, stop: stop.name, eye: [...eye], target: [...look], fov: ROAD_FOV, still: true, aside: [...aside] });
+    for (const screens of [arriveAt, holdAt]) placed.push({ screens, stop: stop.name, eye: [...eye], target: [...look], fov: ROAD_FOV, still: true });
     landmarks.push({ ...landmark, from, to, arriveAt, holdAt });
   }
 
   const end = start + STOP_SCREENS * roadStops.length;
   const last = placed[placed.length - 1];
-  if (last.screens < end) {
-    /** @type {PlacedKey} */
-    const rest = { ...last, screens: end, eye: [...last.eye], target: [...last.target], still: true };
-    if (last.aside) rest.aside = [...last.aside];
-    placed.push(rest);
-  }
+  if (last.screens < end) placed.push({ ...last, screens: end, eye: [...last.eye], target: [...last.target], still: true });
   return { stops, landmarks, commits, end };
 }
 

@@ -86,6 +86,7 @@ function FlightChapter({ service, excerpt, screen }) {
           frameOpacity={frameOpacity}
         />
         <img
+          data-world-target
           src={screen.src}
           alt={screen.alt}
           style={{ opacity: timeline.handoff, left: targetBox.x, top: targetBox.y, width: targetBox.w, height: targetBox.h }}
@@ -199,7 +200,9 @@ function AuditChapter({ service, excerpt, animate }) {
       <div className="pin-frame sticky top-0 flex items-center">
         <div className={`relative z-10 mx-auto grid w-full max-w-6xl gap-10 px-6 ${CHAPTER_GRID} lg:items-center lg:px-10`}>
           <ServiceText service={service} />
-          <div className="min-w-0">{panel}</div>
+          <div data-world-target className="min-w-0">
+            {panel}
+          </div>
         </div>
       </div>
     </section>
@@ -212,25 +215,29 @@ function AuditChapter({ service, excerpt, animate }) {
  * @param {{ includeDrafts: boolean }} props Whether unapproved excerpts may show (the public site passes false).
  */
 export default function ServiceChapters({ includeDrafts }) {
+  return (
+    <>
+      {SERVICE_CHAPTERS.map(({ slug, excerptId }) => (
+        <ServiceChapterFor key={slug} slug={slug} excerptId={excerptId} includeDrafts={includeDrafts} />
+      ))}
+    </>
+  );
+}
+
+/**
+ * One service's chapter, as door A shows it: the audit checking its file, a flight onto its screen, or
+ * its code beside it. The Code World's business road places each on its own (W2 revised, R4).
+ * @param {{ slug: string, excerptId: string, includeDrafts: boolean }} props
+ */
+export function ServiceChapterFor({ slug, excerptId, includeDrafts }) {
   const reducedMotion = usePrefersReducedMotion();
   const { mode } = useField();
   const flights = !reducedMotion && mode === 'webgl';
-
-  return (
-    <>
-      {SERVICE_CHAPTERS.map(({ slug, excerptId }) => {
-        const service = services.find((s) => s.slug === slug);
-        if (!service) throw new Error(`services.js has no service "${slug}".`);
-        const excerpt = getExcerpt(excerptId, { includeDrafts });
-        if (slug === 'technical-audits') {
-          return <AuditChapter key={slug} service={service} excerpt={excerpt} animate={!reducedMotion} />;
-        }
-        const screen = serviceScreens[/** @type {keyof typeof serviceScreens} */ (slug)];
-        if (flights && excerpt && screen) {
-          return <FlightChapter key={slug} service={service} excerpt={excerpt} screen={screen} />;
-        }
-        return <StaticChapter key={slug} service={service} excerpt={excerpt} screen={screen} />;
-      })}
-    </>
-  );
+  const service = services.find((s) => s.slug === slug);
+  if (!service) throw new Error(`services.js has no service "${slug}".`);
+  const excerpt = getExcerpt(excerptId, { includeDrafts });
+  if (slug === 'technical-audits') return <AuditChapter service={service} excerpt={excerpt} animate={!reducedMotion} />;
+  const screen = serviceScreens[/** @type {keyof typeof serviceScreens} */ (slug)];
+  if (flights && excerpt && screen) return <FlightChapter service={service} excerpt={excerpt} screen={screen} />;
+  return <StaticChapter service={service} excerpt={excerpt} screen={screen} />;
 }

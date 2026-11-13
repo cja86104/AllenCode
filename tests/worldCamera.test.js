@@ -1,6 +1,6 @@
 // @ts-check
 import { describe, expect, it } from 'vitest';
-import { cameraAt, CAMERA_KEYS } from '../src/world/camera.js';
+import { cameraAt, CAMERA_KEYS, frameCamera } from '../src/world/camera.js';
 
 /** @param {[number, number, number]} a @param {[number, number, number]} b */
 const distance = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
@@ -109,5 +109,12 @@ describe('still keys (Code World W2.2)', () => {
     const reference = [0.1, 0.3, 0.5, 0.8].map((p) => cameraAt(p, plain));
     expect(reference.every((c) => Number.isFinite(c.eye[0]))).toBe(true);
     expect(cameraAt(0.5, CAMERA_KEYS)).toEqual(cameraAt(0.5));
+  });
+});
+
+describe('no sideways framing (Code World R1: W2.5’s aside, the fork glitch, is gone)', () => {
+  it('a wide screen leaves the camera exactly as cameraAt gives it', () => {
+    const camera = cameraAt(0.5);
+    expect(frameCamera(camera, 1.6)).toBe(camera);
   });
 });

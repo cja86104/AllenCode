@@ -153,24 +153,9 @@ describe('the business road (Code World W2.2)', () => {
     }
   });
 
-  it('on a screen wider than tall, sets each landmark to the right, leaving the left for its words', () => {
-    for (const viewport of [
-      { width: 1440, height: 900 },
-      { width: 1280, height: 720 },
-      { width: 1024, height: 768 },
-    ]) {
-      for (const landmark of journey.landmarks) {
-        const rest = (landmark.arriveAt + landmark.holdAt) / 2;
-        const rect = landmarkRect(frameCamera(cameraAt(rest, journey.keys), viewport.width / viewport.height), viewport, landmark);
-        expect(rect.left, `${landmark.stopId} at ${viewport.width}`).toBeGreaterThanOrEqual(0.4 * viewport.width);
-        expect(rect.left + rect.width).toBeLessThanOrEqual(viewport.width);
-        expect(Math.abs(rect.width / rect.height / (landmark.width / landmark.height) - 1)).toBeLessThan(0.02);
-        // Clear of the nav (about 62 px) and on screen: level with the camera, not lifted as on a phone.
-        expect(rect.top, `${landmark.stopId} at ${viewport.width}: below the nav`).toBeGreaterThanOrEqual(72);
-        expect(rect.top + rect.height).toBeLessThanOrEqual(viewport.height);
-        expect(Math.abs(rect.top + rect.height / 2 - viewport.height / 2)).toBeLessThan(0.08 * viewport.height);
-      }
-    }
+  it('carries no sideways framing on any key (R1)', () => {
+    for (const key of journey.keys) expect('aside' in key).toBe(false);
+    expect('aside' in cameraAt(0.7, journey.keys)).toBe(false);
   });
 
   it('holds perfectly still from arriving at a landmark until it leaves', () => {

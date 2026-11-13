@@ -11,6 +11,7 @@ import {
 } from './glyphAtlas.js';
 import { createGlyphRenderer } from './glyphRenderer.js';
 import { resolveTransform } from './resolveTransform.js';
+import { loadTarget } from './loadTarget.js';
 import { createGovernor } from './governor.js';
 import { watchContext } from './contextRecovery.js';
 import { fieldBus } from './fieldBus.js';
@@ -23,34 +24,6 @@ const MAX_DPR = 2;
  * progress 0 nothing is drawn: the scene's DOM shows the code until the flight begins.
  */
 const FADE_FROM = 0.92;
-
-/**
- * Loads what a transformation lands on: waits for a text target's font, or decodes an image
- * target and reads its pixels at the size it is drawn. A sketch needs nothing loaded.
- * @param {import('./types.js').TransformSpec} spec
- * @returns {Promise<{ data: Uint8ClampedArray, width: number, height: number } | undefined>}
- */
-async function loadTarget(spec) {
-  const { target } = spec;
-  if (target.kind === 'sketch') return undefined;
-  if (target.kind === 'text') {
-    await document.fonts.load(target.font).catch(() => []);
-    return undefined;
-  }
-  const img = new Image();
-  img.decoding = 'async';
-  img.src = target.src;
-  await img.decode();
-  const width = Math.max(1, Math.round(spec.targetBox.w));
-  const height = Math.max(1, Math.round(spec.targetBox.h));
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext('2d', { willReadFrequently: true });
-  if (!ctx) throw new Error('Could not create a 2D canvas to read the target image.');
-  ctx.drawImage(img, 0, 0, width, height);
-  return { data: ctx.getImageData(0, 0, width, height).data, width, height };
-}
 
 /**
  * @param {number} edge0

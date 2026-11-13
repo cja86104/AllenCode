@@ -1,11 +1,18 @@
 // @ts-check
 import { LANDMARK } from './landmark.js';
+import { landedShape } from './worldFlight.js';
 
 /**
  * The prototype world, generated in code from real approved excerpts (no models, nothing invented).
  * Every shape is a set of glyphs: a position (x, y, z), the character drawn (its UTF-16 code), an
  * rgba colour, and one glyph size in world units for the whole shape. Deterministic for a seed.
- * @typedef {{ positions: Float32Array, glyphs: Uint16Array, colors: Float32Array, size: number }} Shape
+ * `tag`, for a screen landmark on the road (R4): its place among the landmarks plus one for its code
+ * sculpture, minus that for its picture; the renderer draws one or the other by how many landmarks
+ * the visitor has passed. Untagged shapes are always drawn.
+ * `sizes` (R5), when present, gives each glyph its own size in place of `size`. `flow` (R5), when
+ * present, is one float per glyph: 0 stands still; above 0, the glyph rises up a column that height
+ * from the ground, wrapping (the stands' code between their posts).
+ * @typedef {{ positions: Float32Array, glyphs: Uint16Array, colors: Float32Array, size: number, tag?: number, sizes?: Float32Array, flow?: Float32Array }} Shape
  * @typedef {[number, number, number]} Vec3
  * @typedef {[number, number]} Point2 A point on the ground: x and z.
  * @typedef {'low' | 'mid' | 'high'} Tier
@@ -230,12 +237,20 @@ export function codeRoad(code, { path, width, count }, seed) {
  * The road's edges: a line of ember characters along each side of `path`, `spacing` apart, at half
  * `width` from its centre, so the road reads as a road and not a scatter (Chris, 2026-11-10). The
  * characters follow `code` in reading order.
+ * - `from`: the first characters stand this far along the path (R5: a road that carries on from
+ *   another's end keeps its spacing instead of doubling the joint).
+ * - `highlights`: edge characters within `HIGHLIGHT_RADIUS` of one of these points are drawn at full
+ *   alpha and 1.6 times the size (How I work's commits on the edge, R5).
+ * - `openings`: no edge characters within `radius` of these points (where a side path joins, R5).
  * @param {string} code
- * @param {{ path: ReadonlyArray<Point2>, width: number, spacing: number }} options
+ * @param {{
+ *   path: ReadonlyArray<Point2>, width: number, spacing: number, from?: number,
+ *   highlights?: ReadonlyArray<Point2>, openings?: { points: ReadonlyArray<Point2>, radius: number },
+ * }} options
  * @param {number} seed
  * @returns {Shape}
  */
-export function roadEdges(code, { path, width, spacing }, seed) {
+export function roadEdges(code, { path, width, spacing, from = 0, highlights = [], openings }, seed) {
   const ink = inkOf(code);
   const random = seeded(seed);
   const segments = [];
@@ -245,12 +260,13 @@ export function roadEdges(code, { path, width, spacing }, seed) {
     segments.push({ from: path[i], to: path[i + 1], start: total, length });
     total += length;
   }
-  const perSide = Math.floor(total / spacing) + 1;
-  const shape = emptyShape(perSide * 2, 0.1);
-  let i = 0;
+  const size = 0.1;
+  const perSide = total >= from ? Math.floor((total - from) / spacing) + 1 : 0;
+  /** @type {Array<{ x: number, z: number, char: string, lit: boolean }>} */
+  const placed = [];
   for (const side of [-1, 1]) {
     for (let k = 0; k < perSide; k += 1) {
-      const along = Math.min(total, k * spacing);
+      const along = Math.min(total, from + k * spacing);
       const segment = segments.find((s) => along <= s.start + s.length) ?? segments[segments.length - 1];
       const t = segment.length === 0 ? 0 : (along - segment.start) / segment.length;
       const dx = (segment.to[0] - segment.from[0]) / (segment.length || 1);
@@ -259,11 +275,74 @@ export function roadEdges(code, { path, width, spacing }, seed) {
       const offset = side * (width / 2) + (random() - 0.5) * 0.04;
       const x = segment.from[0] + (segment.to[0] - segment.from[0]) * t - dz * offset;
       const z = segment.from[1] + (segment.to[1] - segment.from[1]) * t + dx * offset;
-      put(shape, i, x, 0.02, z, ink[(k + (side > 0 ? 7 : 0)) % ink.length], EMBER, 0.85);
+      if (openings && openings.points.some(([px, pz]) => Math.hypot(x - px, z - pz) < openings.radius)) continue;
+      const lit = highlights.some(([px, pz]) => Math.hypot(x - px, z - pz) <= HIGHLIGHT_RADIUS);
+      placed.push({ x, z, char: ink[(k + (side > 0 ? 7 : 0)) % ink.length], lit });
+    }
+  }
+  const shape = emptyShape(placed.length, size);
+  const sizes = highlights.length > 0 ? new Float32Array(placed.length).fill(size) : null;
+  placed.forEach(({ x, z, char, lit }, i) => {
+    put(shape, i, x, 0.02, z, char, EMBER, lit ? 1 : 0.85);
+    if (sizes && lit) sizes[i] = size * 1.6;
+  });
+  return sizes ? { ...shape, sizes } : shape;
+}
+
+/** How near a highlight point an edge character must be to light up. */
+const HIGHLIGHT_RADIUS = 0.8;
+
+/** A stand's posts stand this far either side of its landmark's centre, across the face. */
+const POST_OFFSET = 0.35;
+/** The stand's three columns of flowing code, this far apart. */
+const COLUMN_GAP = 0.12;
+
+/**
+ * What a road landmark stands on (Chris, 2026-11-12: "a double post under it with the code running
+ * in between… set up nice"): two ember posts of the road's characters, one every line height, square
+ * under the landmark at `POST_OFFSET` either side of its centre, from the ground to its bottom edge;
+ * and between them three columns of the road's characters, pale, flowing up (`flow`: the column's
+ * height; the posts' 0). It is the road's code, separate from the landmark's own code, which flies
+ * into its picture; a flight never touches it.
+ * @param {string} roadCode
+ * @param {import('./roadLayout.js').Landmark} landmark
+ * @param {number} seed
+ * @returns {Shape & { flow: Float32Array }}
+ */
+export function landmarkStand(roadCode, landmark, seed) {
+  const ink = inkOf(roadCode);
+  const first = Math.floor(seeded(seed)() * ink.length);
+  const bottom = landmark.center[1] - landmark.height / 2;
+  const step = SLAB_METRICS.lineHeight;
+  const postGlyphs = bottom >= 0 ? Math.floor(bottom / step + 1e-9) + 1 : 0;
+  const columnGlyphs = bottom >= step ? Math.round(bottom / step) : 0;
+  const count = postGlyphs * 2 + columnGlyphs * 3;
+  const shape = emptyShape(count, 0.1);
+  const flow = new Float32Array(count);
+  // Across the face, as `orient` turns a shape facing +z.
+  const rx = landmark.facing[2];
+  const rz = -landmark.facing[0];
+  const [cx, , cz] = landmark.center;
+  let i = 0;
+  for (const side of [-1, 1]) {
+    for (let k = 0; k < postGlyphs; k += 1) {
+      const across = side * POST_OFFSET;
+      put(shape, i, cx + across * rx, Math.min(bottom, k * step), cz + across * rz, ink[(first + i) % ink.length], EMBER, 0.9);
       i += 1;
     }
   }
-  return shape;
+  [-1, 0, 1].forEach((column) => {
+    const across = column * COLUMN_GAP;
+    for (let k = 0; k < columnGlyphs; k += 1) {
+      // Evenly round the column's height, each column a third of a step behind the last, so the three
+      // never rise in lockstep.
+      const y = (((k + (column + 1) / 3) * bottom) / columnGlyphs) % bottom;
+      put(shape, i, cx + across * rx, y, cz + across * rz, ink[(first + i) % ink.length], PALE, 0.75);
+      flow[i] = bottom;
+      i += 1;
+    }
+  });
+  return { ...shape, flow };
 }
 
 /**
@@ -385,52 +464,34 @@ export function buildWorld(tier, sources, seed) {
   ];
 }
 
-/** Glyphs in each commit's cluster on the road's edge. */
-const COMMIT_GLYPHS = 24;
-
-/**
- * How I work's commits on the road's edge: a tight ember cluster of the road's own characters at
- * each point, low on the ground, as the edge's line thickening where a commit landed.
- * @param {string} code
- * @param {ReadonlyArray<Point2>} points
- * @param {number} seed
- * @returns {Shape}
- */
-export function commitMarks(code, points, seed) {
-  const ink = inkOf(code);
-  const random = seeded(seed);
-  const shape = emptyShape(points.length * COMMIT_GLYPHS, 0.12);
-  let i = 0;
-  for (const [x, z] of points) {
-    for (let k = 0; k < COMMIT_GLYPHS; k += 1) {
-      const angle = random() * Math.PI * 2;
-      const radius = 0.35 * Math.sqrt(random());
-      put(shape, i, x + Math.cos(angle) * radius, 0.05 + random() * 0.5, z + Math.sin(angle) * radius, ink[(i * 5) % ink.length], EMBER, 0.75 + 0.25 * random());
-      i += 1;
-    }
-  }
-  return shape;
-}
-
 /** Shares of what the budget leaves after the exact parts: the road's scatter, then the screens. */
-const ROAD_SCATTER = Object.freeze({ trunk: 0.2, business: 0.08, family: 0.07, onward: 0.1 });
+// R5: the onward road runs on into the fog, so it takes 0.05 more of the scatter from the trunk, which
+// is still by far the densest stretch.
+const ROAD_SCATTER = Object.freeze({ trunk: 0.15, business: 0.08, family: 0.07, onward: 0.15 });
 const SCREEN_SHARE = 0.55;
+/** Half the onward road's width, and half a side path's (R5). */
+const ROAD_HALF = 1.6;
+const SPUR_HALF = 0.8;
 
 /**
  * The home's world with a road beyond the fork (Code World W2.3): the opening as `buildWorld` builds
  * it (without the prototype's lone landmark), the road running on past the branch with its ember
  * edges, a landmark per stop (a screen sculpture of its excerpt for products and services, the
- * audit's file as a slab, Crew Advisors' file unfinished with its cursor) and how I work's commit
- * marks. Within the tier's budget: the editor, signs, edges, slabs and marks are exact; the rest goes
- * to the road's scatter (45 %) and the screens (55 %, shared equally).
+ * audit's file as a slab, Crew Advisors' file unfinished with its cursor), how I work's commits lit on
+ * the road's edge, a side path to each landmark and a stand under it (R5). Within the tier's budget:
+ * the editor, signs, edges, slabs and stands are exact; the rest goes to the road's scatter (the side
+ * paths share the onward road's, by area, so the ground reads as one surface) and the screens.
  * @param {Tier} tier
  * @param {{ gate: string, road: string, stops: Readonly<Record<string, string>> }} sources Approved
  *   code: the empty file's, the road's, and each stop's by excerpt id.
  * @param {number} seed
  * @param {{ stops: ReadonlyArray<import('./roads.js').RoadStop>, layout: ReturnType<typeof import('./roadLayout.js').layoutRoad> }} road
+ * @param {Readonly<Record<string, { data: Uint8ClampedArray, width: number, height: number }>>} [landed] Each
+ *   screen landmark's real screen, once loaded (R4): with one, the landmark's share is split between its
+ *   code sculpture and its picture in characters, tagged so the renderer shows the picture once passed.
  * @returns {Array<{ name: string, shape: Shape, stopId?: string, cursor?: number }>}
  */
-export function buildRoadWorld(tier, sources, seed, road) {
+export function buildRoadWorld(tier, sources, seed, road, landed = {}) {
   const { layout } = road;
   const branchEnd = ROAD_PATHS.business.length;
   const onward = /** @type {Point2[]} */ (layout.path.slice(branchEnd - 1));
@@ -440,9 +501,30 @@ export function buildRoadWorld(tier, sources, seed, road) {
     trunk: roadEdges(sources.road, { path: ROAD_PATHS.trunk, width: 4, spacing: EDGE_SPACING }, seed + 6),
     business: roadEdges(sources.road, { path: ROAD_PATHS.business, width: 3.2, spacing: EDGE_SPACING }, seed + 7),
     family: roadEdges(sources.road, { path: ROAD_PATHS.family, width: 3.2, spacing: EDGE_SPACING }, seed + 8),
-    onward: roadEdges(sources.road, { path: onward, width: 3.2, spacing: EDGE_SPACING }, seed + 9),
   };
-  const commits = layout.commits.length > 0 ? commitMarks(sources.road, layout.commits, seed + 10) : null;
+  // Each side path leaves the road at its edge: its mouth is where the main edge opens.
+  const spurs = layout.spurs.map(({ stopId, path: [from, to] }) => {
+    const length = Math.hypot(to[0] - from[0], to[1] - from[1]);
+    const mouth = /** @type {Point2} */ ([from[0] + ((to[0] - from[0]) / length) * ROAD_HALF, from[1] + ((to[1] - from[1]) / length) * ROAD_HALF]);
+    return { stopId, path: [mouth, to], length: length - ROAD_HALF };
+  });
+  // The onward road's edges carry on at the branch's spacing, where the branch's last ones left off.
+  const branchLength = ROAD_PATHS.business.slice(1).reduce((sum, p, i) => sum + Math.hypot(p[0] - ROAD_PATHS.business[i][0], p[1] - ROAD_PATHS.business[i][1]), 0);
+  const carryOn = (Math.floor(branchLength / EDGE_SPACING + 1e-9) + 1) * EDGE_SPACING - branchLength;
+  const onwardEdges = roadEdges(
+    sources.road,
+    {
+      path: onward,
+      width: ROAD_HALF * 2,
+      spacing: EDGE_SPACING,
+      from: carryOn,
+      highlights: layout.commits,
+      openings: { points: spurs.map((spur) => spur.path[0]), radius: SPUR_HALF + EDGE_SPACING / 2 },
+    },
+    seed + 9,
+  );
+  const spurEdges = spurs.map((spur, n) => roadEdges(sources.road, { path: spur.path, width: SPUR_HALF * 2, spacing: EDGE_SPACING }, seed + 40 + n));
+  const stands = layout.landmarks.map((landmark, n) => landmarkStand(sources.road, landmark, seed + 60 + n));
 
   /** @type {Array<{ name: string, shape: Shape, stopId?: string, cursor?: number }>} */
   const exact = [];
@@ -463,12 +545,17 @@ export function buildRoadWorld(tier, sources, seed, road) {
     }
   });
 
-  const fixedShapes = [editor, signs, edges.trunk, edges.business, edges.family, edges.onward, ...exact.map((part) => part.shape), ...(commits ? [commits] : [])];
+  const fixedShapes = [editor, signs, edges.trunk, edges.business, edges.family, onwardEdges, ...spurEdges, ...stands, ...exact.map((part) => part.shape)];
   const fixed = fixedShapes.reduce((sum, shape) => sum + shape.glyphs.length, 0);
   const rest = budgetFor(tier) - fixed;
   if (rest <= 0) throw new Error(`The ${tier} budget leaves no glyphs for the road.`);
   const share = (/** @type {number} */ fraction) => Math.floor(rest * fraction);
   const perScreen = screens.length > 0 ? Math.floor(share(SCREEN_SHARE) / screens.length) : 0;
+  // The onward road's scatter, shared with the side paths by area.
+  const onwardLength = onward.slice(1).reduce((sum, p, i) => sum + Math.hypot(p[0] - onward[i][0], p[1] - onward[i][1]), 0);
+  const areas = { onward: onwardLength * ROAD_HALF * 2, spurs: spurs.map((spur) => spur.length * SPUR_HALF * 2) };
+  const totalArea = areas.onward + areas.spurs.reduce((sum, a) => sum + a, 0);
+  const scatterFor = (/** @type {number} */ area) => Math.floor((share(ROAD_SCATTER.onward) * area) / totalArea);
 
   return [
     { name: 'editor', shape: editor },
@@ -478,15 +565,27 @@ export function buildRoadWorld(tier, sources, seed, road) {
     { name: 'family-edges', shape: edges.family },
     { name: 'business-road', shape: codeRoad(sources.road, { path: ROAD_PATHS.business, width: 3.2, count: share(ROAD_SCATTER.business) }, seed + 3) },
     { name: 'family-road', shape: codeRoad(sources.road, { path: ROAD_PATHS.family, width: 3.2, count: share(ROAD_SCATTER.family) }, seed + 4) },
-    { name: 'onward-road', shape: codeRoad(sources.road, { path: onward, width: 3.2, count: share(ROAD_SCATTER.onward) }, seed + 11) },
-    { name: 'onward-edges', shape: edges.onward },
+    { name: 'onward-road', shape: codeRoad(sources.road, { path: onward, width: ROAD_HALF * 2, count: scatterFor(areas.onward) }, seed + 11) },
+    { name: 'onward-edges', shape: onwardEdges },
+    ...spurs.flatMap((spur, n) => [
+      { name: `spur-road:${spur.stopId}`, shape: codeRoad(sources.road, { path: spur.path, width: SPUR_HALF * 2, count: Math.max(1, scatterFor(areas.spurs[n])) }, seed + 50 + n) },
+      { name: `spur-edges:${spur.stopId}`, shape: spurEdges[n] },
+    ]),
+    ...layout.landmarks.map((landmark, n) => ({ name: `stand:${landmark.stopId}`, shape: stands[n] })),
     { name: 'signs', shape: signs },
-    ...screens.map(({ stopId, landmark, code }, n) => ({
-      name: `landmark:${stopId}`,
-      stopId,
-      shape: screenSculpture(code, { width: landmark.width, height: landmark.height, center: landmark.center, count: perScreen, facing: landmark.facing }, seed + 30 + n),
-    })),
+    ...screens.flatMap(({ stopId, landmark, code }, n) => {
+      const image = landed[stopId];
+      const place = layout.landmarks.indexOf(landmark) + 1;
+      const count = image ? Math.floor(perScreen / 2) : perScreen;
+      const sculpture = screenSculpture(code, { width: landmark.width, height: landmark.height, center: landmark.center, count, facing: landmark.facing }, seed + 30 + n);
+      if (!image) return [{ name: `landmark:${stopId}`, stopId, shape: sculpture }];
+      // The picture's grid step, in the image's pixels, for about the other half of the share.
+      const step = Math.max(1, Math.sqrt((image.width * image.height) / Math.max(1, perScreen - count)));
+      return [
+        { name: `landmark:${stopId}`, stopId, shape: { ...sculpture, tag: place } },
+        { name: `landed:${stopId}`, stopId, shape: { ...landedShape(image, landmark, code, step), tag: -place } },
+      ];
+    }),
     ...exact,
-    ...(commits ? [{ name: 'commits', shape: commits }] : []),
   ];
 }
