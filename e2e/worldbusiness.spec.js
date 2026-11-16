@@ -44,7 +44,8 @@ test.describe('the world starts as today does (Code World R4)', () => {
     await open(page);
     await takeBusiness(page);
     const ids = await page.locator('[data-world-stop]').evaluateAll((els) => els.map((el) => /** @type {HTMLElement} */ (el).dataset.worldStop));
-    expect(ids).toEqual(ROAD);
+    // Then where the roads meet (W4).
+    expect(ids).toEqual([...ROAD, 'workshop', 'your-idea']);
   });
 });
 

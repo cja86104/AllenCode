@@ -1,6 +1,7 @@
 // @ts-check
 import { LANDMARK } from './landmark.js';
 import { landedShape } from './worldFlight.js';
+import { roadBetween, roadLength } from './roadPath.js';
 
 /**
  * The prototype world, generated in code from real approved excerpts (no models, nothing invented).
@@ -307,6 +308,47 @@ export function roadEdges(code, { path, width, spacing, from = 0, highlights = [
 /** How near a highlight point an edge character must be to light up. */
 const HIGHLIGHT_RADIUS = 0.8;
 
+/** Your idea's frame: its edge characters this far apart, and its faint grid inside. */
+const FRAME_SPACING = 0.12;
+const FRAME_GRID = 0.6;
+
+/**
+ * The frame your idea is sketched on (Code World W4): the road's characters in ember round the
+ * landmark's edge and a faint grid of pale ones inside, waiting for the visitor's line. Exact: no
+ * flight touches it; the sketch the visitor builds appears over it.
+ * @param {string} roadCode
+ * @param {import('./roadLayout.js').Landmark} landmark
+ * @param {number} seed
+ * @returns {Shape}
+ */
+export function sketchFrame(roadCode, landmark, seed) {
+  const ink = inkOf(roadCode);
+  const first = Math.floor(seeded(seed)() * ink.length);
+  const halfW = landmark.width / 2;
+  const halfH = landmark.height / 2;
+  /** @type {Array<{ x: number, y: number, edge: boolean }>} */
+  const points = [];
+  const across = Math.round(landmark.width / FRAME_SPACING);
+  const down = Math.round(landmark.height / FRAME_SPACING);
+  for (let i = 0; i <= across; i += 1) {
+    const x = -halfW + (landmark.width * i) / across;
+    points.push({ x, y: halfH, edge: true }, { x, y: -halfH, edge: true });
+  }
+  for (let j = 1; j < down; j += 1) {
+    const y = -halfH + (landmark.height * j) / down;
+    points.push({ x: -halfW, y, edge: true }, { x: halfW, y, edge: true });
+  }
+  for (let x = -halfW + FRAME_GRID; x < halfW - 1e-9; x += FRAME_GRID) {
+    for (let y = -halfH + FRAME_GRID; y < halfH - 1e-9; y += FRAME_GRID) points.push({ x, y, edge: false });
+  }
+  const shape = emptyShape(points.length, 0.1);
+  const [cx, cy, cz] = landmark.center;
+  points.forEach(({ x, y, edge }, i) => {
+    put(shape, i, cx + x, cy + y, cz, ink[(first + i) % ink.length], edge ? EMBER : PALE, edge ? 0.9 : 0.25);
+  });
+  return orient(shape, landmark.center, landmark.facing);
+}
+
 /** A stand's posts stand this far either side of its landmark's centre, across the face. */
 const POST_OFFSET = 0.35;
 /** The stand's three columns of flowing code, this far apart. */
@@ -485,12 +527,22 @@ export function buildWorld(tier, sources, seed) {
  * tier (W3.1, Chris 2026-11-16: the business road looked thinner and dimmer than the family road,
  * which spent the whole budget on the road). The same density whichever door is taken; the road
  * between the landmarks has half of it, the run-on into the fog an eighth, and the screens take what
- * the budget leaves. On the low tier this is what the fixed parts and six screens at `SCREEN_FLOOR`
+ * the budget leaves. On the low tier this is what the fixed parts and the screens at `SCREEN_FLOOR`
  * leave; a fuller phone road needs a larger low budget (`budgetFor`), not a larger density.
  */
 export const ROAD_DENSITY = Object.freeze({ low: 12, mid: 26, high: 46 });
-/** A screen landmark never has fewer glyphs than this: the picture must still read. */
-const SCREEN_FLOOR = 400;
+/**
+ * A screen landmark never has fewer glyphs than this, by tier: the picture must still read. 300 on
+ * the low tier (W4: with the workshop the business road has eleven landmarks, and a phone sees each
+ * sculpture only briefly before its real picture takes over).
+ */
+export const SCREEN_FLOOR = Object.freeze({ low: 300, mid: 400, high: 400 });
+/**
+ * The road between the landmarks, as a share of `ROAD_DENSITY`, by tier (W3.1: a half; W4: a third
+ * on the low tier, so the longer business road fits the phone budget at the same density as the family
+ * road's, without thinning the opening).
+ */
+export const BETWEEN_SHARE = Object.freeze({ low: 1 / 3, mid: 1 / 2, high: 1 / 2 });
 /** Half the onward road's width, and half a side path's (R5). */
 const ROAD_HALF = 1.6;
 const SPUR_HALF = 0.8;
@@ -547,6 +599,9 @@ export function buildRoadWorld(tier, sources, seed, road, landed = {}) {
   );
   const spurEdges = spurs.map((spur, n) => roadEdges(sources.road, { path: spur.path, width: SPUR_HALF * 2, spacing: EDGE_SPACING }, seed + 40 + n));
   const stands = layout.landmarks.map((landmark, n) => landmarkStand(sources.road, landmark, seed + 60 + n));
+  // The other road coming in to where the roads meet (W4): its edges and a little code, no landmarks.
+  const other = /** @type {Point2[]} */ (layout.other ?? []);
+  const otherEdges = other.length > 1 ? roadEdges(sources.road, { path: other, width: ROAD_HALF * 2, spacing: EDGE_SPACING }, seed + 13) : null;
 
   /** @type {Array<{ name: string, shape: Shape, stopId?: string, cursor?: number }>} */
   const exact = [];
@@ -556,6 +611,11 @@ export function buildRoadWorld(tier, sources, seed, road, landed = {}) {
     // How I work's commits light the road's edge; a stop of words (done for you, W3) has no landmark.
     if (stop.kind === 'commits' || stop.kind === 'words') return;
     const landmark = layout.landmarks.find((l) => l.stopId === stop.id);
+    // Your idea's frame (W4): the road's own code, always drawn; the visitor's sketch appears over it.
+    if (stop.kind === 'sketch' && landmark) {
+      exact.push({ name: `landmark:${stop.id}`, shape: sketchFrame(sources.road, landmark, seed + 20 + k) });
+      return;
+    }
     const code = stop.excerptId ? sources.stops[stop.excerptId] : undefined;
     if (!landmark || code === undefined) throw new Error(`The road has no landmark or code for ${stop.id}.`);
     if (stop.kind === 'unfinished') {
@@ -568,32 +628,33 @@ export function buildRoadWorld(tier, sources, seed, road, landed = {}) {
     }
   });
 
-  const fixedShapes = [editor, signs, edges.trunk, edges.business, edges.family, onwardEdges, ...spurEdges, ...stands, ...exact.map((part) => part.shape)];
+  const fixedShapes = [editor, signs, edges.trunk, edges.business, edges.family, onwardEdges, ...spurEdges, ...stands, ...(otherEdges ? [otherEdges] : []), ...exact.map((part) => part.shape)];
   const fixed = fixedShapes.reduce((sum, shape) => sum + shape.glyphs.length, 0);
   // The scatter by density: the opening, the road between the landmarks (to the last stop), the
   // run-on into the fog, and the side paths.
   const density = ROAD_DENSITY[tier];
   const lastAlong = layout.along.length > 0 ? layout.along[layout.along.length - 1] : 0;
-  const [onwardStart] = onward;
-  const splitAt = /** @type {Point2} */ ([onwardStart[0] + layout.direction[0] * lastAlong, onwardStart[1] + layout.direction[1] * lastAlong]);
-  const between = /** @type {Point2[]} */ ([onwardStart, splitAt]);
-  const runOn = /** @type {Point2[]} */ ([splitAt, onward[onward.length - 1]]);
+  // Split by distance along the road, round the bend where the roads meet (W4).
+  const between = roadBetween(layout, 0, lastAlong);
+  const runOn = roadBetween(layout, lastAlong, roadLength(layout));
   const scatter = {
     trunk: scatterCount(density, ROAD_PATHS.trunk, 4),
     business: scatterCount(density, ROAD_PATHS.business, 3.2),
     family: scatterCount(density, ROAD_PATHS.family, 3.2),
-    between: scatterCount(density / 2, between, ROAD_HALF * 2),
+    between: scatterCount(density * BETWEEN_SHARE[tier], between, ROAD_HALF * 2),
     runOn: scatterCount(density / 8, runOn, ROAD_HALF * 2),
-    spurs: spurs.map((spur) => Math.max(1, scatterCount(density / 2, spur.path, SPUR_HALF * 2))),
+    other: other.length > 1 ? scatterCount(density / 8, other, ROAD_HALF * 2) : 0,
+    spurs: spurs.map((spur) => Math.max(1, scatterCount(density * BETWEEN_SHARE[tier], spur.path, SPUR_HALF * 2))),
   };
-  const scattered = scatter.trunk + scatter.business + scatter.family + scatter.between + scatter.runOn + scatter.spurs.reduce((sum, n) => sum + n, 0);
+  const scattered = scatter.trunk + scatter.business + scatter.family + scatter.between + scatter.runOn + scatter.other + scatter.spurs.reduce((sum, n) => sum + n, 0);
   let remainder = budgetFor(tier) - fixed - scattered;
-  if (screens.length > 0 && remainder < SCREEN_FLOOR * screens.length) {
+  const floor = SCREEN_FLOOR[tier];
+  if (screens.length > 0 && remainder < floor * screens.length) {
     // The budget, not the density, is the limit: the scatter gives way so every screen keeps its floor.
-    const keep = Math.max(0, budgetFor(tier) - fixed - SCREEN_FLOOR * screens.length) / scattered;
-    for (const key of /** @type {const} */ (['trunk', 'business', 'family', 'between', 'runOn'])) scatter[key] = Math.floor(scatter[key] * keep);
+    const keep = Math.max(0, budgetFor(tier) - fixed - floor * screens.length) / scattered;
+    for (const key of /** @type {const} */ (['trunk', 'business', 'family', 'between', 'runOn', 'other'])) scatter[key] = Math.floor(scatter[key] * keep);
     scatter.spurs = scatter.spurs.map((n) => Math.max(1, Math.floor(n * keep)));
-    remainder = SCREEN_FLOOR * screens.length;
+    remainder = floor * screens.length;
   }
   if (remainder <= 0) throw new Error(`The ${tier} budget leaves no glyphs for the road.`);
   const perScreen = screens.length > 0 ? Math.floor(remainder / screens.length) : 0;
@@ -608,6 +669,12 @@ export function buildRoadWorld(tier, sources, seed, road, landed = {}) {
     { name: 'family-road', shape: codeRoad(sources.road, { path: ROAD_PATHS.family, width: 3.2, count: scatter.family }, seed + 4) },
     { name: 'onward-road', shape: codeRoad(sources.road, { path: between, width: ROAD_HALF * 2, count: scatter.between }, seed + 11) },
     { name: 'run-on-road', shape: codeRoad(sources.road, { path: runOn, width: ROAD_HALF * 2, count: scatter.runOn }, seed + 12) },
+    ...(otherEdges
+      ? [
+          { name: 'other-road', shape: codeRoad(sources.road, { path: other, width: ROAD_HALF * 2, count: scatter.other }, seed + 14) },
+          { name: 'other-edges', shape: otherEdges },
+        ]
+      : []),
     { name: 'onward-edges', shape: onwardEdges },
     ...spurs.flatMap((spur, n) => [
       { name: `spur-road:${spur.stopId}`, shape: codeRoad(sources.road, { path: spur.path, width: SPUR_HALF * 2, count: scatter.spurs[n] }, seed + 50 + n) },

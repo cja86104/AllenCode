@@ -38,7 +38,8 @@ test('taking family/ lays door B along the road: Hearth, the five templates, don
   await open(page);
   await takeFamily(page);
   const ids = await page.locator('[data-world-stop]').evaluateAll((els) => els.map((el) => /** @type {HTMLElement} */ (el).dataset.worldStop));
-  expect(ids).toEqual(ROAD);
+  // Then where the roads meet (W4).
+  expect(ids).toEqual([...ROAD, 'workshop', 'your-idea']);
   const order = await page.evaluate(() => {
     const done = /** @type {HTMLElement} */ (document.querySelector('[data-world-stop="done-for-you"]'));
     const builder = /** @type {HTMLElement} */ (document.querySelector('[data-chapter="builder"]'));

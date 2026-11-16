@@ -1,5 +1,5 @@
 // @ts-check
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ScrollEngine from '../scroll/ScrollEngine.jsx';
 import { useDoor } from '../door/DoorProvider.jsx';
@@ -9,6 +9,8 @@ import { readCapabilityEnv } from '../field/environment.js';
 import WorldCanvas, { WORLD_SOURCES_APPROVED } from './WorldCanvas.jsx';
 import { routeFor } from './route.js';
 import { buildTrack, measureSections } from './worldTrack.js';
+import JourneyRail from './JourneyRail.jsx';
+import { journeyLength, railStops } from './rail.js';
 import { markWorldFailed } from './worldSwitch.js';
 
 /** The field's device tiers, as the world's glyph budgets name them. */
@@ -27,6 +29,10 @@ export default function WorldLayer() {
   // The camera's track, measured from the page (R4): on mount, on resize, whenever the page's size
   // changes (chapters loading, a door taken), and for each new route.
   const trackRef = useRef(/** @type {import('./homeWorld.js').TrackState | null} */ (null));
+  // The journey rail (W4): its stops from the measured page, the visitor's place along it.
+  const [rail, setRail] = useState(/** @type {Array<{ name: string, from: number }>} */ ([]));
+  const lengthRef = useRef(1);
+  const getRailProgress = useCallback(() => window.scrollY / lengthRef.current, []);
   useEffect(() => {
     let version = trackRef.current?.version ?? 0;
     let queued = 0;
@@ -35,6 +41,8 @@ export default function WorldLayer() {
       const sections = measureSections(document);
       version += 1;
       trackRef.current = { track: buildTrack(route, sections, { width: window.innerWidth, height: window.innerHeight }), sections, version };
+      lengthRef.current = journeyLength(sections);
+      setRail(railStops(route, sections));
     };
     const soon = () => {
       if (!queued) queued = requestAnimationFrame(measure);
@@ -67,6 +75,7 @@ export default function WorldLayer() {
     <>
       <ScrollEngine enabled />
       <WorldCanvas tier={tier} home={home} onMeter={showMeter ? setReport : undefined} onFail={markWorldFailed} />
+      {rail.length > 0 && <JourneyRail stops={rail} getProgress={getRailProgress} />}
       {showMeter && (
         <p
           data-frame-meter

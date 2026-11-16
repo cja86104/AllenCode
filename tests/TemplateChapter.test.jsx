@@ -9,7 +9,7 @@ import TemplateChapter, { DOOR_B_TEMPLATES, segmentTimeline, TemplateChapterFor 
 import WorldRoadChapters from '../src/scenes/WorldRoadChapters.jsx';
 import { excerpts, getExcerpt } from '../src/content/excerpts/index.js';
 import { fieldBus } from '../src/field/fieldBus.js';
-import { familyRoadStops } from '../src/world/roads.js';
+import { familyRoadStops, MEETING_STOPS } from '../src/world/roads.js';
 
 beforeEach(() => {
   window.sessionStorage.clear();
@@ -131,7 +131,8 @@ describe('door B along the family road (Code World W3.4)', () => {
       </MemoryRouter>,
     );
     const stops = [...document.querySelectorAll('[data-world-segment="rest"][data-world-stop]')].map((el) => el.getAttribute('data-world-stop'));
-    expect(stops).toEqual(familyRoadStops().map((s) => s.id));
+    // Then where the roads meet (W4).
+    expect(stops).toEqual([...familyRoadStops(), ...MEETING_STOPS].map((s) => s.id));
     expect(document.querySelector('[data-world-stop="hearth"] [data-door-b-intro] [data-world-target]')).not.toBeNull();
     expect(document.querySelectorAll('[data-world-stop] section[data-template-chapter]')).toHaveLength(DOOR_B_TEMPLATES.length);
     expect(document.querySelector('[data-world-stop="done-for-you"] [data-chapter="done-for-you"]')).not.toBeNull();

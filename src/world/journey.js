@@ -1,6 +1,6 @@
 // @ts-check
 import { cameraAt } from './camera.js';
-import { EYE_HEIGHT, LOOK_BELOW, layoutRoad } from './roadLayout.js';
+import { EYE_HEIGHT, LOOK_BELOW, layoutRoad, roadAt } from './roadLayout.js';
 
 /** @typedef {[number, number, number]} Vec3 */
 /** @typedef {import('./roads.js').RoadStop} RoadStop */
@@ -168,8 +168,11 @@ export function buildJourney(door, roadStops = [], sizes = {}) {
 function placeRoad(door, roadStops, sizes, start, placed) {
   const layout = layoutRoad(roadStops, door, sizes);
   const { origin, direction } = layout;
-  const onRoad = (/** @type {number} */ along, /** @type {number} */ y) =>
-    /** @type {Vec3} */ ([origin[0] + direction[0] * along, y, origin[1] + direction[1] * along]);
+  // Places on the road by distance along it, round the bend where the roads meet (W4).
+  const onRoad = (/** @type {number} */ along, /** @type {number} */ y) => {
+    const { point } = roadAt(layout, along);
+    return /** @type {Vec3} */ ([point[0], y, point[1]]);
+  };
   /** @type {JourneyStop[]} */
   const stops = [];
   /** @type {Array<Landmark & { from: number, to: number, arriveAt: number, holdAt: number }>} */

@@ -8,6 +8,7 @@ import { resolveTransform } from '../field/resolveTransform.js';
 import { products } from '../data/products.js';
 import { serviceScreens } from '../data/serviceScreens.js';
 import { templates } from '../data/templates.js';
+import { BUILDER } from '../content/builderStory.js';
 import { loopOf } from '../scenes/ProductChapter.jsx';
 import { buildRoadWorld, buildWorld, inkBefore, slabCaret } from './shapes.js';
 import { TYPED_FROM, TYPED_TO } from './journey.js';
@@ -73,7 +74,8 @@ function readPicture(src) {
 }
 
 /**
- * The screen a road stop resolves into: a product's or a template's loop poster, or a service's screen.
+ * The screen a road stop resolves into: a product's or a template's loop poster, a service's screen, or
+ * (the workshop, W4) Chris's photo.
  * @param {import('./roads.js').RoadStop} stop
  */
 function screenOf(stop) {
@@ -83,6 +85,7 @@ function screenOf(stop) {
   }
   if (stop.kind === 'service') return serviceScreens[/** @type {keyof typeof serviceScreens} */ (stop.id)]?.src ?? null;
   if (stop.kind === 'template') return templates.find((t) => t.id === stop.id)?.poster ?? null;
+  if (stop.kind === 'portrait') return BUILDER.photo.src;
   return null;
 }
 
@@ -180,7 +183,10 @@ export function createHomeWorld({ renderer, atlas, tier, canvas, scrim }) {
       if (landmark) plane = { point: landmark.center, normal: landmark.facing };
     }
     if (!plane || !section) return;
-    renderer.setFlight(toWorldFlight(resolved, { camera: state.track.cameraAt(section.from), viewport, plane }));
+    // A pinned rest's camera is still, so its start stands for all of it; a held rest's (your idea, W4)
+    // moves with the page, so the flight is placed through the camera where it was launched.
+    const at = section.hold === 'visible' ? window.scrollY : section.from;
+    renderer.setFlight(toWorldFlight(resolved, { camera: state.track.cameraAt(at), viewport, plane }));
     placedFor = state.version;
     flightKey = claimed;
   };
@@ -262,7 +268,10 @@ export function createHomeWorld({ renderer, atlas, tier, canvas, scrim }) {
         }
       });
 
-      renderer.render(camera, now, { fades, cursor, flight, passed });
+      // The world fades out over the screen before the brief (W4); faded out, it is not drawn at all.
+      const shown = state ? state.track.fadeAt(y) : 1;
+      canvas.style.opacity = shown.toFixed(3);
+      if (shown > 0) renderer.render(camera, now, { fades, cursor, flight, passed });
 
       const data = canvas.dataset;
       if (road) data.road = road.door;
@@ -285,7 +294,7 @@ export function createHomeWorld({ renderer, atlas, tier, canvas, scrim }) {
       data.landed = landed.join(',');
       data.editor = editorShown.toFixed(2);
       data.progress = state ? state.track.progressAt(y).toFixed(3) : '0.000';
-      if (scrim) scrim.style.opacity = section?.kind === 'rest' ? '1' : '0';
+      if (scrim) scrim.style.opacity = section?.kind === 'rest' ? shown.toFixed(3) : '0';
       return camera;
     },
   };

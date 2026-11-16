@@ -22,8 +22,9 @@ export const BUDGETS = Object.freeze([
   // Phase 8: measured (renderer 4.66 kB, vendor 51.15 kB, world canvas 6.34 kB) plus about 5 percent.
   { name: 'renderer chunk (after first paint)', limitKb: 5, match: (file) => /^FieldScene-.*\.js$/.test(file) },
   { name: 'scroll vendor: GSAP and Lenis (after first paint)', limitKb: 54, match: (file) => /^vendor-scroll-.*\.js$/.test(file) },
-  // The world's canvas with the home's world and the flight in it (W2 revised, R4): 7.20 kB measured, plus 5 %.
-  { name: 'code world canvas (world only)', limitKb: 7.6, match: (file) => /^WorldCanvas-.*\.js$/.test(file) },
+  // The world's canvas with the home's world and the flight in it (W2 revised, R4), and since W4 the
+  // journey rail the home and the lab share, which the bundler puts here: 8.11 kB measured, plus 5 %.
+  { name: 'code world canvas (world only)', limitKb: 8.5, match: (file) => /^WorldCanvas-.*\.js$/.test(file) },
   // The world opening, its road stops now today's chapters (W2 revised, R4): 2.15 kB measured, plus 5 %.
   { name: 'code world journey (world only)', limitKb: 2.3, match: (file) => /^WorldJourney-.*\.js$/.test(file) },
   // The Code world prototype's lab page (/lab/world), which the site never loads (Task P2).

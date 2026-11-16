@@ -9,7 +9,10 @@ import {
   editorSlab,
   forkSigns,
   landmarkStand,
+  sketchFrame,
   ROAD_DENSITY,
+  BETWEEN_SHARE,
+  SCREEN_FLOOR,
   ROAD_PATHS,
   SLAB_METRICS,
   roadEdges,
@@ -17,7 +20,9 @@ import {
   slabCaret,
   unfinishedSlab,
 } from '../src/world/shapes.js';
-import { businessRoadStops, familyRoadStops } from '../src/world/roads.js';
+import { businessRoadStops, familyRoadStops, MEETING_STOPS } from '../src/world/roads.js';
+import builder from '../src/content/excerpts/builder.js';
+import { routeFor } from '../src/world/route.js';
 import { layoutRoad, roadSizes, spurPaths } from '../src/world/roadLayout.js';
 import { getExcerpt } from '../src/content/excerpts/index.js';
 import gate from '../src/content/excerpts/gate.js';
@@ -448,24 +453,24 @@ describe('the road is as full on every door (Code World W3.1)', () => {
       }
     });
 
-    it(`${tier}: the road between the landmarks is half the opening's density, the run-on an eighth, the side paths the road's`, () => {
+    it(`${tier}: the road between the landmarks is BETWEEN_SHARE of the opening's density, the run-on an eighth, the side paths the road's`, () => {
       const parts = buildRoadWorld(tier, sources, 1, { stops, layout });
       const onward = layout.path.slice(ROAD_PATHS.business.length - 1);
       const last = layout.along[layout.along.length - 1];
-      const between = Math.floor((ROAD_DENSITY[tier] / 2) * 3.2 * last);
+      const between = Math.floor(ROAD_DENSITY[tier] * BETWEEN_SHARE[tier] * 3.2 * last);
       const runOn = Math.floor((ROAD_DENSITY[tier] / 8) * 3.2 * (area(onward, 1) - last));
       expect(count(parts, 'onward-road') + count(parts, 'run-on-road')).toBe(between + runOn);
       for (const spur of layout.spurs) {
         const spurLength = Math.hypot(spur.path[1][0] - spur.path[0][0], spur.path[1][1] - spur.path[0][1]) - 1.6;
-        expect(count(parts, `spur-road:${spur.stopId}`)).toBe(Math.max(1, Math.floor((ROAD_DENSITY[tier] / 2) * 1.6 * spurLength)));
+        expect(count(parts, `spur-road:${spur.stopId}`)).toBe(Math.max(1, Math.floor(ROAD_DENSITY[tier] * BETWEEN_SHARE[tier] * 1.6 * spurLength)));
       }
     });
 
-    it(`${tier}: the screens share what the budget leaves, at least 400 each, and the whole fits`, () => {
+    it(`${tier}: the screens share what the budget leaves, SCREEN_FLOOR each at least, and the whole fits`, () => {
       const parts = buildRoadWorld(tier, sources, 1, { stops, layout });
       const screens = stops.filter((s) => s.kind === 'product' || s.kind === 'service');
       const sizes = screens.map((s) => count(parts, `landmark:${s.id}`));
-      expect(Math.min(...sizes)).toBeGreaterThanOrEqual(400);
+      expect(Math.min(...sizes)).toBeGreaterThanOrEqual(SCREEN_FLOOR[tier]);
       expect(Math.max(...sizes) - Math.min(...sizes)).toBeLessThanOrEqual(1);
       expect(parts.reduce((sum, p) => sum + p.shape.glyphs.length, 0)).toBeLessThanOrEqual(budgetFor(tier));
     });
@@ -502,4 +507,62 @@ describe('the family road’s world (Code World W3.3)', () => {
       expect(parts.reduce((sum, p) => sum + p.shape.glyphs.length, 0)).toBeLessThanOrEqual(budgetFor(tier));
     }
   });
+});
+
+describe('where the roads meet (Code World W4.2)', () => {
+  const EMBER_R = 0xf9 / 255;
+  const landmark = /** @type {import('../src/world/roadLayout.js').Landmark} */ ({
+    stopId: 'your-idea', kind: 'sketch', center: [2, 3, -40], facing: [0, 0, 1], width: 6, height: 4.5,
+  });
+
+  it('draws your idea’s frame of the road’s code: ember round its edge, a faint grid inside, all in its plane', () => {
+    const allowed = charsIn(ambient.code);
+    const frame = sketchFrame(ambient.code, landmark, 1);
+    expect(frame.glyphs.length).toBeGreaterThan(100);
+    let edge = 0;
+    for (let i = 0; i < frame.glyphs.length; i += 1) {
+      const x = frame.positions[i * 3] - landmark.center[0];
+      const y = frame.positions[i * 3 + 1] - landmark.center[1];
+      const z = frame.positions[i * 3 + 2] - landmark.center[2];
+      expect(Math.abs(z)).toBeLessThanOrEqual(0.02);
+      expect(Math.abs(x)).toBeLessThanOrEqual(3 + 0.02);
+      expect(Math.abs(y)).toBeLessThanOrEqual(2.25 + 0.02);
+      expect(allowed.has(String.fromCharCode(frame.glyphs[i]))).toBe(true);
+      const onEdge = Math.abs(Math.abs(x) - 3) <= 0.02 || Math.abs(Math.abs(y) - 2.25) <= 0.02;
+      if (Math.abs(frame.colors[i * 4] - EMBER_R) < 1e-6) {
+        expect(onEdge).toBe(true);
+        edge += 1;
+      } else {
+        expect(frame.colors[i * 4 + 3]).toBeCloseTo(0.25, 6);
+      }
+    }
+    expect(edge).toBeGreaterThan(80);
+  });
+
+  for (const door of /** @type {const} */ (['a', 'b'])) {
+    it(`door ${door}: builds the workshop’s screen, your idea’s frame and the other road, within every budget`, () => {
+      const road = routeFor(door).road;
+      if (!road) throw new Error('no road');
+      const sources = { gate: gate.code, road: ambient.code, stops: road.sources };
+      for (const tier of /** @type {const} */ (['low', 'mid', 'high'])) {
+        const parts = buildRoadWorld(tier, sources, 1, { stops: road.stops, layout: road.layout });
+        const count = (/** @type {string} */ name) => parts.find((p) => p.name === name)?.shape.glyphs.length ?? 0;
+        expect(count('landmark:workshop'), tier).toBeGreaterThanOrEqual(SCREEN_FLOOR[tier]);
+        // Neither door's road is thinned to fit: the opening is at its full density on every tier.
+        expect(count('trunk-road'), `${tier}: the trunk at full density`).toBe(Math.floor(ROAD_DENSITY[tier] * 4 * 37));
+        expect(count('landmark:your-idea')).toBeGreaterThan(0);
+        expect(parts.find((p) => p.name === 'landmark:your-idea')?.shape.tag).toBeUndefined();
+        const otherLength = road.layout.other.slice(1).reduce((sum, p, i) => sum + Math.hypot(p[0] - road.layout.other[i][0], p[1] - road.layout.other[i][1]), 0);
+        expect(count('other-road')).toBe(Math.floor((ROAD_DENSITY[tier] / 8) * 3.2 * otherLength));
+        const edges = parts.find((p) => p.name === 'other-edges')?.shape;
+        if (!edges) throw new Error('no other edges');
+        for (let i = 0; i < edges.glyphs.length; i += 1) {
+          expect(Math.abs(distanceToPath([edges.positions[i * 3], edges.positions[i * 3 + 2]], road.layout.other) - 1.6)).toBeLessThanOrEqual(0.05);
+        }
+        expect(parts.reduce((sum, p) => sum + p.shape.glyphs.length, 0)).toBeLessThanOrEqual(budgetFor(tier));
+      }
+      expect(road.sources.builder).toBe(builder.code);
+      expect(MEETING_STOPS.every((stop) => road.stops.includes(stop))).toBe(true);
+    });
+  }
 });

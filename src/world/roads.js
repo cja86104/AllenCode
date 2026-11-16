@@ -14,8 +14,9 @@ import { DOOR_B_TEMPLATES } from '../scenes/TemplateChapter.jsx';
  * One stop on a road beyond the fork. `kind` decides its landmark: a product's screen resolving into
  * its loop, a product still being written (`unfinished`), a service's screen, the audit's checked
  * file, the commits of how I work, a template's screen resolving into its loop (the family road,
- * W3), or a stop of words with no landmark (done for you).
- * @typedef {{ id: string, name: string, kind: 'product' | 'unfinished' | 'service' | 'audit' | 'commits' | 'template' | 'words', excerptId: string | null }} RoadStop
+ * W3), a stop of words with no landmark (done for you), or, where the roads meet (W4), the workshop's
+ * portrait and the frame your idea's sketch is built on.
+ * @typedef {{ id: string, name: string, kind: 'product' | 'unfinished' | 'service' | 'audit' | 'commits' | 'template' | 'words' | 'portrait' | 'sketch', excerptId: string | null }} RoadStop
  */
 
 /** The audit chapter has no screen: its real thing is its own file, every line checked. */
@@ -79,13 +80,26 @@ export function familyRoadStops({ includeDrafts = false, registry = approvedRegi
 }
 
 /**
+ * Where both roads meet (Code World W4): the workshop (Chris's story, the builder excerpt, becoming
+ * his photo) and the frame the visitor's idea is sketched on. Both doors' roads end with these.
+ * @type {ReadonlyArray<RoadStop>}
+ */
+export const MEETING_STOPS = Object.freeze([
+  Object.freeze({ id: 'workshop', name: 'The workshop', kind: /** @type {const} */ ('portrait'), excerptId: 'builder' }),
+  Object.freeze({ id: 'your-idea', name: 'Your idea', kind: /** @type {const} */ ('sketch'), excerptId: null }),
+]);
+
+/**
  * The road stop a chapter's flight lands at, from the flight's key prefix: door A's chapters name
  * their flights by their stop (`underfire-ai`), door B's by their own slugs (`door-b-intro` for
- * Hearth, `template-<id>` for a template; W3.5). Anything else is returned as it is.
+ * Hearth, `template-<id>` for a template; W3.5), the builder and the idea by theirs (`builder`, `idea`;
+ * W4). Anything else is returned as it is.
  * @param {string} slug
  */
 export function stopForFlight(slug) {
   if (slug === 'door-b-intro') return 'hearth';
+  if (slug === 'builder') return 'workshop';
+  if (slug === 'idea') return 'your-idea';
   if (slug.startsWith('template-')) return slug.slice('template-'.length);
   return slug;
 }

@@ -4,8 +4,10 @@
 /**
  * A camera key. `still` gives the key a zero tangent: the camera eases to rest there, and between
  * two still keys it does not move at all, so a landmark's real screen can be laid exactly over it
- * (Code World W2.2). Keys without it curve as uniform Catmull-Rom, as in the prototype.
- * @typedef {{ at: number, eye: Vec3, target: Vec3, fov: number, stop: string, still?: boolean }} CameraKey
+ * (Code World W2.2). Keys without it curve as uniform Catmull-Rom, as in the prototype. `linear` (W4)
+ * makes the span from this key to the next a straight line at an even pace: the camera moves with
+ * the page there, keeping a landmark under a part of the page that scrolls.
+ * @typedef {{ at: number, eye: Vec3, target: Vec3, fov: number, stop: string, still?: boolean, linear?: boolean }} CameraKey
  */
 
 /**
@@ -93,6 +95,14 @@ export function cameraAt(progress, keys = CAMERA_KEYS) {
   const k2 = keys[i + 1];
   const k3 = keys[Math.min(last, i + 2)];
   const t = (p - k1.at) / (k2.at - k1.at);
+  if (k1.linear === true) {
+    const lerp = (/** @type {number} */ a, /** @type {number} */ b) => a + (b - a) * t;
+    return {
+      eye: /** @type {Vec3} */ (k1.eye.map((v, j) => lerp(v, k2.eye[j]))),
+      target: /** @type {Vec3} */ (k1.target.map((v, j) => lerp(v, k2.target[j]))),
+      fov: lerp(k1.fov, k2.fov),
+    };
+  }
   const still1 = k1.still === true;
   const still2 = k2.still === true;
   return {

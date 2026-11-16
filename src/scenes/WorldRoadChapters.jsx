@@ -8,10 +8,14 @@ import { getExcerpt } from '../content/excerpts/index.js';
 import { DoorBIntroFor } from './DoorBIntro.jsx';
 import { TemplateChapterFor } from './TemplateChapter.jsx';
 import DoneForYou from './DoneForYou.jsx';
+import Builder from './Builder.jsx';
+import IdeaSketch from './IdeaSketch.jsx';
 import { businessRoadStops, familyRoadStops } from '../world/roads.js';
 
 /** Scroll of road before each chapter, while the camera travels to its landmark. */
 const ROAD_BEFORE = '80vh';
+/** The road before the workshop: the bend where the roads meet is about three ordinary stretches (W4). */
+const ROAD_TO_MEETING = '240vh';
 /** A stop of words (done for you) holds on screen this long, so the camera rests on the road there. */
 const WORDS_HOLD = '160vh';
 
@@ -19,7 +23,8 @@ const WORDS_HOLD = '160vh';
  * A door's chapters along its Code World road: today's chapters, unchanged, in the road's order, each
  * after a stretch of road, each marked as a rest for the camera's track (`data-world-segment="rest"`,
  * `data-world-stop`). Door a: the business road (W2 revised, R4), products first. Door b: the family
- * road (W3.4): Hearth, each template as its own chapter, then done for you.
+ * road (W3.4): Hearth, each template as its own chapter, then done for you. Both then go on to where
+ * the roads meet (W4): the workshop (the builder) and your idea.
  * @param {{ door: 'a' | 'b', includeDrafts: boolean }} props
  */
 export default function WorldRoadChapters({ door, includeDrafts }) {
@@ -64,6 +69,15 @@ export default function WorldRoadChapters({ door, includeDrafts }) {
           </div>
         );
       })}
+      {/* Where the roads meet (W4): the workshop, then your idea, held while it is on screen. */}
+      <div aria-hidden="true" style={{ height: ROAD_TO_MEETING }} />
+      <div data-world-segment="rest" data-world-stop="workshop">
+        <Builder />
+      </div>
+      <div aria-hidden="true" style={{ height: ROAD_BEFORE }} />
+      <div data-world-segment="rest" data-world-stop="your-idea" data-world-hold="visible">
+        <IdeaSketch />
+      </div>
     </>
   );
 }

@@ -99,6 +99,7 @@ export default function Builder() {
           frameOpacity={frameOpacity}
         />
         <div
+          data-world-target
           style={{ opacity: timeline.handoff, left: targetBox.x, top: targetBox.y, width: targetBox.w, height: targetBox.h }}
           className="absolute"
         >

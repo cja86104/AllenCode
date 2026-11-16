@@ -1,7 +1,7 @@
 // @ts-check
 import { describe, expect, it } from 'vitest';
-import { layoutRoad, roadSizes, spurPaths, ROAD_STEP, LATERAL } from '../src/world/roadLayout.js';
-import { businessRoadStops, familyRoadStops } from '../src/world/roads.js';
+import { layoutRoad, roadAt, roadSizes, spurPaths, ROAD_STEP, LATERAL, BEND_AFTER, BEND_LENGTH, OTHER_ROAD, RUN_ON } from '../src/world/roadLayout.js';
+import { businessRoadStops, familyRoadStops, MEETING_STOPS } from '../src/world/roads.js';
 import { getExcerpt } from '../src/content/excerpts/index.js';
 import { distanceToPath } from '../src/world/shapes.js';
 
@@ -144,5 +144,116 @@ describe('the family road (Code World W3.2)', () => {
     expect(road.spurs.map((s) => s.stopId)).toEqual(road.landmarks.map((l) => l.stopId));
     expect(road.direction[0]).toBeGreaterThan(0);
     expect(road.along).toHaveLength(family.length);
+  });
+});
+
+describe('the road bends and meets a shared road (Code World W4.1)', () => {
+  /** @type {Array<import('../src/world/roads.js').RoadStop>} */
+  const meeting = [
+    { id: 'm1', name: 'M1', kind: 'portrait', excerptId: null },
+    { id: 'm2', name: 'M2', kind: 'sketch', excerptId: null },
+  ];
+  const meetingSizes = { m1: { width: 6, height: 7.5 }, m2: { width: 6, height: 4.5 } };
+  const all = [...stops, ...meeting];
+  const both = { ...sizes, ...meetingSizes };
+  const near = (/** @type {number[]} */ a, /** @type {number[]} */ b, eps = 1e-9) => a.every((v, i) => Math.abs(v - b[i]) <= eps);
+
+  it('keeps the straight road where it was: roadAt matches origin + direction × distance at every road stop', () => {
+    const road = layoutRoad(all, 'a', both);
+    for (const distance of road.along.slice(0, stops.length)) {
+      const { point, heading } = roadAt(road, distance);
+      expect(near(point, [road.origin[0] + road.direction[0] * distance, road.origin[1] + road.direction[1] * distance])).toBe(true);
+      expect(near(heading, road.direction)).toBe(true);
+    }
+  });
+
+  for (const door of /** @type {const} */ (['a', 'b'])) {
+    const road = layoutRoad(all, door, both);
+    const last = road.along[stops.length - 1];
+
+    it(`door ${door}: bends from the branch's heading to straight down −z, turning one way only, and the shared road starts at the junction`, () => {
+      expect(road.junction).toBeCloseTo(last + BEND_AFTER + BEND_LENGTH, 9);
+      expect(near(roadAt(road, road.junction).heading, [0, -1], 1e-9)).toBe(true);
+      expect(near(roadAt(road, last + BEND_AFTER - 0.01).heading, road.direction, 1e-9)).toBe(true);
+      let previous = Math.abs(roadAt(road, last + BEND_AFTER).heading[0]);
+      for (let d = last + BEND_AFTER; d <= road.junction; d += 0.5) {
+        const sideways = Math.abs(roadAt(road, d).heading[0]);
+        expect(sideways).toBeLessThanOrEqual(previous + 1e-9);
+        previous = sideways;
+      }
+    });
+
+    it(`door ${door}: puts the meeting landmarks on the shared road, alternate sides, facing back up it`, () => {
+      const placed = road.landmarks.slice(-2);
+      expect(placed.map((l) => l.stopId)).toEqual(['m1', 'm2']);
+      const [jx] = roadAt(road, road.junction).point;
+      placed.forEach((landmark, i) => {
+        expect(road.along[stops.length + i]).toBeCloseTo(road.junction + 7 + ROAD_STEP * i, 9);
+        expect(Math.abs(landmark.center[0] - jx)).toBeCloseTo(LATERAL, 9);
+        expect(landmark.facing).toEqual([0, 0, 1]);
+      });
+      expect(Math.sign(placed[0].center[0] - jx)).toBe(-Math.sign(placed[1].center[0] - jx));
+    });
+
+    it(`door ${door}: the other road comes in from the other side, the bend's mirror image about the shared road, ${OTHER_ROAD} long`, () => {
+      const [jx, jz] = roadAt(road, road.junction).point;
+      const end = road.other[road.other.length - 1];
+      expect(near(end, [jx, jz], 1e-9)).toBe(true);
+      const length = road.other.slice(1).reduce((sum, p, i) => sum + Math.hypot(p[0] - road.other[i][0], p[1] - road.other[i][1]), 0);
+      expect(length).toBeCloseTo(OTHER_ROAD, 6);
+      for (let back = 0; back <= BEND_LENGTH; back += 2) {
+        const mine = roadAt(road, road.junction - back).point;
+        const theirs = pointBack(road.other, back);
+        expect(theirs[0]).toBeCloseTo(2 * jx - mine[0], 6);
+        expect(theirs[1]).toBeCloseTo(mine[1], 6);
+      }
+    });
+
+    it(`door ${door}: runs on ${RUN_ON} past the last meeting stop`, () => {
+      const end = road.path[road.path.length - 1];
+      const lastMeeting = road.along[road.along.length - 1];
+      expect(near(end, roadAt(road, lastMeeting + RUN_ON).point, 1e-6)).toBe(true);
+    });
+  }
+
+  it('door b is door a mirrored in x, the other road included', () => {
+    const a = layoutRoad(all, 'a', both);
+    const b = layoutRoad(all, 'b', both);
+    expect(b.junction).toBeCloseTo(a.junction, 9);
+    a.path.forEach((p, i) => expect(near(b.path[i], [-p[0], p[1]], 1e-9)).toBe(true));
+    a.other.forEach((p, i) => expect(near(b.other[i], [-p[0], p[1]], 1e-9)).toBe(true));
+  });
+
+  it('every side path leaves the road square to its heading, including on the shared road', () => {
+    const road = layoutRoad(all, 'a', both);
+    for (const spur of spurPaths(road)) {
+      const k = all.findIndex((s) => s.id === spur.stopId);
+      const { point, heading } = roadAt(road, road.along[k]);
+      expect(near(spur.path[0], point, 1e-6)).toBe(true);
+      const dx = spur.path[1][0] - spur.path[0][0];
+      const dz = spur.path[1][1] - spur.path[0][1];
+      expect(Math.abs(dx * heading[0] + dz * heading[1]) / Math.hypot(dx, dz)).toBeLessThan(1e-6);
+    }
+  });
+});
+
+/** The point `back` units before a path's end, walking back along it. @param {Array<[number, number]>} path @param {number} back */
+function pointBack(path, back) {
+  let left = back;
+  for (let i = path.length - 1; i > 0; i -= 1) {
+    const [bx, bz] = path[i];
+    const [ax, az] = path[i - 1];
+    const length = Math.hypot(bx - ax, bz - az);
+    if (left <= length) return /** @type {[number, number]} */ ([bx + ((ax - bx) * left) / length, bz + ((az - bz) * left) / length]);
+    left -= length;
+  }
+  return path[0];
+}
+
+describe('the meeting landmarks’ sizes (Code World W4.2)', () => {
+  it('sizes the workshop as the photo’s 4:5 and your idea as the sketch’s 4:3, 6 wide', () => {
+    const meetingSizes = roadSizes(MEETING_STOPS, { builder: 'x' });
+    expect(meetingSizes.workshop).toEqual({ width: 6, height: 7.5 });
+    expect(meetingSizes['your-idea']).toEqual({ width: 6, height: 4.5 });
   });
 });

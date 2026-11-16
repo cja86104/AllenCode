@@ -5,6 +5,7 @@ import usePageMeta from '../hooks/usePageMeta.js';
 import { detectCapabilities } from '../field/capabilities.js';
 import { readCapabilityEnv } from '../field/environment.js';
 import { STOPS, stopAt } from '../world/stops.js';
+import JourneyRail from '../world/JourneyRail.jsx';
 import WorldCanvas, { WORLD_SOURCES_APPROVED } from '../world/WorldCanvas.jsx';
 import { landmarkRect, resolveAt } from '../world/landmark.js';
 import MediaLoop from '../components/MediaLoop.jsx';
@@ -76,7 +77,6 @@ export default function WorldLab() {
   const [report, setReport] = useState(/** @type {MeterReport | null} */ (null));
   const [searchParams] = useSearchParams();
   const showMeter = searchParams.get('meter') === '1';
-  const markerRef = useRef(/** @type {HTMLSpanElement | null} */ (null));
   const [stopName, setStopName] = useState(STOPS[0].name);
   const screenRef = useRef(/** @type {HTMLDivElement | null} */ (null));
   const [arrived, setArrived] = useState(false);
@@ -86,7 +86,7 @@ export default function WorldLab() {
     return span > 0 ? window.scrollY / span : 0;
   }, []);
 
-  /** Each frame: lay the real screen over the sculpture, and move the stop and the rail. */
+  /** Each frame: lay the real screen over the sculpture, and name the stop (the rail moves itself). */
   const onFrame = useCallback((/** @type {import('../world/WorldCanvas.jsx').WorldFrame} */ { progress, camera, resolved }) => {
     const screen = screenRef.current;
     if (screen) {
@@ -98,9 +98,8 @@ export default function WorldLab() {
       screen.style.opacity = rect.visible ? String(resolved) : '0';
     }
     setArrived(resolved >= 1);
-    // Only a change of stop re-renders React; the rail's marker moves without one.
+    // Only a change of stop re-renders React.
     setStopName(stopAt(progress).name);
-    if (markerRef.current) markerRef.current.style.top = `${(progress * 100).toFixed(2)}%`;
   }, []);
   const onFail = useCallback(() => setMode('plain'), []);
 
@@ -158,28 +157,7 @@ export default function WorldLab() {
       </div>
 
       {/* The rail: where the visitor is, from the empty file to shipped. */}
-      <nav data-rail aria-label="Journey" className="fixed bottom-24 right-4 top-28 z-10 flex flex-col items-center sm:right-8">
-        <span className="mono text-[10px] uppercase tracking-[0.25em] text-white/60 [writing-mode:vertical-rl]">empty file</span>
-        <div className="relative my-3 w-px flex-1 bg-white/15">
-          <span ref={markerRef} aria-hidden="true" className="absolute left-1/2 top-0 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-ember" />
-          <ol className="absolute inset-0">
-            {STOPS.map((stop) => {
-              const active = stop.name === stopName;
-              return (
-                <li
-                  key={stop.name}
-                  aria-current={active ? 'step' : undefined}
-                  style={{ top: `${stop.from * 100}%` }}
-                  className="absolute right-3 -translate-y-1/2 whitespace-nowrap text-right"
-                >
-                  <span className={active ? 'mono text-[10px] uppercase tracking-[0.2em] text-ember' : 'sr-only'}>{stop.name}</span>
-                </li>
-              );
-            })}
-          </ol>
-        </div>
-        <span className="mono text-[10px] uppercase tracking-[0.25em] text-white/60 [writing-mode:vertical-rl]">shipped</span>
-      </nav>
+      <JourneyRail stops={STOPS} getProgress={getProgress} />
 
       {showMeter && (
         <p

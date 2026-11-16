@@ -1,6 +1,6 @@
 // @ts-check
 import { describe, expect, it } from 'vitest';
-import { businessRoadStops, familyRoadStops, stopForFlight } from '../src/world/roads.js';
+import { businessRoadStops, familyRoadStops, MEETING_STOPS, stopForFlight } from '../src/world/roads.js';
 import { DOOR_B_TEMPLATES } from '../src/scenes/TemplateChapter.jsx';
 import { excerpts } from '../src/content/excerpts/index.js';
 import { products } from '../src/data/products.js';
@@ -96,5 +96,20 @@ describe('stopForFlight: which road stop a chapter’s flight lands at (Code Wor
     expect(stopForFlight('door-b-intro')).toBe('hearth');
     for (const id of ['evergreen', 'keepsake', 'vow', 'gather', 'folio']) expect(stopForFlight(`template-${id}`)).toBe(id);
     for (const id of ['underfire-ai', 'mvp-sprints', 'gate']) expect(stopForFlight(id)).toBe(id);
+  });
+});
+
+describe('where the roads meet (Code World W4.2)', () => {
+  it('has the workshop then your idea, on both roads', () => {
+    expect(MEETING_STOPS).toEqual([
+      { id: 'workshop', name: 'The workshop', kind: 'portrait', excerptId: 'builder' },
+      { id: 'your-idea', name: 'Your idea', kind: 'sketch', excerptId: null },
+    ]);
+  });
+
+  it('lands the builder’s flight at the workshop and the idea’s at your idea', () => {
+    expect(stopForFlight('builder')).toBe('workshop');
+    expect(stopForFlight('idea')).toBe('your-idea');
+    expect(stopForFlight('door-b-intro')).toBe('hearth');
   });
 });

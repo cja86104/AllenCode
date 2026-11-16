@@ -57,7 +57,7 @@ function boxOf(rect) {
 function Sketch({ blocks, opacity, sketchRef }) {
   const placed = sketchShapes(blocks, SKETCH_SPACE);
   return (
-    <div ref={sketchRef} aria-hidden="true" data-sketch className="relative aspect-[4/3] w-full">
+    <div ref={sketchRef} aria-hidden="true" data-sketch data-world-target className="relative aspect-[4/3] w-full">
       <div style={{ opacity }} className="absolute inset-0">
         {placed.flatMap(({ block, shapes }) =>
           shapes.map((shape, i) => (

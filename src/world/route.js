@@ -1,6 +1,6 @@
 // @ts-check
 import { getExcerpt } from '../content/excerpts/index.js';
-import { businessRoadStops, familyRoadStops } from './roads.js';
+import { businessRoadStops, familyRoadStops, MEETING_STOPS } from './roads.js';
 import { layoutRoad, roadSizes } from './roadLayout.js';
 import { buildJourney } from './journey.js';
 import { CURSOR } from './shapes.js';
@@ -48,7 +48,8 @@ export function routeFor(door) {
   /** @type {Route} */
   let route;
   if (door) {
-    const stops = door === 'a' ? businessRoadStops() : familyRoadStops();
+    // Both roads end where the roads meet (W4): the workshop, then your idea.
+    const stops = [...(door === 'a' ? businessRoadStops() : familyRoadStops()), ...MEETING_STOPS];
     const sources = sourcesOf(stops);
     const sizes = roadSizes(stops, sources);
     route = { journey: buildJourney(door, stops, sizes), road: { door, stops, layout: layoutRoad(stops, door, sizes), sources } };

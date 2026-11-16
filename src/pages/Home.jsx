@@ -86,13 +86,20 @@ export default function Home() {
           </>
         ))}
 
-      {door && (
-        <>
-          <Builder />
-          <IdeaSketch />
-          <BriefChapter />
-        </>
-      )}
+      {/* In the world the roads meet at the workshop and your idea (W4), then the world fades out over the
+          screen before the brief, which with the footer is the plain page. */}
+      {door &&
+        (world ? (
+          <div data-world-segment="end">
+            <BriefChapter />
+          </div>
+        ) : (
+          <>
+            <Builder />
+            <IdeaSketch />
+            <BriefChapter />
+          </>
+        ))}
     </>
   );
 }
