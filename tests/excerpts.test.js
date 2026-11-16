@@ -101,6 +101,17 @@ describe('approved excerpts', () => {
     }
   });
 
+  it('the two new service excerpts come from this build at its pushed commit, approved by Chris (2026-11-16)', () => {
+    const web = excerpts['service-web'];
+    const uiux = excerpts['service-uiux'];
+    expect(web).toMatchObject({ repo: 'cja86104/AllenCode', path: 'src/scenes/WorldRoadChapters.jsx', lines: [72, 81], commit: 'c27c37b19b006e6bdaa594cdb33305ad1492cea9' });
+    expect(uiux).toMatchObject({ repo: 'cja86104/AllenCode', path: 'src/scenes/IdeaSketch.jsx', lines: [57, 80], commit: 'c27c37b19b006e6bdaa594cdb33305ad1492cea9' });
+    for (const excerpt of [web, uiux]) {
+      expect(excerpt.approved).toEqual({ by: 'Chris', on: '2026-11-16' });
+      expect(getExcerpt(excerpt.id)?.id).toBe(excerpt.id);
+    }
+  });
+
   it('the four service excerpts are approved by Chris and render without drafts', () => {
     for (const id of ['service-mvp', 'service-custom', 'service-ai', 'service-audit']) {
       expect(excerpts[id].approved, id).toEqual({ by: 'Chris', on: '2026-11-09' });

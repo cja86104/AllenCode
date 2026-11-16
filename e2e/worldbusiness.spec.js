@@ -9,19 +9,22 @@ import { canvas, inChapter, near, open, restRect, scrollTo, spanOf, takeBusiness
  * its landmark while its code flies into its picture.
  */
 
+// The services first, then "our work/" and the products (Chris, 2026-11-16).
 const ROAD = [
+  'mvp-sprints',
+  'custom-saas-builds',
+  'custom-web-development',
+  'ui-ux-design',
+  'ai-integration',
+  'technical-audits',
   'my-teachers-toolbox',
   'underfire-ai',
   'founders-helm',
   'crew-advisors',
-  'mvp-sprints',
-  'custom-saas-builds',
-  'ai-integration',
-  'technical-audits',
   'how-i-work',
 ];
 const PRODUCTS = ['my-teachers-toolbox', 'underfire-ai', 'founders-helm'];
-const SERVICES = ['mvp-sprints', 'custom-saas-builds', 'ai-integration'];
+const SERVICES = ['mvp-sprints', 'custom-saas-builds', 'custom-web-development', 'ui-ux-design', 'ai-integration'];
 
 test.describe('the world starts as today does (Code World R4)', () => {
   test('the gate’s empty file types and flies into the headline, drawn by the world; the world’s own file stays hidden until then', async ({ page }) => {
@@ -40,7 +43,7 @@ test.describe('the world starts as today does (Code World R4)', () => {
     await expect.poll(async () => Number(await canvas(page).getAttribute('data-editor'))).toBeGreaterThan(0.9);
   });
 
-  test('taking business/ lays today’s chapters along the road, products first', async ({ page }) => {
+  test('taking business/ lays today’s chapters along the road, services first', async ({ page }) => {
     await open(page);
     await takeBusiness(page);
     const ids = await page.locator('[data-world-stop]').evaluateAll((els) => els.map((el) => /** @type {HTMLElement} */ (el).dataset.worldStop));
@@ -126,12 +129,12 @@ test.describe('each chapter plays at its landmark (Code World R4)', () => {
     expect(await canvas(page).getAttribute('data-landed')).not.toContain('founders-helm');
   });
 
-  test('arriving straight at Founders Helm (a returning visitor): the two before have landed, its flight follows its scroll', async ({ page }) => {
+  test('arriving straight at Founders Helm (a returning visitor): every flight before it has landed, its own follows its scroll', async ({ page }) => {
     await page.addInitScript(() => window.sessionStorage.setItem('allencode:door', 'a'));
     await open(page);
     await expect(page.locator('[data-world-stop="founders-helm"]')).toBeAttached();
     await inChapter(page, 'founders-helm', 0.5);
-    await expect.poll(() => canvas(page).getAttribute('data-landed'), { timeout: 8000 }).toBe('my-teachers-toolbox,underfire-ai');
+    await expect.poll(() => canvas(page).getAttribute('data-landed'), { timeout: 8000 }).toBe([...SERVICES, 'my-teachers-toolbox', 'underfire-ai'].join(','));
     await expect(canvas(page)).toHaveAttribute('data-flight', /^founders-helm:/);
   });
 

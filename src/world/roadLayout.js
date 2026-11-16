@@ -113,10 +113,11 @@ function branchEnd() {
  * @param {ReadonlyArray<RoadStop>} stops
  * @param {'a' | 'b'} door
  * @param {Record<string, { width: number, height: number }>} sizes From `roadSizes`.
- * @returns {{ path: Point2[], landmarks: Landmark[], commits: Point2[], along: number[], origin: Point2, direction: Point2, junction: number, other: Point2[], spurs: Array<{ stopId: string, path: Point2[] }> }}
+ * @returns {{ path: Point2[], landmarks: Landmark[], commits: Point2[], along: number[], origin: Point2, direction: Point2, junction: number, other: Point2[], signs: Array<{ label: string, along: number }>, spurs: Array<{ stopId: string, path: Point2[] }> }}
  *   `along` is each stop's distance along the road; `origin` and `direction` the branch's end and the
  *   road's first heading (mirrored for the family road); `junction` where the shared road begins (the
  *   road's end when no stop is on it); `other` the other road coming in to the junction (empty then);
+ *   `signs` a sign across the road half a stretch before each stop with `signBefore` (2026-11-16);
  *   `spurs` the side path to each landmark (`spurPaths`).
  */
 export function layoutRoad(stops, door, sizes) {
@@ -199,6 +200,8 @@ export function layoutRoad(stops, door, sizes) {
       height: size.height,
     });
   };
+  /** @type {Array<{ label: string, along: number }>} */
+  const signs = [];
   let roadIndex = 0;
   let meetingIndex = 0;
   for (const stop of stops) {
@@ -210,6 +213,7 @@ export function layoutRoad(stops, door, sizes) {
     } else {
       const distance = FIRST_AT + ROAD_STEP * roadIndex;
       along.push(distance);
+      if (stop.signBefore) signs.push({ label: stop.signBefore, along: distance - ROAD_STEP / 2 });
       place(stop, distance, roadIndex % 2 === 0 ? -1 : 1);
       roadIndex += 1;
     }
@@ -221,10 +225,10 @@ export function layoutRoad(stops, door, sizes) {
       landmark.center[0] = -landmark.center[0];
       landmark.facing[0] = noNegativeZero(-landmark.facing[0]);
     }
-    const mirrored = { path: path.map(flip), landmarks, commits: commits.map(flip), along, origin: flip(origin), direction: flip(heading), junction, other: other.map(flip) };
+    const mirrored = { path: path.map(flip), landmarks, commits: commits.map(flip), along, origin: flip(origin), direction: flip(heading), junction, other: other.map(flip), signs };
     return { ...mirrored, spurs: spurPaths(mirrored) };
   }
-  const business = { path, landmarks, commits, along, origin, direction: heading, junction, other };
+  const business = { path, landmarks, commits, along, origin, direction: heading, junction, other, signs };
   return { ...business, spurs: spurPaths(business) };
 }
 

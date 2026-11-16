@@ -9,10 +9,11 @@ describe('routeFor: one journey per door, shared by the canvas and the page (Cod
     const route = routeFor('a');
     expect(routeFor('a')).toBe(route);
     expect(route.road?.door).toBe('a');
-    expect(route.road?.stops).toHaveLength(9 + MEETING_STOPS.length);
-    // W2's 20.3 screens, and 1.5 for each stop where the roads meet (W4).
-    expect(route.journey.screens).toBeCloseTo(20.3 + 1.5 * MEETING_STOPS.length, 9);
-    expect(route.journey.landmarks).toHaveLength(8 + MEETING_STOPS.length);
+    // W2's nine stops, and the two services added on 2026-11-16.
+    expect(route.road?.stops).toHaveLength(11 + MEETING_STOPS.length);
+    // W2's 20.3 screens, 1.5 for each added service, and 1.5 for each stop where the roads meet (W4).
+    expect(route.journey.screens).toBeCloseTo(20.3 + 1.5 * 2 + 1.5 * MEETING_STOPS.length, 9);
+    expect(route.journey.landmarks).toHaveLength(10 + MEETING_STOPS.length);
     for (const stop of route.road?.stops ?? []) if (stop.excerptId) expect(typeof route.road?.sources[stop.excerptId]).toBe('string');
   });
 

@@ -3,9 +3,9 @@ import { expect, test } from '@playwright/test';
 import { visibleCodePixels } from './pixels.js';
 import { openWithDoor } from './door.js';
 
-const SLUGS = ['mvp-sprints', 'custom-saas-builds', 'ai-integration', 'technical-audits'];
+const SLUGS = ['mvp-sprints', 'custom-saas-builds', 'custom-web-development', 'ui-ux-design', 'ai-integration', 'technical-audits'];
 
-test('door a reaches the four service chapters in order, then the shared close', async ({ page }) => {
+test('door a reaches the six service chapters in order, then the shared close', async ({ page }) => {
   await openWithDoor(page, 'a');
   const expected = ['gate', ...SLUGS, 'how-i-work', 'builder', 'idea', 'brief'];
   const chapters = page.locator('[data-chapter]');

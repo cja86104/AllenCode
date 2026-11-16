@@ -16,35 +16,33 @@ import { DOOR_B_TEMPLATES } from '../scenes/TemplateChapter.jsx';
  * file, the commits of how I work, a template's screen resolving into its loop (the family road,
  * W3), a stop of words with no landmark (done for you), or, where the roads meet (W4), the workshop's
  * portrait and the frame your idea's sketch is built on.
- * @typedef {{ id: string, name: string, kind: 'product' | 'unfinished' | 'service' | 'audit' | 'commits' | 'template' | 'words' | 'portrait' | 'sketch', excerptId: string | null }} RoadStop
+ * `signBefore` (2026-11-16) puts a sign across the road just before the stop ("our work/" before the
+ * products).
+ * @typedef {{ id: string, name: string, kind: 'product' | 'unfinished' | 'service' | 'audit' | 'commits' | 'template' | 'words' | 'portrait' | 'sketch', excerptId: string | null, signBefore?: string }} RoadStop
  */
 
 /** The audit chapter has no screen: its real thing is its own file, every line checked. */
 const AUDIT_SLUG = 'technical-audits';
 
+/** The sign across the business road between the services and the products (Chris, 2026-11-16). */
+export const OUR_WORK = 'our work/';
+
 /**
- * The business road's stops (Code World spec, section 3; W2.1), from the site's own data: products
- * first, in `products.js` order (Chris, 2026-11-10: "products first"), then the services in the
- * chapters' story order, then how I work. A product or service without an approved excerpt, or
- * without the screen or loop it would resolve into, is left out rather than drawn half-built.
+ * The business road's stops (Code World spec, section 3; W2.1), from the site's own data: the
+ * services first, in the chapters' order, then under the "our work/" sign the products, in
+ * `products.js` order, then how I work (Chris, 2026-11-16: "services first"; it was products first
+ * from 2026-11-10). A product or service without an approved excerpt, or without the screen or loop
+ * it would resolve into, is left out rather than drawn half-built.
  * @param {{ includeDrafts?: boolean, registry?: Readonly<Record<string, Excerpt>> }} [options]
  * @returns {RoadStop[]}
  */
+
 export function businessRoadStops({ includeDrafts = false, registry = approvedRegistry } = {}) {
   const has = (/** @type {string | undefined} */ id) => Boolean(id && getExcerpt(id, { includeDrafts, registry }));
   /** @type {RoadStop[]} */
   const stops = [];
 
-  for (const product of products) {
-    const excerptId = PRODUCT_EXCERPTS[product.slug];
-    if (!has(excerptId)) continue;
-    if (product.status === 'live') {
-      if (product.previewVideo && product.poster) stops.push({ id: product.slug, name: product.name, kind: 'product', excerptId });
-    } else {
-      stops.push({ id: product.slug, name: product.name, kind: 'unfinished', excerptId });
-    }
-  }
-
+  // The services first, then the products under the "our work/" sign (Chris, 2026-11-16).
   for (const { slug, excerptId } of SERVICE_CHAPTERS) {
     const service = services.find((s) => s.slug === slug);
     if (!service || !has(excerptId)) continue;
@@ -54,6 +52,18 @@ export function businessRoadStops({ includeDrafts = false, registry = approvedRe
       stops.push({ id: slug, name: service.name, kind: 'service', excerptId });
     }
   }
+
+  const firstProduct = stops.length;
+  for (const product of products) {
+    const excerptId = PRODUCT_EXCERPTS[product.slug];
+    if (!has(excerptId)) continue;
+    if (product.status === 'live') {
+      if (product.previewVideo && product.poster) stops.push({ id: product.slug, name: product.name, kind: 'product', excerptId });
+    } else {
+      stops.push({ id: product.slug, name: product.name, kind: 'unfinished', excerptId });
+    }
+  }
+  if (stops.length > firstProduct) stops[firstProduct] = { ...stops[firstProduct], signBefore: OUR_WORK };
 
   stops.push({ id: 'how-i-work', name: 'How I work', kind: 'commits', excerptId: null });
   return stops;

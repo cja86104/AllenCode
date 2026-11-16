@@ -1,7 +1,7 @@
 // @ts-check
 import { LANDMARK } from './landmark.js';
 import { landedShape } from './worldFlight.js';
-import { roadBetween, roadLength } from './roadPath.js';
+import { roadAt, roadBetween, roadLength } from './roadPath.js';
 
 /**
  * The prototype world, generated in code from real approved excerpts (no models, nothing invented).
@@ -436,6 +436,44 @@ export function forkSigns(labels, { at }, seed) {
 }
 
 /**
+ * A sign across the road (Chris, 2026-11-16: "a sign for our work"): the label in white on a board
+ * above the road, its characters repeated up an ember post at each of the road's edges, facing back
+ * up the road so the camera reads it as it drives under.
+ * @param {string} label
+ * @param {{ at: Point2, heading: Point2, halfWidth: number }} options Where on the road's centre line, which way it runs there, and half its width.
+ * @param {number} seed
+ * @returns {Shape}
+ */
+export function roadGateway(label, { at, heading, halfWidth }, seed) {
+  const random = seeded(seed);
+  const ink = inkOf(label);
+  const postGlyphs = 17;
+  const shape = emptyShape(ink.length + postGlyphs * 2, 0.26);
+  // Across the road, to the traveller's right.
+  const right = [-heading[1], heading[0]];
+  const place = (/** @type {number} */ across) => [at[0] + right[0] * across, at[1] + right[1] * across];
+  // The label's letters keep their places, a space a letter wide, so "our work/" reads as two words.
+  const slots = [...label];
+  let i = 0;
+  let k = 0;
+  slots.forEach((slot, j) => {
+    if (!slot.trim()) return;
+    const [x, z] = place((j - (slots.length - 1) / 2) * 0.3);
+    put(shape, i, x, 3.3, z, ink[k], WHITE, 1);
+    i += 1;
+    k += 1;
+  });
+  for (const side of [-1, 1]) {
+    for (let k = 0; k < postGlyphs; k += 1) {
+      const [x, z] = place(side * halfWidth);
+      put(shape, i, x + (random() - 0.5) * 0.001, k * 0.19, z, ink[k % ink.length], EMBER, 0.55);
+      i += 1;
+    }
+  }
+  return shape;
+}
+
+/**
  * A landmark: a screen-shaped sculpture of `code`, its frame drawn densely and its face filled,
  * which resolves into the product's real screen when the camera arrives (Task P4).
  * @param {string} code
@@ -471,6 +509,11 @@ export function budgetFor(tier) {
 
 /** Distance between the characters lining the road's edges, in world units. */
 const EDGE_SPACING = 0.35;
+/**
+ * The road's edge characters' spacing by tier: 0.5 on the low tier (2026-11-16: with the services
+ * first and two more of them, the business road's long edges are the phone budget's largest fixed cost).
+ */
+const EDGE_SPACING_BY_TIER = Object.freeze({ low: 0.5, mid: EDGE_SPACING, high: EDGE_SPACING });
 
 /** The road's centre lines: the trunk to the fork, then a branch each way. */
 export const ROAD_PATHS = Object.freeze({
@@ -490,12 +533,13 @@ export const ROAD_PATHS = Object.freeze({
  * @returns {Array<{ name: string, shape: Shape }>}
  */
 export function buildWorld(tier, sources, seed) {
+  const edgeSpacing = EDGE_SPACING_BY_TIER[tier];
   const editor = editorSlab(sources.gate, seed);
   const signs = forkSigns(['business/', 'family/'], { at: [0, 0, -40] }, seed + 1);
   const edges = {
-    trunk: roadEdges(sources.road, { path: ROAD_PATHS.trunk, width: 4, spacing: EDGE_SPACING }, seed + 6),
-    business: roadEdges(sources.road, { path: ROAD_PATHS.business, width: 3.2, spacing: EDGE_SPACING }, seed + 7),
-    family: roadEdges(sources.road, { path: ROAD_PATHS.family, width: 3.2, spacing: EDGE_SPACING }, seed + 8),
+    trunk: roadEdges(sources.road, { path: ROAD_PATHS.trunk, width: 4, spacing: edgeSpacing }, seed + 6),
+    business: roadEdges(sources.road, { path: ROAD_PATHS.business, width: 3.2, spacing: edgeSpacing }, seed + 7),
+    family: roadEdges(sources.road, { path: ROAD_PATHS.family, width: 3.2, spacing: edgeSpacing }, seed + 8),
   };
   const density = ROAD_DENSITY[tier];
   const scatter = {
@@ -539,10 +583,11 @@ export const ROAD_DENSITY = Object.freeze({ low: 12, mid: 26, high: 46 });
 export const SCREEN_FLOOR = Object.freeze({ low: 300, mid: 400, high: 400 });
 /**
  * The road between the landmarks, as a share of `ROAD_DENSITY`, by tier (W3.1: a half; W4: a third
- * on the low tier, so the longer business road fits the phone budget at the same density as the family
- * road's, without thinning the opening).
+ * on the low tier; 2026-11-16, with two more services on the business road: a quarter on the low
+ * tier and 0.45 on the mid, so the business road fits at the same density as the family road's,
+ * without thinning the opening).
  */
-export const BETWEEN_SHARE = Object.freeze({ low: 1 / 3, mid: 1 / 2, high: 1 / 2 });
+export const BETWEEN_SHARE = Object.freeze({ low: 1 / 4, mid: 0.45, high: 1 / 2 });
 /** Half the onward road's width, and half a side path's (R5). */
 const ROAD_HALF = 1.6;
 const SPUR_HALF = 0.8;
@@ -566,15 +611,16 @@ const SPUR_HALF = 0.8;
  * @returns {Array<{ name: string, shape: Shape, stopId?: string, cursor?: number }>}
  */
 export function buildRoadWorld(tier, sources, seed, road, landed = {}) {
+  const edgeSpacing = EDGE_SPACING_BY_TIER[tier];
   const { layout } = road;
   const branchEnd = ROAD_PATHS.business.length;
   const onward = /** @type {Point2[]} */ (layout.path.slice(branchEnd - 1));
   const editor = editorSlab(sources.gate, seed);
   const signs = forkSigns(['business/', 'family/'], { at: [0, 0, -40] }, seed + 1);
   const edges = {
-    trunk: roadEdges(sources.road, { path: ROAD_PATHS.trunk, width: 4, spacing: EDGE_SPACING }, seed + 6),
-    business: roadEdges(sources.road, { path: ROAD_PATHS.business, width: 3.2, spacing: EDGE_SPACING }, seed + 7),
-    family: roadEdges(sources.road, { path: ROAD_PATHS.family, width: 3.2, spacing: EDGE_SPACING }, seed + 8),
+    trunk: roadEdges(sources.road, { path: ROAD_PATHS.trunk, width: 4, spacing: edgeSpacing }, seed + 6),
+    business: roadEdges(sources.road, { path: ROAD_PATHS.business, width: 3.2, spacing: edgeSpacing }, seed + 7),
+    family: roadEdges(sources.road, { path: ROAD_PATHS.family, width: 3.2, spacing: edgeSpacing }, seed + 8),
   };
   // Each side path leaves the road at its edge: its mouth is where the main edge opens.
   const spurs = layout.spurs.map(({ stopId, path: [from, to] }) => {
@@ -584,24 +630,29 @@ export function buildRoadWorld(tier, sources, seed, road, landed = {}) {
   });
   // The onward road's edges carry on at the branch's spacing, where the branch's last ones left off.
   const branchLength = ROAD_PATHS.business.slice(1).reduce((sum, p, i) => sum + Math.hypot(p[0] - ROAD_PATHS.business[i][0], p[1] - ROAD_PATHS.business[i][1]), 0);
-  const carryOn = (Math.floor(branchLength / EDGE_SPACING + 1e-9) + 1) * EDGE_SPACING - branchLength;
+  const carryOn = (Math.floor(branchLength / edgeSpacing + 1e-9) + 1) * edgeSpacing - branchLength;
   const onwardEdges = roadEdges(
     sources.road,
     {
       path: onward,
       width: ROAD_HALF * 2,
-      spacing: EDGE_SPACING,
+      spacing: edgeSpacing,
       from: carryOn,
       highlights: layout.commits,
-      openings: { points: spurs.map((spur) => spur.path[0]), radius: SPUR_HALF + EDGE_SPACING / 2 },
+      openings: { points: spurs.map((spur) => spur.path[0]), radius: SPUR_HALF + edgeSpacing / 2 },
     },
     seed + 9,
   );
-  const spurEdges = spurs.map((spur, n) => roadEdges(sources.road, { path: spur.path, width: SPUR_HALF * 2, spacing: EDGE_SPACING }, seed + 40 + n));
+  const spurEdges = spurs.map((spur, n) => roadEdges(sources.road, { path: spur.path, width: SPUR_HALF * 2, spacing: edgeSpacing }, seed + 40 + n));
   const stands = layout.landmarks.map((landmark, n) => landmarkStand(sources.road, landmark, seed + 60 + n));
   // The other road coming in to where the roads meet (W4): its edges and a little code, no landmarks.
   const other = /** @type {Point2[]} */ (layout.other ?? []);
-  const otherEdges = other.length > 1 ? roadEdges(sources.road, { path: other, width: ROAD_HALF * 2, spacing: EDGE_SPACING }, seed + 13) : null;
+  const otherEdges = other.length > 1 ? roadEdges(sources.road, { path: other, width: ROAD_HALF * 2, spacing: edgeSpacing }, seed + 13) : null;
+  // Signs across the road ("our work/" before the products, 2026-11-16).
+  const gateways = (layout.signs ?? []).map((sign, n) => {
+    const { point, heading } = roadAt(layout, sign.along);
+    return { name: `sign:${sign.label}`, shape: roadGateway(sign.label, { at: point, heading, halfWidth: ROAD_HALF }, seed + 70 + n) };
+  });
 
   /** @type {Array<{ name: string, shape: Shape, stopId?: string, cursor?: number }>} */
   const exact = [];
@@ -628,7 +679,7 @@ export function buildRoadWorld(tier, sources, seed, road, landed = {}) {
     }
   });
 
-  const fixedShapes = [editor, signs, edges.trunk, edges.business, edges.family, onwardEdges, ...spurEdges, ...stands, ...(otherEdges ? [otherEdges] : []), ...exact.map((part) => part.shape)];
+  const fixedShapes = [editor, signs, edges.trunk, edges.business, edges.family, onwardEdges, ...spurEdges, ...stands, ...(otherEdges ? [otherEdges] : []), ...gateways.map((g) => g.shape), ...exact.map((part) => part.shape)];
   const fixed = fixedShapes.reduce((sum, shape) => sum + shape.glyphs.length, 0);
   // The scatter by density: the opening, the road between the landmarks (to the last stop), the
   // run-on into the fog, and the side paths.
@@ -682,6 +733,7 @@ export function buildRoadWorld(tier, sources, seed, road, landed = {}) {
     ]),
     ...layout.landmarks.map((landmark, n) => ({ name: `stand:${landmark.stopId}`, shape: stands[n] })),
     { name: 'signs', shape: signs },
+    ...gateways,
     ...screens.flatMap(({ stopId, landmark, code }, n) => {
       const image = landed[stopId];
       const place = layout.landmarks.indexOf(landmark) + 1;

@@ -257,3 +257,13 @@ describe('the meeting landmarks’ sizes (Code World W4.2)', () => {
     expect(meetingSizes['your-idea']).toEqual({ width: 6, height: 4.5 });
   });
 });
+
+describe('the "our work/" sign between the services and the products (Chris, 2026-11-16)', () => {
+  it('stands half a stretch before the first product, on door a; door b has none', () => {
+    const road = layoutRoad(stops, 'a', sizes);
+    const first = stops.findIndex((s) => s.signBefore);
+    expect(road.signs).toEqual([{ label: 'our work/', along: road.along[first] - ROAD_STEP / 2 }]);
+    const family = familyRoadStops();
+    expect(layoutRoad(family, 'b', roadSizes(family, sourcesOf(family))).signs).toEqual([]);
+  });
+});

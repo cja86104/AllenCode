@@ -2,6 +2,7 @@
 import { useRef } from 'react';
 import { services } from '../data/services.js';
 import { serviceScreens } from '../data/serviceScreens.js';
+import MediaLoop from '../components/MediaLoop.jsx';
 import { getExcerpt } from '../content/excerpts/index.js';
 import { useField } from '../field/fieldBus.js';
 import { usePrefersReducedMotion } from '../field/environment.js';
@@ -19,6 +20,8 @@ import { CHAPTER_BODY, CHAPTER_GRID, CHAPTER_ITEM, CHAPTER_LABEL, CHAPTER_TITLE 
 export const SERVICE_CHAPTERS = Object.freeze([
   { slug: 'mvp-sprints', excerptId: 'service-mvp' },
   { slug: 'custom-saas-builds', excerptId: 'service-custom' },
+  { slug: 'custom-web-development', excerptId: 'service-web' },
+  { slug: 'ui-ux-design', excerptId: 'service-uiux' },
   { slug: 'ai-integration', excerptId: 'service-ai' },
   { slug: 'technical-audits', excerptId: 'service-audit' },
 ]);
@@ -58,7 +61,7 @@ export function ServiceText({ service, compact = false }) {
 
 /**
  * A chapter whose code flies onto a real product screen (spec section 4, step 4).
- * @param {{ service: Service, excerpt: Excerpt, screen: { src: string, alt: string, width: number, height: number } }} props
+ * @param {{ service: Service, excerpt: Excerpt, screen: { src: string, alt: string, width: number, height: number, video?: string } }} props
  */
 function FlightChapter({ service, excerpt, screen }) {
   const sectionRef = useRef(/** @type {HTMLElement | null} */ (null));
@@ -85,13 +88,24 @@ function FlightChapter({ service, excerpt, screen }) {
           codeOpacity={codeOpacity}
           frameOpacity={frameOpacity}
         />
-        <img
-          data-world-target
-          src={screen.src}
-          alt={screen.alt}
-          style={{ opacity: timeline.handoff, left: targetBox.x, top: targetBox.y, width: targetBox.w, height: targetBox.h }}
-          className="absolute rounded-lg object-cover shadow-2xl"
-        />
+        {screen.video ? (
+          // A screen that loops a video (2026-11-16): the code lands on its poster, then the loop plays.
+          <div
+            data-world-target
+            style={{ opacity: timeline.handoff, left: targetBox.x, top: targetBox.y, width: targetBox.w, height: targetBox.h }}
+            className="absolute"
+          >
+            <MediaLoop src={screen.video} poster={screen.src} alt={screen.alt} active={timeline.handoff >= 1} className="h-full w-full rounded-lg shadow-2xl" />
+          </div>
+        ) : (
+          <img
+            data-world-target
+            src={screen.src}
+            alt={screen.alt}
+            style={{ opacity: timeline.handoff, left: targetBox.x, top: targetBox.y, width: targetBox.w, height: targetBox.h }}
+            className="absolute rounded-lg object-cover shadow-2xl"
+          />
+        )}
       </div>
     </section>
   );
@@ -100,7 +114,7 @@ function FlightChapter({ service, excerpt, screen }) {
 /**
  * A chapter without a flight: the service's copy beside its code (and its screen, when one exists).
  * Used for reduced motion, without WebGL, and until Chris supplies the chapter's screen.
- * @param {{ service: Service, excerpt: Excerpt | null, screen: { src: string, alt: string } | null }} props
+ * @param {{ service: Service, excerpt: Excerpt | null, screen: { src: string, alt: string, video?: string } | null }} props
  */
 function StaticChapter({ service, excerpt, screen }) {
   return (
@@ -111,7 +125,12 @@ function StaticChapter({ service, excerpt, screen }) {
       <ServiceText service={service} />
       <div className="min-w-0 space-y-6">
         {excerpt && <EditorPanel excerpt={excerpt} />}
-        {screen && <img src={screen.src} alt={screen.alt} className="w-full rounded-lg shadow-2xl" />}
+        {screen &&
+          (screen.video ? (
+            <MediaLoop src={screen.video} poster={screen.src} alt={screen.alt} className="rounded-lg shadow-2xl" />
+          ) : (
+            <img src={screen.src} alt={screen.alt} className="w-full rounded-lg shadow-2xl" />
+          ))}
       </div>
     </section>
   );

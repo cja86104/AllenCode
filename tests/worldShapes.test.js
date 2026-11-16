@@ -10,6 +10,7 @@ import {
   forkSigns,
   landmarkStand,
   sketchFrame,
+  roadGateway,
   ROAD_DENSITY,
   BETWEEN_SHARE,
   SCREEN_FLOOR,
@@ -459,7 +460,8 @@ describe('the road is as full on every door (Code World W3.1)', () => {
       const last = layout.along[layout.along.length - 1];
       const between = Math.floor(ROAD_DENSITY[tier] * BETWEEN_SHARE[tier] * 3.2 * last);
       const runOn = Math.floor((ROAD_DENSITY[tier] / 8) * 3.2 * (area(onward, 1) - last));
-      expect(count(parts, 'onward-road') + count(parts, 'run-on-road')).toBe(between + runOn);
+      // Within a glyph each: the test and the code multiply in a different order before rounding down.
+      expect(Math.abs(count(parts, 'onward-road') + count(parts, 'run-on-road') - (between + runOn))).toBeLessThanOrEqual(2);
       for (const spur of layout.spurs) {
         const spurLength = Math.hypot(spur.path[1][0] - spur.path[0][0], spur.path[1][1] - spur.path[0][1]) - 1.6;
         expect(count(parts, `spur-road:${spur.stopId}`)).toBe(Math.max(1, Math.floor(ROAD_DENSITY[tier] * BETWEEN_SHARE[tier] * 1.6 * spurLength)));
@@ -565,4 +567,56 @@ describe('where the roads meet (Code World W4.2)', () => {
       expect(MEETING_STOPS.every((stop) => road.stops.includes(stop))).toBe(true);
     });
   }
+});
+
+describe('the "our work/" sign across the road (Chris, 2026-11-16)', () => {
+  const WHITE_R = 1;
+  it('writes its label in white on a board across the road, on two ember posts at the road’s edges', () => {
+    const sign = roadGateway('our work/', { at: [-10, -70], heading: [0, -1], halfWidth: 1.6 }, 1);
+    const label = [...'our work/'].filter((c) => c.trim());
+    let letters = '';
+    /** @type {number[]} */
+    const postX = [];
+    for (let i = 0; i < sign.glyphs.length; i += 1) {
+      const [x, y, z] = [sign.positions[i * 3], sign.positions[i * 3 + 1], sign.positions[i * 3 + 2]];
+      expect(z).toBeCloseTo(-70, 6);
+      if (Math.abs(sign.colors[i * 4] - WHITE_R) < 1e-6 && Math.abs(sign.colors[i * 4 + 1] - 1) < 1e-6) {
+        letters += String.fromCharCode(sign.glyphs[i]);
+        expect(y).toBeGreaterThanOrEqual(3);
+        expect(Math.abs(x + 10)).toBeLessThan(1.6);
+      } else {
+        expect(Math.abs(sign.colors[i * 4] - 0xf9 / 255)).toBeLessThan(1e-6);
+        postX.push(Math.round((x + 10) * 10) / 10);
+      }
+    }
+    expect(letters).toBe(label.join(''));
+    expect([...new Set(postX)].sort((a, b) => a - b)).toEqual([-1.6, 1.6]);
+  });
+
+  it('leaves a letter’s gap where the label has a space, so it reads "our work/", not "ourwork/"', () => {
+    const sign = roadGateway('our work/', { at: [0, 0], heading: [0, -1], halfWidth: 1.6 }, 1);
+    /** @type {number[]} */
+    const xs = [];
+    for (let i = 0; i < sign.glyphs.length; i += 1) if (sign.colors[i * 4 + 1] === 1) xs.push(sign.positions[i * 3]);
+    xs.sort((a, b) => a - b);
+    const steps = xs.slice(1).map((x, i) => Math.round((x - xs[i]) * 1000) / 1000);
+    // Seven letter-to-letter steps: one of them, between "r" and "w", is two letters wide.
+    expect(steps).toHaveLength(7);
+    const step = Math.min(...steps);
+    expect(steps.filter((d) => Math.abs(d - step * 2) < 1e-3)).toHaveLength(1);
+    expect(steps.filter((d) => Math.abs(d - step) < 1e-3)).toHaveLength(6);
+    // Centred across the road.
+    expect(xs[0] + xs[xs.length - 1]).toBeCloseTo(0, 6);
+  });
+
+  it('is part of the business road’s world, within every budget', () => {
+    const road = routeFor('a').road;
+    if (!road) throw new Error('no road');
+    for (const tier of /** @type {const} */ (['low', 'mid', 'high'])) {
+      const parts = buildRoadWorld(tier, { gate: gate.code, road: ambient.code, stops: road.sources }, 1, { stops: road.stops, layout: road.layout });
+      expect(parts.find((p) => p.name === 'sign:our work/')?.shape.glyphs.length).toBeGreaterThan(8);
+      expect(parts.reduce((sum, p) => sum + p.shape.glyphs.length, 0)).toBeLessThanOrEqual(budgetFor(tier));
+      expect(parts.find((p) => p.name === 'trunk-road')?.shape.glyphs.length, `${tier}: the trunk at full density`).toBe(Math.floor(ROAD_DENSITY[tier] * 4 * 37));
+    }
+  });
 });

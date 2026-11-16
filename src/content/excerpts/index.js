@@ -5,6 +5,8 @@ import serviceMvp from './service-mvp.js';
 import serviceCustom from './service-custom.js';
 import serviceAi from './service-ai.js';
 import serviceAudit from './service-audit.js';
+import serviceWeb from './service-web.js';
+import serviceUiux from './service-uiux.js';
 import productMyTeachersToolbox from './product-my-teachers-toolbox.js';
 import productUnderfireAi from './product-underfire-ai.js';
 import productFoundersHelm from './product-founders-helm.js';
@@ -61,6 +63,8 @@ export const excerpts = Object.freeze({
   [serviceCustom.id]: serviceCustom,
   [serviceAi.id]: serviceAi,
   [serviceAudit.id]: serviceAudit,
+  [serviceWeb.id]: serviceWeb,
+  [serviceUiux.id]: serviceUiux,
   [productMyTeachersToolbox.id]: productMyTeachersToolbox,
   [productUnderfireAi.id]: productUnderfireAi,
   [productFoundersHelm.id]: productFoundersHelm,

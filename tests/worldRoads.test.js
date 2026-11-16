@@ -7,30 +7,35 @@ import { products } from '../src/data/products.js';
 import { services } from '../src/data/services.js';
 
 describe('businessRoadStops (Code World W2.1)', () => {
-  it('runs products first, then the services in story order, then how I work', () => {
+  it('runs the services first, then (under the "our work/" sign) the products, then how I work (Chris, 2026-11-16)', () => {
     const stops = businessRoadStops();
     expect(stops.map((stop) => stop.id)).toEqual([
+      'mvp-sprints',
+      'custom-saas-builds',
+      'custom-web-development',
+      'ui-ux-design',
+      'ai-integration',
+      'technical-audits',
       'my-teachers-toolbox',
       'underfire-ai',
       'founders-helm',
       'crew-advisors',
-      'mvp-sprints',
-      'custom-saas-builds',
-      'ai-integration',
-      'technical-audits',
       'how-i-work',
     ]);
     expect(stops.map((stop) => stop.kind)).toEqual([
-      'product',
-      'product',
-      'product',
-      'unfinished',
+      'service',
+      'service',
       'service',
       'service',
       'service',
       'audit',
+      'product',
+      'product',
+      'product',
+      'unfinished',
       'commits',
     ]);
+    expect(stops.filter((stop) => stop.signBefore).map((stop) => [stop.id, stop.signBefore])).toEqual([['my-teachers-toolbox', 'our work/']]);
   });
 
   it('names each stop with the product’s or service’s own name, and carries its excerpt', () => {
@@ -54,13 +59,15 @@ describe('businessRoadStops (Code World W2.1)', () => {
     const ids = businessRoadStops({ registry }).map((stop) => stop.id);
     expect(ids).not.toContain('founders-helm');
     expect(ids).toEqual([
+      'mvp-sprints',
+      'custom-saas-builds',
+      'custom-web-development',
+      'ui-ux-design',
+      'ai-integration',
+      'technical-audits',
       'my-teachers-toolbox',
       'underfire-ai',
       'crew-advisors',
-      'mvp-sprints',
-      'custom-saas-builds',
-      'ai-integration',
-      'technical-audits',
       'how-i-work',
     ]);
   });

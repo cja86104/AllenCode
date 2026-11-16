@@ -24,8 +24,20 @@ function imageSize(bytes) {
 }
 
 describe('service screens', () => {
-  it('only the three flight services can have a screen; the audit chapter has none', () => {
-    expect(Object.keys(serviceScreens).sort()).toEqual(['ai-integration', 'custom-saas-builds', 'mvp-sprints']);
+  it('only the five flight services can have a screen; the audit chapter has none', () => {
+    expect(Object.keys(serviceScreens).sort()).toEqual(['ai-integration', 'custom-saas-builds', 'custom-web-development', 'mvp-sprints', 'ui-ux-design']);
+  });
+
+  it('the two new services loop a video of this build, at most 700 kB each, over a 1280 × 800 poster (Chris, 2026-11-16)', () => {
+    for (const slug of ['custom-web-development', 'ui-ux-design']) {
+      const screen = serviceScreens[/** @type {keyof typeof serviceScreens} */ (slug)];
+      expect(screen?.video, slug).toBe(`/media/services/${slug}.mp4`);
+      expect(screen?.src, slug).toBe(`/media/services/${slug}.jpg`);
+      expect([screen?.width, screen?.height]).toEqual([1280, 800]);
+      const video = new URL(`../public${screen?.video}`, import.meta.url);
+      expect(existsSync(video), slug).toBe(true);
+      expect(readFileSync(video).length, slug).toBeLessThanOrEqual(700 * 1024);
+    }
   });
 
   it('every screen that is set exists under public/, is at most 400 kB, and matches its recorded size', () => {

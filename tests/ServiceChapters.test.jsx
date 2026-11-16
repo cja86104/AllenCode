@@ -7,8 +7,8 @@ import { services } from '../src/data/services.js';
 const chapterSlugs = SERVICE_CHAPTERS.map((c) => c.slug);
 
 describe('ServiceChapters', () => {
-  it('covers MVP sprints, custom builds, AI integration and audits, in that order, all from services.js', () => {
-    expect(chapterSlugs).toEqual(['mvp-sprints', 'custom-saas-builds', 'ai-integration', 'technical-audits']);
+  it('covers the build services first, then AI integration and audits, in that order, all from services.js (Chris, 2026-11-16)', () => {
+    expect(chapterSlugs).toEqual(['mvp-sprints', 'custom-saas-builds', 'custom-web-development', 'ui-ux-design', 'ai-integration', 'technical-audits']);
     for (const slug of chapterSlugs) expect(services.some((s) => s.slug === slug)).toBe(true);
   });
 
@@ -53,9 +53,23 @@ describe('ServiceChapters', () => {
     expect(audit.querySelectorAll('[data-audit-line]')).toHaveLength(23);
   });
 
-  it('with drafts off, the approved code still shows in all four chapters', () => {
+  it('with drafts off, the approved code still shows in all six chapters', () => {
     const { container } = render(<ServiceChapters includeDrafts={false} />);
-    expect(container.querySelectorAll('pre')).toHaveLength(4);
-    expect(screen.getAllByRole('heading', { level: 2 })).toHaveLength(4);
+    expect(container.querySelectorAll('pre')).toHaveLength(6);
+    expect(screen.getAllByRole('heading', { level: 2 })).toHaveLength(6);
+  });
+
+  it('without the renderer, the two new services show their code beside a loop of this build (Chris, 2026-11-16)', () => {
+    render(<ServiceChapters includeDrafts={false} />);
+    for (const [slug, line] of [
+      ['custom-web-development', '<Builder />'],
+      ['ui-ux-design', 'const placed = sketchShapes(blocks, SKETCH_SPACE);'],
+    ]) {
+      const chapter = /** @type {HTMLElement} */ (document.querySelector(`[data-chapter="${slug}"]`));
+      expect(chapter.querySelector('pre')?.textContent, slug).toContain(line);
+      const video = chapter.querySelector('video');
+      expect(video, slug).not.toBeNull();
+      expect(chapter.querySelector(`img[src="/media/services/${slug}.jpg"]`), slug).not.toBeNull();
+    }
   });
 });
