@@ -69,6 +69,7 @@ function FlightIntro({ excerpt, loop }) {
           frameOpacity={frameOpacity}
         />
         <div
+          data-world-target
           style={{ opacity: timeline.handoff, left: targetBox.x, top: targetBox.y, width: targetBox.w, height: targetBox.h }}
           className="absolute"
         >
@@ -80,6 +81,34 @@ function FlightIntro({ excerpt, loop }) {
 }
 
 /**
+ * Hearth's excerpt and loop, for door B's first chapter.
+ * @param {boolean} includeDrafts
+ * @returns {{ excerpt: Excerpt | null, loop: Loop }}
+ */
+function hearthChapter(includeDrafts) {
+  const hearth = templates.find((t) => t.id === 'hearth');
+  if (!hearth) throw new Error('templates.js has no "hearth" template.');
+  return {
+    excerpt: getExcerpt(hearth.excerpt, { includeDrafts }),
+    loop: {
+      src: hearth.previewVideo,
+      poster: hearth.poster,
+      alt: 'Hearth, a family home page: the Harper family’s name, a drawn landscape and their latest news',
+    },
+  };
+}
+
+/**
+ * Door B's first chapter as the Code World's family road plays it (W3.4): today's flight chapter,
+ * at Hearth's landmark. Only the world renders it, so it is always the flight.
+ * @param {{ includeDrafts: boolean }} props
+ */
+export function DoorBIntroFor({ includeDrafts }) {
+  const { excerpt, loop } = hearthChapter(includeDrafts);
+  return excerpt ? <FlightIntro excerpt={excerpt} loop={loop} /> : null;
+}
+
+/**
  * Door B's first chapter, "What I can make you" (spec section 4, step 4B): plain words beside real
  * code that becomes a family's home page. Without the renderer or with reduced motion, the code sits
  * beside the page it becomes.
@@ -88,14 +117,7 @@ function FlightIntro({ excerpt, loop }) {
 export default function DoorBIntro({ includeDrafts }) {
   const reducedMotion = usePrefersReducedMotion();
   const { mode } = useField();
-  const hearth = templates.find((t) => t.id === 'hearth');
-  if (!hearth) throw new Error('templates.js has no "hearth" template.');
-  const excerpt = getExcerpt(hearth.excerpt, { includeDrafts });
-  const loop = {
-    src: hearth.previewVideo,
-    poster: hearth.poster,
-    alt: 'Hearth, a family home page: the Harper family’s name, a drawn landscape and their latest news',
-  };
+  const { excerpt, loop } = hearthChapter(includeDrafts);
 
   if (!reducedMotion && mode === 'webgl' && excerpt) return <FlightIntro excerpt={excerpt} loop={loop} />;
 

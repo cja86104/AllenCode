@@ -7,9 +7,11 @@ import { loadTarget } from '../field/loadTarget.js';
 import { resolveTransform } from '../field/resolveTransform.js';
 import { products } from '../data/products.js';
 import { serviceScreens } from '../data/serviceScreens.js';
+import { templates } from '../data/templates.js';
 import { loopOf } from '../scenes/ProductChapter.jsx';
 import { buildRoadWorld, buildWorld, inkBefore, slabCaret } from './shapes.js';
 import { TYPED_FROM, TYPED_TO } from './journey.js';
+import { stopForFlight } from './roads.js';
 import { landmarkRect } from './landmark.js';
 import { flightBudgetFor, toWorldFlight } from './worldFlight.js';
 
@@ -71,7 +73,7 @@ function readPicture(src) {
 }
 
 /**
- * The screen a road stop resolves into: a product's loop poster or a service's screen.
+ * The screen a road stop resolves into: a product's or a template's loop poster, or a service's screen.
  * @param {import('./roads.js').RoadStop} stop
  */
 function screenOf(stop) {
@@ -80,6 +82,7 @@ function screenOf(stop) {
     return product ? (loopOf(product)?.poster ?? null) : null;
   }
   if (stop.kind === 'service') return serviceScreens[/** @type {keyof typeof serviceScreens} */ (stop.id)]?.src ?? null;
+  if (stop.kind === 'template') return templates.find((t) => t.id === stop.id)?.poster ?? null;
   return null;
 }
 
@@ -171,8 +174,9 @@ export function createHomeWorld({ renderer, atlas, tier, canvas, scrim }) {
       section = state.sections.find((s) => s.kind === 'gate');
       plane = EDITOR_PLANE;
     } else {
-      const landmark = route.road?.layout.landmarks.find((l) => l.stopId === prefix);
-      section = state.sections.find((s) => s.kind === 'rest' && s.stopId === prefix);
+      const stopId = stopForFlight(prefix);
+      const landmark = route.road?.layout.landmarks.find((l) => l.stopId === stopId);
+      section = state.sections.find((s) => s.kind === 'rest' && s.stopId === stopId);
       if (landmark) plane = { point: landmark.center, normal: landmark.facing };
     }
     if (!plane || !section) return;

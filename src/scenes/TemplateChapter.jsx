@@ -125,12 +125,46 @@ function TemplateSegment({ template, excerpt, local, active, visible, viewport, 
         frameOpacity={frameOpacity}
       />
       <div
+        data-world-target
         style={{ opacity: timeline.handoff, left: targetBox.x, top: targetBox.y, width: targetBox.w, height: targetBox.h }}
         className="absolute"
       >
         <MediaLoop {...loop} active={timeline.handoff >= 1} className="h-full w-full rounded-lg shadow-2xl" />
       </div>
     </div>
+  );
+}
+
+/**
+ * One template as its own pinned chapter (Code World W3.4): in the world each template rests at its
+ * own landmark on the family road, so the single chapter is split, one section per template. The
+ * segment, its words, numbering, code, flight and loop are today's; it is simply always the active
+ * one, playing over its own section's scroll.
+ * @param {{ template: Template, excerpt: Excerpt, index: number, count: number }} props
+ */
+export function TemplateChapterFor({ template, excerpt, index, count }) {
+  const sectionRef = useRef(/** @type {HTMLElement | null} */ (null));
+  const { mode } = useField();
+  const { progress, visible, viewport } = useSectionProgress(sectionRef, true);
+  return (
+    <section ref={sectionRef} data-template-chapter style={{ height: `${SEGMENT_VH + 100}vh` }} className="relative">
+      <div className="pin-frame sticky top-0 overflow-hidden">
+        <TemplateSegment
+          template={template}
+          excerpt={excerpt}
+          local={progress}
+          active
+          visible={visible}
+          viewport={viewport}
+          mode={mode}
+          index={index}
+          count={count}
+        />
+        <div className="absolute bottom-8 left-[6%]">
+          <AllTemplatesLink />
+        </div>
+      </div>
+    </section>
   );
 }
 

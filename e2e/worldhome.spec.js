@@ -113,6 +113,8 @@ test.describe('taking a road at the split (Code World W1.4)', () => {
     await atTheFork(page);
     await page.keyboard.press('ArrowRight');
     await expect(page.locator('[data-door-b-intro]')).toBeAttached();
+    // In the world door B's chapters run along the family road (W3): Hearth is its first stop.
+    await expect(page.locator('[data-world-stop="hearth"] [data-door-b-intro]')).toBeAttached();
   });
 
   test('dragging left takes business/; a short drag or an up-and-down one takes nothing', async ({ page }) => {

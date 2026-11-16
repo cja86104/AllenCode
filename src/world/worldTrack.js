@@ -97,7 +97,9 @@ export function buildTrack(route, sections, viewport) {
     const landmark = layout.landmarks.find((l) => l.stopId === section.stopId);
     if (landmark && section.box) return restPose(landmark, section.box, viewport);
     const index = route.road.stops.findIndex((s) => s.id === section.stopId);
-    if (index < 0 || route.road.stops[index].kind !== 'commits') return null;
+    // How I work's commits and a stop of words (done for you, W3) rest on the road, looking down it.
+    const kind = index < 0 ? null : route.road.stops[index].kind;
+    if (kind !== 'commits' && kind !== 'words') return null;
     const middle = layout.along[index];
     return { eye: onRoad(middle + COMMITS_EYE, EYE_HEIGHT), target: onRoad(middle + COMMITS_LOOK, COMMITS_LOOK_Y), fov: ROAD_FOV };
   }

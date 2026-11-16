@@ -1,6 +1,7 @@
 // @ts-check
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
+import { canvas, inChapter, near, open, restRect, scrollTo, spanOf, takeBusiness } from './world.js';
 
 /**
  * Code World, W2 revised (R4): today's home page plays inside the world. The gate starts it; the
@@ -21,64 +22,6 @@ const ROAD = [
 ];
 const PRODUCTS = ['my-teachers-toolbox', 'underfire-ai', 'founders-helm'];
 const SERVICES = ['mvp-sprints', 'custom-saas-builds', 'ai-integration'];
-
-/** @param {import('@playwright/test').Page} page */
-const canvas = (page) => page.locator('canvas[data-world]');
-
-/** @param {import('@playwright/test').Page} page */
-async function open(page) {
-  await page.goto('/?world=1');
-  await canvas(page).and(page.locator('[data-ready="true"]')).waitFor();
-  await page.locator('[data-world-journey]').waitFor();
-}
-
-/** Scrolls to `y` and waits for the canvas to have drawn there. @param {import('@playwright/test').Page} page @param {number} y */
-async function scrollTo(page, y) {
-  await page.evaluate((top) => window.scrollTo(0, top), y);
-  await expect.poll(() => page.evaluate(() => window.scrollY), { timeout: 5000 }).toBeGreaterThan(y - 3);
-  await page.waitForTimeout(250);
-}
-
-/** The scroll span a section's frame is pinned for (from its top until its last screen). @param {import('@playwright/test').Page} page @param {string} selector */
-async function spanOf(page, selector) {
-  return page.evaluate((sel) => {
-    const el = /** @type {HTMLElement} */ (document.querySelector(sel));
-    const rect = el.getBoundingClientRect();
-    const from = rect.top + window.scrollY;
-    return { from, to: from + rect.height - window.innerHeight };
-  }, selector);
-}
-
-/** Scrolls to a share (0..1) of a road chapter's pinned span. @param {import('@playwright/test').Page} page @param {string} id @param {number} share */
-async function inChapter(page, id, share) {
-  const span = await spanOf(page, `[data-world-stop="${id}"]`);
-  await scrollTo(page, span.from + (span.to - span.from) * share);
-}
-
-/** Takes business/ at the fork and waits for the glide to end. @param {import('@playwright/test').Page} page */
-async function takeBusiness(page) {
-  const journey = await spanOf(page, '[data-world-journey]');
-  await scrollTo(page, journey.to);
-  await expect(page.locator('[data-active-stop]')).toHaveAttribute('data-active-stop', 'The fork');
-  await page.getByRole('button', { name: /business\// }).click();
-  await expect(canvas(page)).toHaveAttribute('data-road', 'a');
-  await page.waitForFunction(() => !document.documentElement.classList.contains('lenis-smooth'), undefined, { timeout: 8000 });
-}
-
-/** The canvas's box for the resting landmark, in CSS pixels. @param {import('@playwright/test').Page} page */
-async function restRect(page) {
-  const value = await canvas(page).getAttribute('data-rest-rect');
-  if (!value) throw new Error('no rest rect');
-  const [left, top, width, height] = value.split(',').map(Number);
-  return { left, top, width, height };
-}
-
-/** Whether a box lies within 3 % (of the rect's size) of the rect. */
-function near(/** @type {{ x: number, y: number, width: number, height: number }} */ box, /** @type {{ left: number, top: number, width: number, height: number }} */ rect) {
-  const dx = 0.03 * rect.width;
-  const dy = 0.03 * rect.height;
-  return Math.abs(box.x - rect.left) <= dx && Math.abs(box.y - rect.top) <= dy && Math.abs(box.width - rect.width) <= dx && Math.abs(box.height - rect.height) <= dy;
-}
 
 test.describe('the world starts as today does (Code World R4)', () => {
   test('the gate’s empty file types and flies into the headline, drawn by the world; the world’s own file stays hidden until then', async ({ page }) => {
@@ -207,14 +150,16 @@ test.describe('each chapter plays at its landmark (Code World R4)', () => {
       .toBe(true);
   });
 
-  test('switching to family in the nav mid-road leaves the business road behind', async ({ page }) => {
+  test('switching to family in the nav mid-road leaves the business road behind for the family road', async ({ page }) => {
     await open(page);
     await takeBusiness(page);
     await inChapter(page, 'underfire-ai', 0.5);
     await page.getByRole('group', { name: 'Show the site for' }).first().getByRole('button', { name: 'Family' }).click();
-    await expect(page.locator('[data-world-stop]')).toHaveCount(0);
-    await expect(canvas(page)).not.toHaveAttribute('data-road', 'a');
-    await expect(canvas(page)).not.toHaveAttribute('data-flight', /.+/);
+    // The family road has its own stops since W3; none of the business road's is left.
+    await expect(page.locator('[data-world-stop="underfire-ai"]')).toHaveCount(0);
+    await expect(page.locator('[data-world-stop="hearth"]')).toBeAttached();
+    await expect(canvas(page)).toHaveAttribute('data-road', 'b');
+    await expect(canvas(page)).not.toHaveAttribute('data-flight', /^underfire-ai:/);
   });
 
   test('the scrim is behind a resting chapter’s words, and gone on the road between', async ({ page }) => {

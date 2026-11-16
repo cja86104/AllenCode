@@ -21,10 +21,12 @@ const road = /** @type {NonNullable<typeof route.road>} */ (route.road);
  * section), then per road stop 1.8 screens of road (80vh of road, then the chapter sliding in) and the
  * chapter's 120vh pinned span; boxes as today's layout gives them.
  * @param {{ width: number, height: number }} viewport
+ * @param {ReturnType<typeof routeFor>} [onRoute] Whose road (door a's by default).
  * @returns {TrackSection[]}
  */
-function page(viewport) {
+function page(viewport, onRoute = route) {
   const h = viewport.height;
+  const stopsOf = /** @type {NonNullable<typeof onRoute.road>} */ (onRoute.road);
   const w1 = routeFor(null);
   void w1;
   const openingScreens = 6.8;
@@ -33,17 +35,17 @@ function page(viewport) {
   let at = 2.8 * h;
   sections.push({ kind: 'opening', from: at, to: at + openingScreens * h });
   at += (openingScreens + 1) * h;
-  for (const stop of road.stops) {
+  for (const stop of stopsOf.stops) {
     at += 0.8 * h;
     /** @type {TrackSection} */
     const rest = { kind: 'rest', stopId: stop.id, from: at, to: at + 1.2 * h };
-    const code = stop.excerptId ? road.sources[stop.excerptId] : '';
-    if (stop.kind === 'product') rest.box = flightGeometry(code, { width: 1280, height: 800 }, viewport.width, h).targetBox;
+    const code = stop.excerptId ? stopsOf.sources[stop.excerptId] : '';
+    if (stop.kind === 'product' || stop.kind === 'template') rest.box = flightGeometry(code, { width: 1280, height: 800 }, viewport.width, h).targetBox;
     else if (stop.kind === 'service') {
       const screen = serviceScreens[/** @type {keyof typeof serviceScreens} */ (stop.id)];
       if (!screen) throw new Error(stop.id);
       rest.box = flightGeometry(code, screen, viewport.width, h).targetBox;
-    } else if (stop.kind !== 'commits') rest.box = { x: viewport.width * 0.5, y: h * 0.2, w: viewport.width * 0.42, h: h * 0.5 };
+    } else if (stop.kind !== 'commits' && stop.kind !== 'words') rest.box = { x: viewport.width * 0.5, y: h * 0.2, w: viewport.width * 0.42, h: h * 0.5 };
     sections.push(rest);
     at += 2.2 * h;
   }
@@ -124,6 +126,37 @@ describe('buildTrack: the camera follows the page (Code World R2)', () => {
       expect(track.sectionAt((rest.from + rest.to) / 2)).toBe(rest);
       expect(track.sectionAt(rest.from - 10)).toBeNull();
       expect(track.sectionAt(10)?.kind).toBe('gate');
+    });
+  }
+});
+
+describe('buildTrack on the family road (Code World W3.3)', () => {
+  const familyRoute = routeFor('b');
+  const family = /** @type {NonNullable<typeof familyRoute.road>} */ (familyRoute.road);
+  for (const viewport of VIEWPORTS) {
+    const label = `${viewport.width}×${viewport.height}`;
+    const sections = page(viewport, familyRoute);
+    const track = buildTrack(familyRoute, sections, viewport);
+
+    it(`door b: rests square on each template's box (${label})`, () => {
+      for (const section of sections.filter((s) => s.kind === 'rest' && s.box)) {
+        const landmark = family.layout.landmarks.find((l) => l.stopId === section.stopId);
+        if (!landmark || !section.box) throw new Error(`No landmark for ${section.stopId}`);
+        const pose = restPose(landmark, section.box, viewport);
+        const camera = track.cameraAt((section.from + section.to) / 2);
+        for (let i = 0; i < 3; i += 1) expect(camera.eye[i]).toBeCloseTo(pose.eye[i], 6);
+      }
+    });
+
+    it(`door b: rests on the road at done for you, looking down it (${label})`, () => {
+      const rest = sections[sections.length - 1];
+      expect(rest.stopId).toBe('done-for-you');
+      const along = family.layout.along[family.layout.along.length - 1];
+      const { origin, direction } = family.layout;
+      const camera = track.cameraAt((rest.from + rest.to) / 2);
+      expect(camera.eye[0]).toBeCloseTo(origin[0] + direction[0] * (along - 6), 6);
+      expect(camera.eye[2]).toBeCloseTo(origin[1] + direction[1] * (along - 6), 6);
+      expect(camera.target[0]).toBeCloseTo(origin[0] + direction[0] * (along + 10), 6);
     });
   }
 });

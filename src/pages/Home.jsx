@@ -66,7 +66,7 @@ export default function Home() {
       {/* Door A's chapters: in the world, today's chapters along the business road, products first. */}
       {door === 'a' &&
         (world ? (
-          <WorldRoadChapters includeDrafts={false} />
+          <WorldRoadChapters door="a" includeDrafts={false} />
         ) : (
           <>
             <ServiceChapters includeDrafts={false} />
@@ -74,13 +74,17 @@ export default function Home() {
             <HowIWork />
           </>
         ))}
-      {door === 'b' && (
-        <>
-          <DoorBIntro includeDrafts={false} />
-          <TemplateChapter includeDrafts={false} />
-          <DoneForYou />
-        </>
-      )}
+      {/* Door B's chapters: in the world, today's chapters along the family road, one per template (W3). */}
+      {door === 'b' &&
+        (world ? (
+          <WorldRoadChapters door="b" includeDrafts={false} />
+        ) : (
+          <>
+            <DoorBIntro includeDrafts={false} />
+            <TemplateChapter includeDrafts={false} />
+            <DoneForYou />
+          </>
+        ))}
 
       {door && (
         <>

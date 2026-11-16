@@ -2,6 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { roadGlyphs, routeFor } from '../src/world/route.js';
 import { CURSOR } from '../src/world/shapes.js';
+import { familyRoadStops } from '../src/world/roads.js';
 
 describe('routeFor: one journey per door, shared by the canvas and the page (Code World W2.4)', () => {
   it('builds the business road for door a, once', () => {
@@ -14,11 +15,16 @@ describe('routeFor: one journey per door, shared by the canvas and the page (Cod
     for (const stop of route.road?.stops ?? []) if (stop.excerptId) expect(typeof route.road?.sources[stop.excerptId]).toBe('string');
   });
 
-  it('leaves the fork and the family road as W1 had them', () => {
+  it('builds the family road for door b, once, and the atlas covers both roads (W3.2)', () => {
+    const route = routeFor('b');
+    expect(route.road?.door).toBe('b');
+    expect(route.road?.stops.map((s) => s.id)).toEqual(familyRoadStops().map((s) => s.id));
+    expect(routeFor('b')).toBe(route);
     expect(routeFor(null).road).toBeNull();
-    expect(routeFor('b').road).toBeNull();
     expect(routeFor(null).journey.screens).toBeCloseTo(4.4, 9);
-    expect(routeFor('b').journey.screens).toBeCloseTo(6.8, 9);
+    expect(route.journey.landmarks).toHaveLength(6);
+    const glyphs = roadGlyphs();
+    for (const code of Object.values(route.road?.sources ?? {})) for (const c of code) if (c.trim()) expect(glyphs).toContain(c);
   });
 
   it('gives the atlas every character the road may draw, and the cursor', () => {

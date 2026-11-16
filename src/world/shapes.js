@@ -228,9 +228,24 @@ export function codeRoad(code, { path, width, count }, seed) {
     const x = segment.from[0] + (segment.to[0] - segment.from[0]) * t - dz * offset;
     const z = segment.from[1] + (segment.to[1] - segment.from[1]) * t + dx * offset;
     const spark = random() < 0.07;
-    put(shape, i, x, (random() - 0.5) * 0.2, z, ink[i % ink.length], spark ? EMBER : PALE, spark ? 0.9 : 0.25 + 0.45 * random());
+    put(shape, i, x, (random() - 0.5) * 0.2, z, ink[i % ink.length], spark ? EMBER : PALE, spark ? 0.9 : 0.45 + 0.45 * random());
   }
   return shape;
+}
+
+/** @param {ReadonlyArray<ReadonlyArray<number>>} path */
+function pathLength(path) {
+  return path.slice(1).reduce((sum, p, i) => sum + Math.hypot(p[0] - path[i][0], p[1] - path[i][1]), 0);
+}
+
+/**
+ * How many scatter glyphs a stretch of road gets at a density, in glyphs per unit of ground.
+ * @param {number} density
+ * @param {ReadonlyArray<ReadonlyArray<number>>} path
+ * @param {number} width
+ */
+function scatterCount(density, path, width) {
+  return Math.floor(density * width * pathLength(path));
 }
 
 /**
@@ -440,35 +455,42 @@ export function buildWorld(tier, sources, seed) {
     business: roadEdges(sources.road, { path: ROAD_PATHS.business, width: 3.2, spacing: EDGE_SPACING }, seed + 7),
     family: roadEdges(sources.road, { path: ROAD_PATHS.family, width: 3.2, spacing: EDGE_SPACING }, seed + 8),
   };
+  const density = ROAD_DENSITY[tier];
+  const scatter = {
+    trunk: scatterCount(density, ROAD_PATHS.trunk, 4),
+    business: scatterCount(density, ROAD_PATHS.business, 3.2),
+    family: scatterCount(density, ROAD_PATHS.family, 3.2),
+  };
   const fixed = [editor, signs, edges.trunk, edges.business, edges.family].reduce((sum, shape) => sum + shape.glyphs.length, 0);
-  const rest = budgetFor(tier) - fixed;
-  if (rest <= 0) throw new Error(`The ${tier} budget leaves no glyphs for the road.`);
-  const share = (/** @type {number} */ fraction) => Math.floor(rest * fraction);
+  const rest = budgetFor(tier) - fixed - scatter.trunk - scatter.business - scatter.family;
+  if (rest <= 0) throw new Error(`The ${tier} budget leaves no glyphs for the landmark.`);
   return [
     { name: 'editor', shape: editor },
-    { name: 'trunk-road', shape: codeRoad(sources.road, { path: ROAD_PATHS.trunk, width: 4, count: share(0.4) }, seed + 2) },
+    { name: 'trunk-road', shape: codeRoad(sources.road, { path: ROAD_PATHS.trunk, width: 4, count: scatter.trunk }, seed + 2) },
     { name: 'trunk-edges', shape: edges.trunk },
     { name: 'business-edges', shape: edges.business },
     { name: 'family-edges', shape: edges.family },
-    { name: 'business-road', shape: codeRoad(sources.road, { path: ROAD_PATHS.business, width: 3.2, count: share(0.2) }, seed + 3) },
-    { name: 'family-road', shape: codeRoad(sources.road, { path: ROAD_PATHS.family, width: 3.2, count: share(0.15) }, seed + 4) },
+    { name: 'business-road', shape: codeRoad(sources.road, { path: ROAD_PATHS.business, width: 3.2, count: scatter.business }, seed + 3) },
+    { name: 'family-road', shape: codeRoad(sources.road, { path: ROAD_PATHS.family, width: 3.2, count: scatter.family }, seed + 4) },
     { name: 'signs', shape: signs },
     {
       name: 'landmark',
-      shape: screenSculpture(
-        sources.landmark,
-        { width: LANDMARK.width, height: LANDMARK.height, center: LANDMARK.center, count: share(0.25) },
-        seed + 5,
-      ),
+      shape: screenSculpture(sources.landmark, { width: LANDMARK.width, height: LANDMARK.height, center: LANDMARK.center, count: rest }, seed + 5),
     },
   ];
 }
 
-/** Shares of what the budget leaves after the exact parts: the road's scatter, then the screens. */
-// R5: the onward road runs on into the fog, so it takes 0.05 more of the scatter from the trunk, which
-// is still by far the densest stretch.
-const ROAD_SCATTER = Object.freeze({ trunk: 0.15, business: 0.08, family: 0.07, onward: 0.15 });
-const SCREEN_SHARE = 0.55;
+/**
+ * The road's scatter, in glyphs per unit of ground, on the opening (the trunk and both branches), by
+ * tier (W3.1, Chris 2026-11-16: the business road looked thinner and dimmer than the family road,
+ * which spent the whole budget on the road). The same density whichever door is taken; the road
+ * between the landmarks has half of it, the run-on into the fog an eighth, and the screens take what
+ * the budget leaves. On the low tier this is what the fixed parts and six screens at `SCREEN_FLOOR`
+ * leave; a fuller phone road needs a larger low budget (`budgetFor`), not a larger density.
+ */
+export const ROAD_DENSITY = Object.freeze({ low: 12, mid: 26, high: 46 });
+/** A screen landmark never has fewer glyphs than this: the picture must still read. */
+const SCREEN_FLOOR = 400;
 /** Half the onward road's width, and half a side path's (R5). */
 const ROAD_HALF = 1.6;
 const SPUR_HALF = 0.8;
@@ -479,8 +501,8 @@ const SPUR_HALF = 0.8;
  * edges, a landmark per stop (a screen sculpture of its excerpt for products and services, the
  * audit's file as a slab, Crew Advisors' file unfinished with its cursor), how I work's commits lit on
  * the road's edge, a side path to each landmark and a stand under it (R5). Within the tier's budget:
- * the editor, signs, edges, slabs and stands are exact; the rest goes to the road's scatter (the side
- * paths share the onward road's, by area, so the ground reads as one surface) and the screens.
+ * the editor, signs, edges, slabs and stands are exact; the road's scatter is laid by `ROAD_DENSITY`
+ * (W3.1: the same on every door); the screens share what is left, `SCREEN_FLOOR` each at least.
  * @param {Tier} tier
  * @param {{ gate: string, road: string, stops: Readonly<Record<string, string>> }} sources Approved
  *   code: the empty file's, the road's, and each stop's by excerpt id.
@@ -531,7 +553,8 @@ export function buildRoadWorld(tier, sources, seed, road, landed = {}) {
   /** @type {Array<{ stopId: string, landmark: import('./roadLayout.js').Landmark, code: string }>} */
   const screens = [];
   road.stops.forEach((stop, k) => {
-    if (stop.kind === 'commits') return;
+    // How I work's commits light the road's edge; a stop of words (done for you, W3) has no landmark.
+    if (stop.kind === 'commits' || stop.kind === 'words') return;
     const landmark = layout.landmarks.find((l) => l.stopId === stop.id);
     const code = stop.excerptId ? sources.stops[stop.excerptId] : undefined;
     if (!landmark || code === undefined) throw new Error(`The road has no landmark or code for ${stop.id}.`);
@@ -547,28 +570,47 @@ export function buildRoadWorld(tier, sources, seed, road, landed = {}) {
 
   const fixedShapes = [editor, signs, edges.trunk, edges.business, edges.family, onwardEdges, ...spurEdges, ...stands, ...exact.map((part) => part.shape)];
   const fixed = fixedShapes.reduce((sum, shape) => sum + shape.glyphs.length, 0);
-  const rest = budgetFor(tier) - fixed;
-  if (rest <= 0) throw new Error(`The ${tier} budget leaves no glyphs for the road.`);
-  const share = (/** @type {number} */ fraction) => Math.floor(rest * fraction);
-  const perScreen = screens.length > 0 ? Math.floor(share(SCREEN_SHARE) / screens.length) : 0;
-  // The onward road's scatter, shared with the side paths by area.
-  const onwardLength = onward.slice(1).reduce((sum, p, i) => sum + Math.hypot(p[0] - onward[i][0], p[1] - onward[i][1]), 0);
-  const areas = { onward: onwardLength * ROAD_HALF * 2, spurs: spurs.map((spur) => spur.length * SPUR_HALF * 2) };
-  const totalArea = areas.onward + areas.spurs.reduce((sum, a) => sum + a, 0);
-  const scatterFor = (/** @type {number} */ area) => Math.floor((share(ROAD_SCATTER.onward) * area) / totalArea);
+  // The scatter by density: the opening, the road between the landmarks (to the last stop), the
+  // run-on into the fog, and the side paths.
+  const density = ROAD_DENSITY[tier];
+  const lastAlong = layout.along.length > 0 ? layout.along[layout.along.length - 1] : 0;
+  const [onwardStart] = onward;
+  const splitAt = /** @type {Point2} */ ([onwardStart[0] + layout.direction[0] * lastAlong, onwardStart[1] + layout.direction[1] * lastAlong]);
+  const between = /** @type {Point2[]} */ ([onwardStart, splitAt]);
+  const runOn = /** @type {Point2[]} */ ([splitAt, onward[onward.length - 1]]);
+  const scatter = {
+    trunk: scatterCount(density, ROAD_PATHS.trunk, 4),
+    business: scatterCount(density, ROAD_PATHS.business, 3.2),
+    family: scatterCount(density, ROAD_PATHS.family, 3.2),
+    between: scatterCount(density / 2, between, ROAD_HALF * 2),
+    runOn: scatterCount(density / 8, runOn, ROAD_HALF * 2),
+    spurs: spurs.map((spur) => Math.max(1, scatterCount(density / 2, spur.path, SPUR_HALF * 2))),
+  };
+  const scattered = scatter.trunk + scatter.business + scatter.family + scatter.between + scatter.runOn + scatter.spurs.reduce((sum, n) => sum + n, 0);
+  let remainder = budgetFor(tier) - fixed - scattered;
+  if (screens.length > 0 && remainder < SCREEN_FLOOR * screens.length) {
+    // The budget, not the density, is the limit: the scatter gives way so every screen keeps its floor.
+    const keep = Math.max(0, budgetFor(tier) - fixed - SCREEN_FLOOR * screens.length) / scattered;
+    for (const key of /** @type {const} */ (['trunk', 'business', 'family', 'between', 'runOn'])) scatter[key] = Math.floor(scatter[key] * keep);
+    scatter.spurs = scatter.spurs.map((n) => Math.max(1, Math.floor(n * keep)));
+    remainder = SCREEN_FLOOR * screens.length;
+  }
+  if (remainder <= 0) throw new Error(`The ${tier} budget leaves no glyphs for the road.`);
+  const perScreen = screens.length > 0 ? Math.floor(remainder / screens.length) : 0;
 
   return [
     { name: 'editor', shape: editor },
-    { name: 'trunk-road', shape: codeRoad(sources.road, { path: ROAD_PATHS.trunk, width: 4, count: share(ROAD_SCATTER.trunk) }, seed + 2) },
+    { name: 'trunk-road', shape: codeRoad(sources.road, { path: ROAD_PATHS.trunk, width: 4, count: scatter.trunk }, seed + 2) },
     { name: 'trunk-edges', shape: edges.trunk },
     { name: 'business-edges', shape: edges.business },
     { name: 'family-edges', shape: edges.family },
-    { name: 'business-road', shape: codeRoad(sources.road, { path: ROAD_PATHS.business, width: 3.2, count: share(ROAD_SCATTER.business) }, seed + 3) },
-    { name: 'family-road', shape: codeRoad(sources.road, { path: ROAD_PATHS.family, width: 3.2, count: share(ROAD_SCATTER.family) }, seed + 4) },
-    { name: 'onward-road', shape: codeRoad(sources.road, { path: onward, width: ROAD_HALF * 2, count: scatterFor(areas.onward) }, seed + 11) },
+    { name: 'business-road', shape: codeRoad(sources.road, { path: ROAD_PATHS.business, width: 3.2, count: scatter.business }, seed + 3) },
+    { name: 'family-road', shape: codeRoad(sources.road, { path: ROAD_PATHS.family, width: 3.2, count: scatter.family }, seed + 4) },
+    { name: 'onward-road', shape: codeRoad(sources.road, { path: between, width: ROAD_HALF * 2, count: scatter.between }, seed + 11) },
+    { name: 'run-on-road', shape: codeRoad(sources.road, { path: runOn, width: ROAD_HALF * 2, count: scatter.runOn }, seed + 12) },
     { name: 'onward-edges', shape: onwardEdges },
     ...spurs.flatMap((spur, n) => [
-      { name: `spur-road:${spur.stopId}`, shape: codeRoad(sources.road, { path: spur.path, width: SPUR_HALF * 2, count: Math.max(1, scatterFor(areas.spurs[n])) }, seed + 50 + n) },
+      { name: `spur-road:${spur.stopId}`, shape: codeRoad(sources.road, { path: spur.path, width: SPUR_HALF * 2, count: scatter.spurs[n] }, seed + 50 + n) },
       { name: `spur-edges:${spur.stopId}`, shape: spurEdges[n] },
     ]),
     ...layout.landmarks.map((landmark, n) => ({ name: `stand:${landmark.stopId}`, shape: stands[n] })),

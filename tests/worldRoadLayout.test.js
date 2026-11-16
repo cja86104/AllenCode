@@ -1,7 +1,7 @@
 // @ts-check
 import { describe, expect, it } from 'vitest';
 import { layoutRoad, roadSizes, spurPaths, ROAD_STEP, LATERAL } from '../src/world/roadLayout.js';
-import { businessRoadStops } from '../src/world/roads.js';
+import { businessRoadStops, familyRoadStops } from '../src/world/roads.js';
 import { getExcerpt } from '../src/content/excerpts/index.js';
 import { distanceToPath } from '../src/world/shapes.js';
 
@@ -127,4 +127,22 @@ describe('the road runs on, and a side path leads to each landmark (Code World R
       });
     });
   }
+});
+
+describe('the family road (Code World W3.2)', () => {
+  const family = familyRoadStops();
+  const familySizes = roadSizes(family, sourcesOf(family));
+  const road = layoutRoad(family, 'b', familySizes);
+
+  it('sizes every template as a 16:10 screen 6 wide', () => {
+    for (const stop of family.filter((s) => s.kind === 'template')) expect(familySizes[stop.id]).toEqual({ width: 6, height: 6 / (1280 / 800) });
+  });
+
+  it('places a landmark per template on the mirrored road, none for done for you, and a side path for each', () => {
+    expect(road.landmarks.map((l) => l.stopId)).toEqual(family.slice(0, -1).map((s) => s.id));
+    expect(road.commits).toEqual([]);
+    expect(road.spurs.map((s) => s.stopId)).toEqual(road.landmarks.map((l) => l.stopId));
+    expect(road.direction[0]).toBeGreaterThan(0);
+    expect(road.along).toHaveLength(family.length);
+  });
 });

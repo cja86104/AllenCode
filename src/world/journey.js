@@ -197,6 +197,12 @@ function placeRoad(door, roadStops, sizes, start, placed) {
       commits = { from, to, along: [along - gap, along, along + gap], origin: [origin[0], origin[1]], direction: [direction[0], direction[1]] };
       continue;
     }
+    if (stop.kind === 'words') {
+      // A stop of words (W3): the camera holds on the road, looking down it, as at the commits.
+      const along = layout.along[k];
+      placed.push({ screens: to, stop: stop.name, eye: onRoad(along - 6, EYE_HEIGHT), target: onRoad(along + 4, 0.8), fov: ROAD_FOV, still: true });
+      continue;
+    }
     const landmark = layout.landmarks.find((l) => l.stopId === stop.id);
     if (!landmark) throw new Error(`No landmark for ${stop.id}.`);
     const look = /** @type {Vec3} */ ([landmark.center[0], landmark.center[1] - LOOK_BELOW * landmark.height, landmark.center[2]]);

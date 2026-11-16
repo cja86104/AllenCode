@@ -40,8 +40,8 @@ const SCREEN_WIDTH = 6;
 const LOOP_ASPECT = 1280 / 800;
 
 /**
- * Each landmark's size: products as their 16:10 loops, services as their real screens, and the
- * slabs (the audit's file, Crew Advisors' unfinished one) as their code lays out.
+ * Each landmark's size: products and templates as their 16:10 loops, services as their real screens,
+ * and the slabs (the audit's file, Crew Advisors' unfinished one) as their code lays out.
  * @param {ReadonlyArray<RoadStop>} stops
  * @param {Readonly<Record<string, string>>} sources Approved excerpt code by excerpt id.
  * @returns {Record<string, { width: number, height: number }>}
@@ -50,7 +50,7 @@ export function roadSizes(stops, sources) {
   /** @type {Record<string, { width: number, height: number }>} */
   const sizes = {};
   for (const stop of stops) {
-    if (stop.kind === 'product') {
+    if (stop.kind === 'product' || stop.kind === 'template') {
       sizes[stop.id] = { width: SCREEN_WIDTH, height: SCREEN_WIDTH / LOOP_ASPECT };
     } else if (stop.kind === 'service') {
       const screen = serviceScreens[/** @type {keyof typeof serviceScreens} */ (stop.id)];
@@ -116,6 +116,8 @@ export function layoutRoad(stops, door, sizes) {
       for (const offset of [-COMMIT_GAP, 0, COMMIT_GAP]) commits.push(at(distance + offset, side * ROAD_HALF_WIDTH));
       return;
     }
+    // A stop of words (done for you, W3) has no landmark: the camera rests on the road there.
+    if (stop.kind === 'words') return;
     const size = sizes[stop.id];
     if (!size) throw new Error(`No size for ${stop.id}.`);
     const ground = at(distance, side * LATERAL);
