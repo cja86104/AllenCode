@@ -274,7 +274,7 @@ export function createHomeWorld({ renderer, atlas, tier, canvas, scrim, surround
       canvas.style.opacity = shown.toFixed(3);
       // The ground and the cursor's ripples beneath it all, shown as the world's editor is (2026-11-16).
       surroundings?.frame({ camera, now, aspect: viewport.width / viewport.height, shown: editorShown });
-      if (shown > 0) renderer.render(camera, now, { fades, cursor, flight, passed, underlay: surroundings?.underlay });
+      if (shown > 0) renderer.render(camera, now, { fades, cursor, flight, passed, underlay: surroundings?.underlay, haze: surroundings?.haze });
 
       const data = canvas.dataset;
       data.page = 'home';

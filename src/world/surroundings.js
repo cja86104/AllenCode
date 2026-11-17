@@ -119,6 +119,45 @@ export function cutWorld(parts, center, radius) {
 /** The middle of the opening's roads (trunk from z −3 to the branches' ends at −55). @type {[number, number]} */
 const OPENING_CENTER = [0, -29];
 
+/**
+ * The hollow mist (Chris, 2026-11-17: "i want to do hollow mist"): a cool, moonlit mist lying on the low
+ * ground, pooling between the hills and drifting, the crests and the code rising out of it.
+ * - `color`: its colour (#80A8CC);
+ * - `ground`: at most this thick on the ground, gone above `clearAbove` units of height;
+ * - `band` and `deep`: the band along the horizon, and the haze over the ground far off;
+ * - `tint`: how far far-off code sinks into its colour as it fades;
+ * - `drift`: how fast it moves over the ground, in units per millisecond (x, z).
+ */
+export const MIST = Object.freeze({
+  color: Object.freeze([0.5, 0.66, 0.8]),
+  ground: 0.26,
+  clearAbove: 3.8,
+  band: 0.11,
+  deep: 0.05,
+  tint: 0.55,
+  drift: Object.freeze([0.00005, 0.00002]),
+});
+
+/** Fractal value noise, for the mist's drift (shared by the ground's shader and the band's). */
+const MIST_NOISE = `float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float vnoise(vec2 p) {
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  vec2 w = f * f * (3.0 - 2.0 * f);
+  return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), w.x), mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), w.x), w.y);
+}
+float fbm(vec2 p) {
+  float v = 0.0;
+  float a = 0.5;
+  for (int i = 0; i < 5; i += 1) {
+    v += a * vnoise(p);
+    p *= 2.03;
+    a *= 0.5;
+  }
+  return v;
+}
+`;
+
 /** The ground's grid lines, faint grey, and the ripples' dim orange (#f97316). */
 const GROUND_SHADERS = {
   vertex: `#version 300 es
@@ -128,39 +167,44 @@ uniform mat4 uViewProjection;
 out vec2 vXZ;
 out float vDepth;
 out float vOffRoad;
+out float vY;
 void main() {
   vec4 clip = uViewProjection * vec4(aPosition, 1.0);
   gl_Position = clip;
   vXZ = aPosition.xz;
   vDepth = clip.w;
   vOffRoad = aOffRoad;
+  vY = aPosition.y;
 }
 `,
+  // In the shader: A line every cell each way, a pixel wide; faded where the cells grow too small to draw.
+  // The grid's nodes, where its lines cross.
+  // Kept off the roads, so they read clean.
+  // The cursor's ripples: nodes near each point of its trail glow, fading out over its life.
   fragment: `#version 300 es
 precision highp float;
 in vec2 vXZ;
 in float vDepth;
 in float vOffRoad;
+in float vY;
+uniform float uTime;
 uniform float uFogNear;
 uniform float uFogFar;
 uniform float uShown;
 uniform vec3 uRipples[${RIPPLE_MAX}];
 out vec4 outColor;
-void main() {
+
+${MIST_NOISE}void main() {
   if (vDepth <= 0.0) discard;
   vec2 g = vXZ / ${GROUND_CELL.toFixed(1)};
   vec2 w = max(fwidth(g), vec2(1e-4));
-  // A line every cell each way, a pixel wide; faded where the cells grow too small to draw.
   vec2 d = abs(fract(g - 0.5) - 0.5) / w;
   float line = (1.0 - min(min(d.x, d.y), 1.0)) * (1.0 - smoothstep(0.25, 0.6, max(w.x, w.y)));
-  // The grid's nodes, where its lines cross.
   float node = 1.0 - smoothstep(0.06, 0.2, length((fract(g + 0.5) - 0.5) * ${GROUND_CELL.toFixed(1)}));
   float fog = 1.0 - smoothstep(uFogNear, uFogFar, vDepth);
   float near = smoothstep(0.5, 2.0, vDepth);
-  // Kept off the roads, so they read clean.
   float off = smoothstep(0.0, 0.8, vOffRoad);
   float base = line * 0.09 * fog * near * off * uShown;
-  // The cursor's ripples: nodes near each point of its trail glow, fading out over its life.
   float glow = 0.0;
   for (int i = 0; i < ${RIPPLE_MAX}; i += 1) {
     float age = uRipples[i].z;
@@ -171,7 +215,55 @@ void main() {
   }
   glow = min(glow, 1.0) * (node * 0.6 + line * 0.25) * fog * off * uShown;
   vec3 color = vec3(0.55, 0.53, 0.5) * base + vec3(0.976, 0.451, 0.086) * glow;
-  outColor = vec4(color, base + glow);
+  float drift = fbm(vXZ * 0.07 + uTime * vec2(${MIST.drift[0]}, ${MIST.drift[1]}));
+  float low = 1.0 - smoothstep(0.4, ${MIST.clearAbove.toFixed(2)}, vY);
+  float far = 1.0 - smoothstep(uFogFar * 0.95, uFogFar * 1.45, vDepth);
+  float mist = low * smoothstep(0.32, 0.78, drift) * smoothstep(2.5, 11.0, vDepth) * far * ${MIST.ground.toFixed(3)} * uShown;
+  color += vec3(${MIST.color.map((c) => c.toFixed(3)).join(', ')}) * mist;
+  outColor = vec4(color, min(base + glow + mist, 1.0));
+}
+`,
+};
+
+/**
+ * The mist's band along the horizon, behind the ground: from the camera's ray through each pixel, how
+ * far the ground is along it (taken as flat) and so how deep in the fog, with the band itself just
+ * above and below the horizon. The ground's own shader adds the mist on the ground: drifting, thickest
+ * on the low ground and gone over the crests, clear just in front of the camera, fading out past the
+ * fog's far edge.
+ */
+const BAND_SHADERS = {
+  vertex: `#version 300 es
+out vec2 vNdc;
+void main() {
+  vec2 corners[3] = vec2[3](vec2(-1.0, -1.0), vec2(3.0, -1.0), vec2(-1.0, 3.0));
+  vNdc = corners[gl_VertexID];
+  gl_Position = vec4(vNdc, 0.0, 1.0);
+}
+`,
+  fragment: `#version 300 es
+precision highp float;
+in vec2 vNdc;
+uniform vec3 uEye;
+uniform vec3 uForward;
+uniform vec3 uRight;
+uniform vec3 uUp;
+uniform float uTan;
+uniform float uAspect;
+uniform float uTime;
+uniform float uShown;
+uniform float uFogNear;
+uniform float uFogFar;
+out vec4 outColor;
+
+${MIST_NOISE}void main() {
+  vec3 dir = normalize(uForward + vNdc.x * uTan * uAspect * uRight + vNdc.y * uTan * uUp);
+  float dist = dir.y < -0.0005 ? min(uEye.y / -dir.y, 400.0) : 400.0;
+  float deep = smoothstep(uFogNear, uFogFar * 1.4, dist);
+  float band = exp(-abs(dir.y) * 16.0);
+  float moving = 0.55 + 0.45 * fbm(vec2(atan(dir.x, dir.z) * 3.0 + uTime * 0.00002, dir.y * 18.0));
+  float a = (band * ${MIST.band.toFixed(3)} + deep * ${MIST.deep.toFixed(3)}) * moving * uShown;
+  outColor = vec4(vec3(${MIST.color.map((c) => c.toFixed(3)).join(', ')}) * a, a);
 }
 `,
 };
@@ -200,7 +292,34 @@ function createGroundLayer(gl) {
   if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error(`Ground program failed to link: ${gl.getProgramInfoLog(program)}`);
   gl.deleteShader(vertex);
   gl.deleteShader(fragment);
+  const bandProgram = gl.createProgram();
+  if (!bandProgram) throw new Error('The mist could not create a program.');
+  const bandVertex = compile(gl.VERTEX_SHADER, BAND_SHADERS.vertex);
+  const bandFragment = compile(gl.FRAGMENT_SHADER, BAND_SHADERS.fragment);
+  gl.attachShader(bandProgram, bandVertex);
+  gl.attachShader(bandProgram, bandFragment);
+  gl.linkProgram(bandProgram);
+  if (!gl.getProgramParameter(bandProgram, gl.LINK_STATUS)) throw new Error(`Mist program failed to link: ${gl.getProgramInfoLog(bandProgram)}`);
+  gl.deleteShader(bandVertex);
+  gl.deleteShader(bandFragment);
+  /** @param {string} name */
+  const bandUniform = (name) => gl.getUniformLocation(bandProgram, name);
+  const b = {
+    eye: bandUniform('uEye'),
+    forward: bandUniform('uForward'),
+    right: bandUniform('uRight'),
+    up: bandUniform('uUp'),
+    tan: bandUniform('uTan'),
+    aspect: bandUniform('uAspect'),
+    time: bandUniform('uTime'),
+    shown: bandUniform('uShown'),
+    fogNear: bandUniform('uFogNear'),
+    fogFar: bandUniform('uFogFar'),
+  };
+  /** The band draws a triangle over the whole screen from its vertex index alone. */
+  const bandVao = gl.createVertexArray();
   const u = {
+    time: gl.getUniformLocation(program, 'uTime'),
     viewProjection: gl.getUniformLocation(program, 'uViewProjection'),
     fogNear: gl.getUniformLocation(program, 'uFogNear'),
     fogFar: gl.getUniformLocation(program, 'uFogFar'),
@@ -238,11 +357,34 @@ function createGroundLayer(gl) {
       wide = mesh.indices instanceof Uint32Array;
     },
     /**
-     * @param {{ viewProjection: Float32Array, fogNear: number, fogFar: number }} frame
+     * @param {{ viewProjection: Float32Array, fogNear: number, fogFar: number, camera: { eye: [number, number, number], target: [number, number, number], fov: number }, time: number, width: number, height: number }} frame
      * @param {number} shown @param {ReadonlyArray<{ x: number, z: number, age: number }>} lit
      */
-    draw({ viewProjection, fogNear, fogFar }, shown, lit) {
+    draw({ viewProjection, fogNear, fogFar, camera, time, width, height }, shown, lit) {
       if (count === 0 || shown <= 0) return;
+      // The mist's band, first: the camera's basis, for its ray through each pixel.
+      const fx = camera.target[0] - camera.eye[0];
+      const fy = camera.target[1] - camera.eye[1];
+      const fz = camera.target[2] - camera.eye[2];
+      const fl = Math.hypot(fx, fy, fz) || 1;
+      const forward = [fx / fl, fy / fl, fz / fl];
+      const rl = Math.hypot(forward[2], forward[0]) || 1;
+      const right = [-forward[2] / rl, 0, forward[0] / rl];
+      const up = [right[1] * forward[2] - right[2] * forward[1], right[2] * forward[0] - right[0] * forward[2], right[0] * forward[1] - right[1] * forward[0]];
+      gl.useProgram(bandProgram);
+      gl.uniform3fv(b.eye, camera.eye);
+      gl.uniform3fv(b.forward, forward);
+      gl.uniform3fv(b.right, right);
+      gl.uniform3fv(b.up, up);
+      gl.uniform1f(b.tan, Math.tan((camera.fov * Math.PI) / 360));
+      gl.uniform1f(b.aspect, width / height);
+      gl.uniform1f(b.time, time);
+      gl.uniform1f(b.shown, shown);
+      gl.uniform1f(b.fogNear, fogNear);
+      gl.uniform1f(b.fogFar, fogFar);
+      gl.bindVertexArray(bandVao);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      gl.bindVertexArray(null);
       for (let i = 0; i < RIPPLE_MAX; i += 1) {
         const p = lit[i];
         ripples.set(p ? [p.x, p.z, p.age] : [0, 0, -1], i * 3);
@@ -252,6 +394,7 @@ function createGroundLayer(gl) {
       gl.uniform1f(u.fogNear, fogNear);
       gl.uniform1f(u.fogFar, fogFar);
       gl.uniform1f(u.shown, shown);
+      gl.uniform1f(u.time, time);
       gl.uniform3fv(u.ripples, ripples);
       gl.bindVertexArray(vao);
       gl.drawElements(gl.TRIANGLES, count, wide ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT, 0);
@@ -262,14 +405,17 @@ function createGroundLayer(gl) {
       gl.deleteBuffer(offRoad);
       gl.deleteBuffer(indices);
       gl.deleteVertexArray(vao);
+      gl.deleteVertexArray(bandVao);
       gl.deleteProgram(program);
+      gl.deleteProgram(bandProgram);
     },
   };
 }
 
 /**
  * The world around the camera (2026-11-16), for the home's world: each door's budget for its whole
- * road, the cut to draw, the ground beneath it, and the cursor's ripples on the ground. Created by the
+ * road, the cut to draw, the ground beneath it with the hollow mist on it, and the cursor's ripples on
+ * the ground. Created by the
  * canvas from the world layer, so its code stays out of the canvas chunk.
  * - The cut: the world within `WINDOW_RADIUS` of where the camera was, the ground's mesh under it.
  * - The ripples: a mouse (not touch) moving over the page is traced from the camera to the ground; off
@@ -333,10 +479,12 @@ export function createSurroundings({ tier, renderer, canvas }) {
       lit = trail.active(now);
       canvas.dataset.ripples = String(lit.length);
     },
-    /** The ground and its ripples, beneath the glyphs (the renderer's `underlay`). @param {{ viewProjection: Float32Array, fogNear: number, fogFar: number }} frame */
+    /** The ground and its ripples, beneath the glyphs (the renderer's `underlay`). @param {{ viewProjection: Float32Array, fogNear: number, fogFar: number, camera: { eye: [number, number, number], target: [number, number, number], fov: number }, time: number, width: number, height: number }} frame */
     underlay(frame) {
       ground.draw(frame, shown, lit);
     },
+    /** Far code sinks into the mist's colour as it fades (the renderer's `haze`). */
+    haze: { color: /** @type {[number, number, number]} */ ([...MIST.color]), tint: MIST.tint },
     destroy() {
       window.removeEventListener('pointermove', move);
       ground.destroy();

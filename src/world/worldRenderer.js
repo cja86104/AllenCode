@@ -123,6 +123,8 @@ export function createWorldRenderer(canvas, atlas) {
     pixelRatio: uniform('uPixelRatio'),
     time: uniform('uTime'),
     fogNear: uniform('uFogNear'),
+    hazeColor: uniform('uHazeColor'),
+    hazeTint: uniform('uHazeTint'),
     fogFar: uniform('uFogFar'),
     fadeFrom: uniform('uFadeFrom'),
     fadeTo: uniform('uFadeTo'),
@@ -242,14 +244,16 @@ export function createWorldRenderer(canvas, atlas) {
      *   cursor?: { index: number, position: [number, number, number], visible: boolean },
      *   flight?: { progress: number, fade: number },
      *   passed?: number,
-     *   underlay?: (frame: { viewProjection: Float32Array, fogNear: number, fogFar: number }) => void,
+     *   underlay?: (frame: { viewProjection: Float32Array, fogNear: number, fogFar: number, camera: Camera, time: number, width: number, height: number }) => void,
+     *   haze?: { color: [number, number, number], tint: number },
      * }} [options] Ranges of glyphs drawn at `amount` of their alpha (at most `MAX_FADES`); one glyph (by
      *   its place in the buffer) drawn at `position`, shown or hidden (an unfinished file's cursor); and
      *   the flight set by `setFlight`, at its progress and fade; and how many road landmarks the visitor
-     *   has passed (each shows its picture instead of its code); and a layer drawn beneath the glyphs,
-     *   after the canvas is cleared (the ground, 2026-11-16).
+     *   has passed (each shows its picture instead of its code); a layer drawn beneath the glyphs,
+     *   after the canvas is cleared (the ground, 2026-11-16); and the colour far code sinks into as it
+     *   fades, with how far it goes (the hollow mist, 2026-11-17; none, the code just fades).
      */
-    render(camera, time, { fades = [], cursor, flight: flying, passed = 0, underlay } = {}) {
+    render(camera, time, { fades = [], cursor, flight: flying, passed = 0, underlay, haze } = {}) {
       this.lastCamera = camera;
       const viewProjection = viewProjectionFor(camera, width / height);
       const projScale = 1 / Math.tan((camera.fov * Math.PI) / 360);
@@ -275,10 +279,12 @@ export function createWorldRenderer(canvas, atlas) {
       gl.uniform1f(u.viewportHeight, height);
       gl.uniform1f(u.pixelRatio, pixelRatio);
       gl.uniform1f(u.time, time);
+      gl.uniform3fv(u.hazeColor, haze ? haze.color : [0, 0, 0]);
+      gl.uniform1f(u.hazeTint, haze ? haze.tint : 0);
       gl.clearColor(0, 0, 0, 0);
       gl.clear(gl.COLOR_BUFFER_BIT);
       if (underlay) {
-        underlay({ viewProjection, fogNear: FOG_NEAR, fogFar: FOG_FAR });
+        underlay({ viewProjection, fogNear: FOG_NEAR, fogFar: FOG_FAR, camera, time, width, height });
         gl.useProgram(program);
       }
       gl.activeTexture(gl.TEXTURE0);
