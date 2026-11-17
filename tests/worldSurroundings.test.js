@@ -1,7 +1,7 @@
 // @ts-check
 import { describe, expect, it } from 'vitest';
 import { cutWorld, worldBudgetFor, WINDOW_RADIUS, RECUT_AFTER } from '../src/world/surroundings.js';
-import { budgetFor, buildRoadWorld, codeRoad, ROAD_PATHS } from '../src/world/shapes.js';
+import { budgetFor, buildRoadWorld, codeRoad, ROAD_DENSITY, ROAD_PATHS } from '../src/world/shapes.js';
 import { routeFor } from '../src/world/route.js';
 import { roadAt, roadLength } from '../src/world/roadLayout.js';
 import gate from '../src/content/excerpts/gate.js';
@@ -81,6 +81,18 @@ describe('cutting the world around the camera', () => {
 });
 
 describe('the budget, cut by cut', () => {
+  it('on a phone, the road between stops carries as much code as on a desktop, for its density (Chris, 2026-11-17: "the mobile needs more code on the road itself")', () => {
+    for (const door of /** @type {const} */ (['a', 'b'])) {
+      const { road, parts } = world(door, 'low');
+      const onward = parts.filter((p) => p.name === 'onward-road').reduce((sum, p) => sum + p.shape.glyphs.length, 0);
+      // Glyphs per unit of road between the branch and the bend, against the opening's density and the road's 3.2 width.
+      const from = road.layout.along[0];
+      const to = road.layout.junction;
+      const perArea = onward / ((to - from) * 3.2);
+      expect(perArea / ROAD_DENSITY.low, door).toBeGreaterThan(0.4);
+    }
+  });
+
   it('the long family road (2026-11-17) keeps each landmark’s glyphs from the short road, within 2%, and the opening full', () => {
     // Each family landmark's glyphs on the 14-unit road, measured at the commit before the change.
     const before = { low: 348, mid: 565, high: 885 };

@@ -1,6 +1,6 @@
 // @ts-check
 import { describe, expect, it } from 'vitest';
-import { buildRoadWorld, codeRoad, roadEdges, roadGateway, ROAD_COLORS, EDGE_LINES } from '../src/world/shapes.js';
+import { buildRoadWorld, codeRoad, roadEdges, roadGateway, screenSculpture, ROAD_COLORS, EDGE_LINES, FRAME_INSET } from '../src/world/shapes.js';
 import { packShapes } from '../src/world/worldRenderer.js';
 import { WORLD_VERTEX_SHADER } from '../src/world/worldShaders.js';
 import { routeFor } from '../src/world/route.js';
@@ -8,7 +8,7 @@ import { worldBudgetFor } from '../src/world/surroundings.js';
 import gate from '../src/content/excerpts/gate.js';
 import ambient from '../src/content/excerpts/ambient.js';
 
-/** Chris, 2026-11-16: the road's code moving forward like a stand's, a third of it in colour (orange, sky blue, green), and three lines on each orange edge. */
+/** Chris, 2026-11-16: the road's code moving forward like a stand's, a third of it in colour (orange, sky blue, green); its edges (2026-11-17) a solid green line and an orange one. */
 
 const CODE = 'const road = () => moving.forward();';
 const PATH = /** @type {Array<[number, number]>} */ ([
@@ -57,21 +57,58 @@ describe('the road’s code (Chris, 2026-11-16)', () => {
   });
 });
 
-describe('the road’s orange edges (Chris, 2026-11-16: three lines wide)', () => {
-  it('draws three lines on each side, the outer at the road’s edge, the others inside it, all orange and still', () => {
-    expect(EDGE_LINES).toBe(3);
+describe('the road’s edges (Chris, 2026-11-17: "make the outer line of the roads a solid green … keep the second row in orange")', () => {
+  it('draws a solid green line at the road’s edge and an orange line inside it, both still', () => {
+    expect(EDGE_LINES).toBe(2);
     const edges = roadEdges(CODE, { path: [[0, 0], [0, -30]], width: 3.2, spacing: 0.5 }, 5);
-    /** @type {Set<number>} */
-    const offsets = new Set();
+    /** @type {Map<number, Set<string>>} */
+    const colours = new Map();
     for (let i = 0; i < edges.glyphs.length; i += 1) {
-      offsets.add(Math.round(Math.abs(edges.positions[i * 3]) * 20) / 20);
-      expect(hex(edges.colors[i * 4], edges.colors[i * 4 + 1], edges.colors[i * 4 + 2])).toBe('f97316');
+      const offset = Math.round(Math.abs(edges.positions[i * 3]) * 20) / 20;
+      const set = colours.get(offset) ?? new Set();
+      set.add(hex(edges.colors[i * 4], edges.colors[i * 4 + 1], edges.colors[i * 4 + 2]));
+      colours.set(offset, set);
     }
-    // 15 cm apart, inward from the edge (each within its 2 cm jitter).
-    expect([...offsets].sort()).toEqual([1.3, 1.45, 1.6]);
+    // The outer line at the edge, all green; the orange 15 cm inside it (each within its 2 cm jitter).
+    expect([...colours.keys()].sort()).toEqual([1.45, 1.6]);
+    expect([...(colours.get(1.6) ?? [])]).toEqual(['4ade80']);
+    expect([...(colours.get(1.45) ?? [])]).toEqual(['f97316']);
     expect(edges.stream).toBeUndefined();
-    // Three lines a side, each a character every half unit for 30 units.
-    expect(edges.glyphs.length).toBe(2 * 3 * 61);
+    // Solid: the green a character every quarter unit (twice the spacing's density), the orange every half unit, for 30 units.
+    expect(edges.glyphs.length).toBe(2 * (121 + 61));
+  });
+});
+
+describe('the boards’ borders (Chris, 2026-11-17: "make this green and orange")', () => {
+  it('rims each board in green at its edge and orange just inside it, its face pale', () => {
+    const width = 6;
+    const height = 3.75;
+    const board = screenSculpture(CODE, { width, height, center: [0, 2, 0], count: 4000 }, 9);
+    let green = 0;
+    let orange = 0;
+    for (let i = 0; i < board.glyphs.length; i += 1) {
+      const x = Math.abs(board.positions[i * 3]);
+      const y = Math.abs(board.positions[i * 3 + 1] - 2);
+      const colour = hex(board.colors[i * 4], board.colors[i * 4 + 1], board.colors[i * 4 + 2]);
+      /** How far the glyph is from a rectangle `inset` inside the board's edge (0 on it). @param {number} inset */
+      const off = (inset) => {
+        const hx = width / 2 - inset;
+        const hy = height / 2 - inset;
+        return x <= hx && y <= hy ? Math.min(hx - x, hy - y) : Math.hypot(Math.max(0, x - hx), Math.max(0, y - hy));
+      };
+      if (colour === '4ade80') {
+        green += 1;
+        expect(off(0), `green ${i}`).toBeLessThan(1e-6);
+      } else if (colour === 'f97316') {
+        orange += 1;
+        expect(off(FRAME_INSET), `orange ${i}`).toBeLessThan(1e-6);
+      }
+    }
+    expect(FRAME_INSET).toBeCloseTo(0.12, 9);
+    // Two rims of about the same weight, together about two fifths of the board's characters.
+    expect(green).toBeGreaterThan(600);
+    expect(orange).toBeGreaterThan(600);
+    expect(Math.abs(green / orange - 1)).toBeLessThan(0.15);
   });
 });
 
@@ -93,7 +130,7 @@ describe('the moving road in the renderer', () => {
   });
 });
 
-describe('the budget with three-line edges', () => {
+describe('the budget with the green and orange edges', () => {
   // Each road's landmark glyphs and opening before the change (measured 2026-11-16).
   const BEFORE = {
     a: { low: { landmark: 4184, trunk: 1776 }, mid: { landmark: 5489, trunk: 3848 }, high: { landmark: 7919, trunk: 6808 } },

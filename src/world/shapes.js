@@ -40,7 +40,7 @@ const COLOURED_SHARE = 1 / 3;
  */
 export const ROAD_FLOW_LOOP = 1.6;
 /** The road's orange edges are this many lines wide, this far apart, inward from the edge (Chris, 2026-11-16). */
-export const EDGE_LINES = 3;
+export const EDGE_LINES = 2;
 const EDGE_GAP = 0.15;
 
 /**
@@ -280,11 +280,12 @@ export function scatterCount(density, path, width) {
 }
 
 /**
- * The road's edges: ember characters along each side of `path`, so the road reads as a road and not
- * a scatter (Chris, 2026-11-10), in `EDGE_LINES` lines a side (Chris, 2026-11-16: "three lines
- * wide"), the outer at half `width` from the centre and the others `EDGE_GAP` apart inside it, each
- * line's characters `spacing` apart and staggered a third of that from its neighbour's. They stay
- * still. The characters follow `code` in reading order.
+ * The road's edges: characters along each side of `path`, so the road reads as a road and not a
+ * scatter (Chris, 2026-11-10), in `EDGE_LINES` lines a side (2026-11-16: three; 2026-11-17: "make the
+ * outer line of the roads a solid green … keep the second row in orange"): the outer, green, at half
+ * `width` from the centre with its characters `spacing / 2` apart, so it reads solid; the orange
+ * `EDGE_GAP` inside it, `spacing` apart and staggered a quarter of that. The third line's characters
+ * went to the green one. They stay still. The characters follow `code` in reading order.
  * - `from`: the first characters stand this far along the path (R5: a road that carries on from
  *   another's end keeps its spacing instead of doubling the joint).
  * - `highlights`: edge characters within `HIGHLIGHT_RADIUS` of one of these points are drawn at full
@@ -309,13 +310,15 @@ export function roadEdges(code, { path, width, spacing, from = 0, highlights = [
     total += length;
   }
   const size = 0.1;
-  const perSide = total >= from ? Math.floor((total - from) / spacing) + 1 : 0;
-  /** @type {Array<{ x: number, y: number, z: number, char: string, lit: boolean }>} */
+  /** @type {Array<{ x: number, y: number, z: number, char: string, lit: boolean, colour: number[] }>} */
   const placed = [];
   for (const side of [-1, 1]) {
     for (let line = 0; line < EDGE_LINES; line += 1) {
-      for (let k = 0; k < perSide; k += 1) {
-        const along = Math.min(total, from + k * spacing + (line * spacing) / EDGE_LINES);
+      // The outer line solid: twice as many characters, as many as the third line it replaces gave.
+      const step = line === 0 ? spacing / 2 : spacing;
+      const count = total >= from ? Math.floor((total - from) / step + 1e-9) + 1 : 0;
+      for (let k = 0; k < count; k += 1) {
+        const along = Math.min(total, from + k * step + (line * spacing) / 4);
         const segment = segments.find((s) => along <= s.start + s.length) ?? segments[segments.length - 1];
         const t = segment.length === 0 ? 0 : (along - segment.start) / segment.length;
         const dx = (segment.to[0] - segment.from[0]) / (segment.length || 1);
@@ -328,14 +331,15 @@ export function roadEdges(code, { path, width, spacing, from = 0, highlights = [
         const y = (segment.from[2] ?? 0) + ((segment.to[2] ?? 0) - (segment.from[2] ?? 0)) * t;
         if (openings && openings.points.some(([px, pz]) => Math.hypot(x - px, z - pz) < openings.radius)) continue;
         const lit = highlights.some(([px, pz]) => Math.hypot(x - px, z - pz) <= HIGHLIGHT_RADIUS);
-        placed.push({ x, y, z, char: ink[(k + (side > 0 ? 7 : 0) + line * 13) % ink.length], lit });
+        placed.push({ x, y, z, char: ink[(k + (side > 0 ? 7 : 0) + line * 13) % ink.length], lit, colour: line === 0 ? GREEN : EMBER });
       }
     }
   }
   const shape = emptyShape(placed.length, size);
   const sizes = highlights.length > 0 ? new Float32Array(placed.length).fill(size) : null;
-  placed.forEach(({ x, y, z, char, lit }, i) => {
-    put(shape, i, x, y + 0.02, z, char, EMBER, lit ? 1 : 0.85);
+  placed.forEach(({ x, y, z, char, lit, colour }, i) => {
+    // How I work's commits light their characters in ember on either line, so they stand out on the green.
+    put(shape, i, x, y + 0.02, z, char, lit ? EMBER : colour, lit ? 1 : 0.85);
     if (sizes && lit) sizes[i] = size * 1.6;
   });
   return sizes ? { ...shape, sizes } : shape;
@@ -343,6 +347,9 @@ export function roadEdges(code, { path, width, spacing, from = 0, highlights = [
 
 /** How near a highlight point an edge character must be to light up. */
 const HIGHLIGHT_RADIUS = 0.8;
+
+/** A board's orange rim stands this far inside its green one, in world units (2026-11-17). */
+export const FRAME_INSET = 0.12;
 
 /** Your idea's frame: its edge characters this far apart, and its faint grid inside. */
 const FRAME_SPACING = 0.12;
@@ -525,12 +532,22 @@ export function screenSculpture(code, { width, height, center, count, facing = F
     let u = random() - 0.5;
     let v = random() - 0.5;
     const frame = random() < 0.4;
+    // Two rims (Chris, 2026-11-17: "make this green and orange"): green at the edge, orange `FRAME_INSET` inside it.
+    const inner = frame && random() < 0.5;
     if (frame) {
-      // Snap to one of the four edges.
-      if (random() < 0.5) u = u < 0 ? -0.5 : 0.5;
-      else v = v < 0 ? -0.5 : 0.5;
+      const iu = inner ? FRAME_INSET / width : 0;
+      const iv = inner ? FRAME_INSET / height : 0;
+      // Snap to one of the four edges of its rim.
+      if (random() < 0.5) {
+        u = (u < 0 ? -1 : 1) * (0.5 - iu);
+        v *= 1 - 2 * iv;
+      } else {
+        v = (v < 0 ? -1 : 1) * (0.5 - iv);
+        u *= 1 - 2 * iu;
+      }
     }
-    put(shape, i, center[0] + u * width, center[1] + v * height, center[2] + (random() - 0.5) * 0.4, ink[i % ink.length], frame ? EMBER : PALE, frame ? 0.85 : 0.35 + 0.4 * random());
+    const colour = frame ? (inner ? EMBER : GREEN) : PALE;
+    put(shape, i, center[0] + u * width, center[1] + v * height, center[2] + (random() - 0.5) * 0.4, ink[i % ink.length], colour, frame ? 0.85 : 0.35 + 0.4 * random());
   }
   return orient(shape, center, facing);
 }
@@ -625,7 +642,7 @@ export const SCREEN_FLOOR = Object.freeze({ low: 300, mid: 400, high: 400 });
  * measured so that on both roads and every tier the opening keeps its full density and the landmarks
  * at least nine tenths of their glyphs).
  */
-export const BETWEEN_SHARE = Object.freeze({ low: 0.15, mid: 0.35, high: 0.42 });
+export const BETWEEN_SHARE = Object.freeze({ low: 0.42, mid: 0.35, high: 0.42 });
 /** Half the onward road's width, and half a side path's (R5). */
 const ROAD_HALF = 1.6;
 const SPUR_HALF = 0.8;

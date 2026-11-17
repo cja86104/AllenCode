@@ -110,18 +110,21 @@ describe('world shapes (Code world prototype, Task P1)', () => {
     expect(words).toBe(board);
   });
 
-  it('edges the road with lines of ember characters on both sides, evenly spaced (Chris, 2026-11-10; three lines, 2026-11-16)', () => {
+  it('edges the road with lines of characters on both sides, evenly spaced: the outer solid green, the inner ember (Chris, 2026-11-10; two lines, 2026-11-17)', () => {
     const edges = roadEdges(ambient.code, { path: TRUNK, width: 4, spacing: 0.35 }, 1);
     const length = 37;
-    expect(edges.glyphs.length).toBe(2 * EDGE_LINES * (Math.floor(length / 0.35) + 1));
+    expect(EDGE_LINES).toBe(2);
+    expect(edges.glyphs.length).toBe(2 * (Math.floor(length / 0.175 + 1e-9) + 1 + Math.floor(length / 0.35) + 1));
     const allowed = charsIn(ambient.code);
     for (let i = 0; i < edges.glyphs.length; i += 1) {
       const x = edges.positions[i * 3];
       const z = edges.positions[i * 3 + 2];
-      expect(offEdgeLine(distanceToPath([x, z], TRUNK), 2)).toBeLessThanOrEqual(0.05 + F32);
+      const off = distanceToPath([x, z], TRUNK);
+      expect(offEdgeLine(off, 2)).toBeLessThanOrEqual(0.05 + F32);
       expect(allowed.has(String.fromCharCode(edges.glyphs[i]))).toBe(true);
       const [r, g, b] = edges.colors.subarray(i * 4, i * 4 + 3);
-      expect([r, g, b].map((v) => Math.round(v * 255))).toEqual([0xf9, 0x73, 0x16]);
+      // The outer line at the road's edge (2 from the centre) green, the inner 15 cm in ember.
+      expect([r, g, b].map((v) => Math.round(v * 255))).toEqual(Math.abs(off - 2) < 0.07 ? [0x4a, 0xde, 0x80] : [0xf9, 0x73, 0x16]);
     }
   });
 
@@ -328,7 +331,7 @@ describe('the road’s edges, side paths and stands (Code World R5)', () => {
     }
   });
 
-  it('carries each edge line evenly from the branch onto the road: no gap, no double (three lines, a road that may curve, 2026-11-16)', () => {
+  it('carries each edge line evenly from the branch onto the road: no gap, no double (each line at its own spacing, a road that may curve, 2026-11-17)', () => {
     const business = part('business-edges');
     const onward = part('onward-edges');
     const end = layout.origin;
@@ -352,9 +355,11 @@ describe('the road’s edges, side paths and stands (Code World R5)', () => {
         }
         along.sort((a, b) => a - b);
         expect(along.length, `side ${side}, line ${line}`).toBeGreaterThan(4);
+        // The outer (green) line's characters half the spacing apart, the inner's the spacing.
+        const step = line === 0 ? spacing / 2 : spacing;
         for (let i = 1; i < along.length; i += 1) {
-          expect(along[i] - along[i - 1], `side ${side}, line ${line}`).toBeGreaterThanOrEqual(spacing / 2);
-          expect(along[i] - along[i - 1], `side ${side}, line ${line}`).toBeLessThanOrEqual(spacing * 1.5);
+          expect(along[i] - along[i - 1], `side ${side}, line ${line}`).toBeGreaterThanOrEqual(step / 2);
+          expect(along[i] - along[i - 1], `side ${side}, line ${line}`).toBeLessThanOrEqual(step * 1.5);
         }
       }
     }
@@ -513,14 +518,16 @@ describe('the family road’s world (Code World W3.3)', () => {
 
   it('builds a screen, a stand and a side path per template, nothing for done for you, within every budget', () => {
     for (const tier of /** @type {const} */ (['low', 'mid', 'high'])) {
-      const parts = buildRoadWorld(tier, sources, 1, { stops, layout });
+      // With the budget the site builds the family road with (cut around the camera, 2026-11-16).
+      const budget = worldBudgetFor('b', tier);
+      const parts = buildRoadWorld(tier, sources, 1, { stops, layout, budget });
       for (const stop of stops.slice(0, -1)) {
         expect(parts.find((p) => p.name === `landmark:${stop.id}`)?.shape.glyphs.length, `${tier} ${stop.id}`).toBeGreaterThanOrEqual(400);
         expect(parts.find((p) => p.name === `stand:${stop.id}`)).toBeDefined();
         expect(parts.find((p) => p.name === `spur-road:${stop.id}`)).toBeDefined();
       }
       expect(parts.some((p) => p.name.endsWith(':done-for-you'))).toBe(false);
-      expect(parts.reduce((sum, p) => sum + p.shape.glyphs.length, 0)).toBeLessThanOrEqual(budgetFor(tier));
+      expect(parts.reduce((sum, p) => sum + p.shape.glyphs.length, 0)).toBeLessThanOrEqual(budget);
     }
   });
 });
