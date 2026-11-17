@@ -120,3 +120,34 @@ test('no accessibility violations at Hearth, at a template and at done for you',
   await inChapter(page, 'done-for-you', 0.5);
   await check();
 });
+
+test('the rail’s current stop reads down the line beside it, never out over the page or past either end (Chris, 2026-11-17)', async ({ page }) => {
+  await open(page);
+  await takeFamily(page);
+  for (const id of ROAD) {
+    await inChapter(page, id, 0.5);
+    const box = await page.evaluate(() => {
+      const rect = (/** @type {Element | null} */ el) => {
+        if (!el) throw new Error('missing rail part');
+        const r = el.getBoundingClientRect();
+        return { left: r.left, right: r.right, top: r.top, bottom: r.bottom, width: r.width, height: r.height };
+      };
+      const rail = /** @type {HTMLElement} */ (document.querySelector('[data-rail]'));
+      const ends = rail.querySelectorAll(':scope > span');
+      return {
+        label: rect(rail.querySelector('[aria-current="step"] span')),
+        line: rect(rail.querySelector(':scope > div')),
+        top: rect(ends[0]),
+        bottom: rect(ends[ends.length - 1]),
+      };
+    });
+    // Written down the line, as "empty file" and "shipped" are.
+    expect(box.label.height, id).toBeGreaterThan(box.label.width);
+    // Beside the line, on its left, close to it.
+    expect(box.label.right, id).toBeLessThanOrEqual(box.line.left);
+    expect(box.line.left - box.label.right, id).toBeLessThan(24);
+    // Never past either end's label.
+    expect(box.label.top, id).toBeGreaterThanOrEqual(box.top.bottom);
+    expect(box.label.bottom, id).toBeLessThanOrEqual(box.bottom.top);
+  }
+});

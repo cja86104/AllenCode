@@ -198,6 +198,8 @@ export function createWorldRenderer(canvas, atlas) {
   return {
     /** The renderer's WebGL context, for a layer drawn beneath the glyphs (the ground, 2026-11-16). */
     context: gl,
+    /** The camera of the last frame drawn, which the drive between pages leaves from (W5b), or null. */
+    lastCamera: /** @type {Camera | null} */ (null),
     /**
      * Replaces everything drawn. Returns each shape's place in the buffer, for `render`'s fade.
      * @param {ReadonlyArray<Shape>} shapes
@@ -248,6 +250,7 @@ export function createWorldRenderer(canvas, atlas) {
      *   after the canvas is cleared (the ground, 2026-11-16).
      */
     render(camera, time, { fades = [], cursor, flight: flying, passed = 0, underlay } = {}) {
+      this.lastCamera = camera;
       const viewProjection = viewProjectionFor(camera, width / height);
       const projScale = 1 / Math.tan((camera.fov * Math.PI) / 360);
       gl.useProgram(program);

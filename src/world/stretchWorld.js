@@ -9,6 +9,7 @@ import { roadSizes } from './roadLayout.js';
 import { inkBefore, slabCaret } from './shapes.js';
 import { layoutStretch, STRETCH } from './stretchLayout.js';
 import { buildStretchWorld } from './stretchShapes.js';
+import { driveAt, driveCamera } from './drive.js';
 import { readPicture, screenOf } from './screens.js';
 import { flightBudgetFor, toWorldFlight } from './worldFlight.js';
 
@@ -113,6 +114,12 @@ export function createStretchWorld({ renderer, atlas, tier, canvas, scrim }) {
   let flightFailed = false;
   /** Bumped on every build, so a landing resolved for an old build is dropped. */
   let generation = 0;
+  /**
+   * The drive between pages (W5b), while it plays: when it started, the camera it left from and how
+   * much of the world it left was shown.
+   * @type {{ start: number, from: { eye: Vec3, target: Vec3, fov: number }, shown: number } | null}
+   */
+  let driving = null;
 
   const restoreHeadline = () => {
     if (held) held.style.opacity = '';
@@ -212,6 +219,25 @@ export function createStretchWorld({ renderer, atlas, tier, canvas, scrim }) {
      */
     frame({ stretch, now }) {
       const viewport = { width: window.innerWidth, height: window.innerHeight };
+      // Arriving from another world (the home's, or another stretch) drives here (W5b); a page loaded
+      // directly has drawn nothing yet, so it opens on its stretch as before.
+      if (stretch !== built && !driving && renderer.lastCamera) {
+        const shown = parseFloat(canvas.style.opacity);
+        driving = { start: now, from: renderer.lastCamera, shown: Number.isFinite(shown) ? shown : 1 };
+      }
+      const drive = driving ? driveAt(now - driving.start) : null;
+      if (!drive) driving = null;
+      if (driving && drive?.half === 'out') {
+        // On ahead out of the world it left, still in the renderer, as that world fades.
+        canvas.dataset.drive = 'out';
+        const opacity = driving.shown * drive.alpha;
+        canvas.style.opacity = opacity.toFixed(3);
+        if (opacity > 0) renderer.render(driveCamera(driving.from, drive.travel), now);
+        else renderer.lastCamera = driveCamera(driving.from, drive.travel);
+        return;
+      }
+      if (drive) canvas.dataset.drive = 'in';
+      else delete canvas.dataset.drive;
       if (stretch !== built || viewport.width !== builtWidth || viewport.height !== builtHeight || Object.keys(read).length !== picturesBuilt) build(stretch, viewport);
       const data = canvas.dataset;
       data.page = `stretch:${stretch.id}`;
@@ -227,7 +253,8 @@ export function createStretchWorld({ renderer, atlas, tier, canvas, scrim }) {
       const from = box.top + y;
       const length = Math.max(1, box.height);
       const p = clamp01((y - from) / length);
-      const camera = cameraAt(p, layout.keys);
+      // In to the road's start from behind it, while the drive plays.
+      const camera = drive ? driveCamera(cameraAt(p, layout.keys), drive.travel) : cameraAt(p, layout.keys);
 
       // The page waits for its headline's landing, so it does not rise over the world meanwhile; a new
       // page and its headline are found again.
@@ -280,7 +307,7 @@ export function createStretchWorld({ renderer, atlas, tier, canvas, scrim }) {
 
       // The world fades out over the end of the landing, so the headline lands on today's page, and is
       // not drawn past the stretch.
-      const shown = y > from + length ? 0 : 1 - smoothstep(WORLD_FADE_FROM, 1, landing);
+      const shown = (y > from + length ? 0 : 1 - smoothstep(WORLD_FADE_FROM, 1, landing)) * (drive ? drive.alpha : 1);
       canvas.style.opacity = shown.toFixed(3);
       if (shown > 0) renderer.render(camera, now, { fades, cursor, flight, passed });
 
@@ -289,8 +316,10 @@ export function createStretchWorld({ renderer, atlas, tier, canvas, scrim }) {
       else delete data.flight;
     },
 
-    /** Leaves the stretch: its page shown again, its flight gone, its world rebuilt next time. */
+    /** Leaves the stretch: its page shown again, its flight gone, any drive here dropped, its world rebuilt next time. */
     release() {
+      driving = null;
+      delete canvas.dataset.drive;
       restoreHeadline();
       renderer.setFlight(null);
       built = null;
