@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- Code World W6: before the first paint, an inner page with a stretch of road holds its space when
+    <!-- Code World W6: before the first paint, a page with a stretch of road (every page but the home) holds its space when
          the world is likely to run (no ?world=0, not turned off this visit, no reduced motion, WebGL2), so
          nothing moves as the world arrives; the app keeps the mark in step from then on. -->
     <script>
       (function () {
         try {
-          var path = location.pathname.replace(/\/+$/, '');
-          if (!/^\/(products(\/[^/]+)?|services|templates|about|contact)$/.test(path)) return;
+          // Every page but the home has a stretch (W7: checkout success and the 404 page too).
+          if (location.pathname.replace(/\/+$/, '') === '') return;
           var flag = new URLSearchParams(location.search).get('world');
           var off = flag === '0' || (flag !== '1' && sessionStorage.getItem('allencode:world') === '0');
           if (off || !window.WebGL2RenderingContext || matchMedia('(prefers-reduced-motion: reduce)').matches) return;

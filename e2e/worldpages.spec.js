@@ -15,6 +15,9 @@ const STRETCHES = /** @type {const} */ ([
   ['/templates', 'templates'],
   ['/about', 'about'],
   ['/contact', 'contact'],
+  // W7 (Chris, 2026-11-17: "Their own word road"): checkout success, and the 404 page for any unknown address.
+  ['/checkout-success', 'thank-you'],
+  ['/nope', 'lost'],
 ]);
 
 /** @param {import('@playwright/test').Page} page @param {string} path */
@@ -105,8 +108,8 @@ test.describe('each inner page’s stretch (Code World W5a)', () => {
     await expect.poll(() => page.locator('[data-world-stretch] + *').evaluate((el) => Number(getComputedStyle(el).opacity))).toBe(1);
   });
 
-  test('a page without a stretch shows the field, as today', async ({ page }) => {
-    await page.goto('/checkout-success?world=1');
+  test('with the world off, a page shows the field, as today', async ({ page }) => {
+    await page.goto('/checkout-success?world=0');
     await expect(page.locator('canvas[data-field]')).toBeAttached();
     await expect(page.locator('canvas[data-world]')).toHaveCount(0);
     await expect(page.locator('[data-world-stretch]')).toHaveCount(0);

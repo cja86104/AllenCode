@@ -7,7 +7,7 @@ import { expect, test } from '@playwright/test';
  * in the same frame (CLS was 1.0 on every stretch page before, the page's content pushed out of view).
  */
 
-const PAGES = ['/', '/products', '/products/underfire-ai', '/services', '/templates', '/about', '/contact'];
+const PAGES = ['/', '/products', '/products/underfire-ai', '/services', '/templates', '/about', '/contact', '/checkout-success', '/nope'];
 
 /** The page's layout shift over its first 3 s, as CLS counts it (no shift right after input). @param {import('@playwright/test').Page} page @param {string} path */
 async function shiftOf(page, path) {

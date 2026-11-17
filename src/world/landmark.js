@@ -9,20 +9,6 @@ import { transformPoint, viewProjectionFor } from './matrix.js';
  */
 export const LANDMARK = Object.freeze({ center: /** @type {Vec3} */ ([-6, 1.8, -58]), width: 6, height: 3.75 });
 
-/** Where in the journey the sculpture hands over to the real screen. */
-const RESOLVE_FROM = 0.8;
-const RESOLVE_TO = 0.92;
-
-/**
- * How far the sculpture has turned into the real screen at a scroll progress: 0 before 0.80, 1
- * after 0.92, eased between (Task P4).
- * @param {number} progress
- */
-export function resolveAt(progress) {
-  const t = Math.min(1, Math.max(0, (progress - RESOLVE_FROM) / (RESOLVE_TO - RESOLVE_FROM)));
-  return t * t * (3 - 2 * t);
-}
-
 /** The way the prototype's landmark faces: straight back up the road (+z). */
 const FACING_BACK = /** @type {Vec3} */ ([0, 0, 1]);
 

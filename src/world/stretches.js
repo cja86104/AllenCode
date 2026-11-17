@@ -14,6 +14,9 @@ import { products as catalogue } from '../data/products.js';
 
 /** The empty file, Contact's stop: the site's first screen comes back as the start of a project. */
 const CONTACT_STOP = Object.freeze({ id: 'contact', name: 'Contact', kind: /** @type {const} */ ('audit'), excerptId: 'gate' });
+/** The empty file again for checkout success and the 404 page (W7, Chris 2026-11-17: "Their own word road"). */
+const THANK_YOU_STOP = Object.freeze({ id: 'thank-you', name: 'Thank you', kind: /** @type {const} */ ('audit'), excerptId: 'gate' });
+const LOST_STOP = Object.freeze({ id: 'lost', name: 'Lost', kind: /** @type {const} */ ('audit'), excerptId: 'gate' });
 
 /** @type {Map<string, Stretch | null>} */
 const known = new Map();
@@ -33,8 +36,9 @@ function stretchOf(id, stops, word) {
 }
 
 /**
- * The word a page's road spells (Chris, 2026-11-17: "spell out what it is"): its section, or on a
- * product's page the product's name; null for a page without a stretch.
+ * The word a page's road spells (Chris, 2026-11-17: "spell out what it is"): its section, on a
+ * product's page the product's name, THANK YOU on checkout success and LOST on any unknown page (W7);
+ * null for the home page and an unknown product (which goes on to Products).
  * @param {string} pathname
  * @returns {string | null}
  */
@@ -42,14 +46,18 @@ export function wordFor(pathname) {
   const path = pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname;
   const sections = /** @type {Record<string, string>} */ ({ '/products': 'PRODUCTS', '/services': 'SERVICES', '/templates': 'TEMPLATES', '/about': 'ABOUT', '/contact': 'CONTACT' });
   if (sections[path]) return sections[path];
-  if (!path.startsWith('/products/')) return null;
-  const product = catalogue.find((p) => p.slug === path.slice('/products/'.length));
+  if (path === '/') return null;
+  if (path === '/checkout-success') return 'THANK YOU';
+  const slug = /^\/products\/([^/]+)$/.exec(path)?.[1];
+  if (slug === undefined) return 'LOST';
+  const product = catalogue.find((p) => p.slug === slug);
   return product ? product.name.toUpperCase() : null;
 }
 
 /**
  * The stretch for a path (Chris, 2026-11-16, approved: every stop reuses an approved excerpt):
- * Products, each product page, Services, Templates, About and Contact. Every other page has none.
+ * Products, each product page, Services, Templates, About and Contact; since W7 checkout success and
+ * the 404 page (any unknown address). The home page and an unknown product have none.
  * Built once per page and shared.
  * @param {string} pathname
  * @returns {Stretch | null}
@@ -67,6 +75,8 @@ export function stretchFor(pathname) {
   let stretch = null;
   const word = wordFor(path);
   if (!word) stretch = null;
+  // Any unknown address, a deeper one under /products/ included: the 404 page.
+  else if (word === 'LOST') stretch = stretchOf('lost', [LOST_STOP], word);
   else if (path === '/products') stretch = stretchOf('products', products, word);
   else if (path.startsWith('/products/')) {
     const slug = path.slice('/products/'.length);
@@ -76,6 +86,7 @@ export function stretchFor(pathname) {
   else if (path === '/templates') stretch = stretchOf('templates', houses, word);
   else if (path === '/about') stretch = stretchOf('about', workshop, word);
   else if (path === '/contact') stretch = stretchOf('contact', [CONTACT_STOP], word);
+  else if (path === '/checkout-success') stretch = stretchOf('thank-you', [THANK_YOU_STOP], word);
   known.set(path, stretch);
   return stretch;
 }

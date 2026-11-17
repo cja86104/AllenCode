@@ -39,6 +39,16 @@ test.describe('the hollow mist', () => {
     expect(await coolness(await page.screenshot(), 0.3, 0.7)).toBeGreaterThan(3);
   });
 
+  test('lies on the inner pages’ roads too, with the grid (Chris, 2026-11-17: "all the inner pages need the grid and fog")', async ({ page }) => {
+    for (const path of ['/about', '/products']) {
+      await page.goto(path);
+      await expect(canvas(page)).toHaveAttribute('data-ready', 'true');
+      await expect(canvas(page)).toHaveAttribute('data-page', /^stretch:/);
+      await page.waitForTimeout(600);
+      expect(await coolness(await page.screenshot(), 0.3, 0.7), path).toBeGreaterThan(3);
+    }
+  });
+
   test('keeps the gate clean: no mist before the world’s own file shows', async ({ page }) => {
     await open(page);
     await expect(canvas(page)).toHaveAttribute('data-editor', '0.00');

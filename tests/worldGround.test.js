@@ -1,6 +1,6 @@
 // @ts-check
 import { describe, expect, it } from 'vitest';
-import { createRippleTrail, GROUND_CELL, GROUND_FLAT, groundAt, groundMesh, groundRoads, rayThrough, RIPPLE_GAP, RIPPLE_LIFE, RIPPLE_MAX, traceGround } from '../src/world/ground.js';
+import { createRippleTrail, GROUND_CELL, GROUND_FLAT, groundAt, groundMesh, groundRoads, rayThrough, RIPPLE_GAP, RIPPLE_LIFE, RIPPLE_MAX, stretchGroundRoads, traceGround } from '../src/world/ground.js';
 import { routeFor } from '../src/world/route.js';
 import { roadAt } from '../src/world/roadLayout.js';
 
@@ -39,6 +39,14 @@ describe('the ground', () => {
     const hit = traceGround(opening, [0, 1.6, 0], [1, -0.3, -1], 46);
     expect(hit).not.toBeNull();
     expect(hit?.offRoad).toBeGreaterThan(0.5);
+  });
+
+  it('under an inner page’s straight road: flat, and kept off the road (2026-11-17)', () => {
+    const straight = stretchGroundRoads([[0, 4], [0, -40]]);
+    expect(groundAt(straight, 20, -10).height).toBe(0);
+    expect(groundAt(straight, 0, -10).offRoad).toBeLessThan(0);
+    expect(groundAt(straight, 1.5, -10).offRoad).toBeLessThan(0);
+    expect(groundAt(straight, 8, -10).offRoad).toBeCloseTo(6.4, 5);
   });
 
   it('knows how far off the road a point is: negative on it, by the nearest road’s edge', () => {

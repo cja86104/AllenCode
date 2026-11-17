@@ -41,7 +41,13 @@ describe('each inner page’s stretch of road (Code World W5a)', () => {
     }
   });
 
-  it('the home page, checkout success, unknown pages and unknown products have none', () => {
-    for (const path of ['/', '/checkout-success', '/nope', '/products/nope', '/lab/world']) expect(stretchFor(path)).toBeNull();
+  it('checkout success and any unknown page (the 404): the empty file as a slab (W7, 2026-11-17)', () => {
+    for (const path of ['/checkout-success', '/nope', '/lab/world', '/products/underfire-ai/more']) {
+      expect(stretchFor(path)?.stops.map((s) => [s.kind, s.excerptId]), path).toEqual([['audit', 'gate']]);
+    }
+  });
+
+  it('the home page and unknown products (they go on to Products) have none', () => {
+    for (const path of ['/', '/products/nope']) expect(stretchFor(path)).toBeNull();
   });
 });

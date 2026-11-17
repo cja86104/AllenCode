@@ -72,6 +72,16 @@ export function groundRoads(layout) {
 }
 
 /**
+ * The ground under an inner page's straight road (Chris, 2026-11-17: "all the inner pages need the
+ * grid and fog"): flat, with the grid kept off the road.
+ * @param {ReadonlyArray<Readonly<Point2>>} path The stretch's road.
+ * @returns {GroundRoads}
+ */
+export function stretchGroundRoads(path) {
+  return { hilly: [], flat: [{ path, half: 1.6 }], half: 1.6 };
+}
+
+/**
  * The nearest point of a polyline to (x, z): its distance and the height there.
  * @param {ReadonlyArray<Readonly<Point2>>} path @param {number} x @param {number} z
  */

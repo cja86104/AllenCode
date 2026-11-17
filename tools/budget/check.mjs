@@ -22,19 +22,16 @@ export const BUDGETS = Object.freeze([
   // Phase 8: measured (renderer 4.66 kB, vendor 51.15 kB, world canvas 6.34 kB) plus about 5 percent.
   { name: 'renderer chunk (after first paint)', limitKb: 5, match: (file) => /^FieldScene-.*\.js$/.test(file) },
   { name: 'scroll vendor: GSAP and Lenis (after first paint)', limitKb: 54, match: (file) => /^vendor-scroll-.*\.js$/.test(file) },
-  // The world's canvas with the home's world and the flight in it (W2 revised, R4), and since W4 the
-  // journey rail the home and the lab share, which the bundler puts here: 8.11 kB measured, plus 5 %.
-  // 2026-11-16: the moving, coloured road, its shape, the world cut around the camera and the ground's
-  // hook into the renderer brought it to 8.69 kB; 9 kB, loaded only with the world switched on.
-  { name: 'code world canvas (world only)', limitKb: 9, match: (file) => /^WorldCanvas-.*\.js$/.test(file) },
+  // The world's layer and canvas, one chunk since W7 (2026-11-17): the canvas was its own chunk while the
+  // lab imported it too. Measured together before W7 at 8.69 + 9.06 = 17.75 kB (limits 9 + 12 kB); with
+  // the lab's single-scene mode and its own Lenis gone, 16.13 kB; 17 kB, loaded only with the world on.
+  { name: 'code world layer and canvas (world only)', limitKb: 17, match: (file) => /^WorldLayer-.*\.js$/.test(file) },
   // The world opening, its road stops now today's chapters (W2 revised, R4): 2.15 kB measured, plus 5 %.
   { name: 'code world journey (world only)', limitKb: 2.3, match: (file) => /^WorldJourney-.*\.js$/.test(file) },
-  // The Code world prototype's lab page (/lab/world), which the site never loads (Task P2).
-  { name: 'code world lab (lab route only)', limitKb: 40, match: (file) => /^WorldLab-.*\.js$/.test(file) },
   {
     name: 'any other script chunk',
     limitKb: 12,
-    match: (file, entry) => file.endsWith('.js') && file !== entry.script && !/^(Home|FieldScene|WorldLab|WorldCanvas|WorldJourney|vendor-scroll)-/.test(file),
+    match: (file, entry) => file.endsWith('.js') && file !== entry.script && !/^(Home|FieldScene|WorldLayer|WorldJourney|vendor-scroll)-/.test(file),
   },
 ]);
 

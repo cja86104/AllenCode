@@ -52,9 +52,10 @@ describe('which pages the world draws (Code World W5a)', () => {
     expect(worldPageFrom({ on: false, pathname: '/' })).toBeNull();
   });
 
-  it('none on checkout success, an unknown page, an unknown product or the lab', () => {
-    for (const path of ['/checkout-success', '/nope', '/products/nope', '/products/underfire-ai/more', '/lab/world']) {
-      expect(worldPageFrom({ on: true, pathname: path }), path).toBeNull();
+  it('a stretch on checkout success and any unknown page too (W7); none for an unknown product, which goes on to Products', () => {
+    for (const path of ['/checkout-success', '/nope', '/products/underfire-ai/more', '/lab/world']) {
+      expect(worldPageFrom({ on: true, pathname: path }), path).toBe('stretch');
     }
+    expect(worldPageFrom({ on: true, pathname: '/products/nope' })).toBeNull();
   });
 });

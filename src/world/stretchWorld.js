@@ -37,9 +37,10 @@ const smoothstep = (a, b, x) => {
 const clamp01 = (x) => Math.min(1, Math.max(0, x));
 
 /**
- * The headline's text as it is laid out, line by line (its own breaks), and its font.
+ * The headline's text as it is laid out, line by line (its own breaks), its font, and its alignment
+ * (W7: the 404 and checkout success pages centre theirs).
  * @param {HTMLElement} headline
- * @returns {{ text: string, font: string, fontPx: number }}
+ * @returns {{ text: string, font: string, fontPx: number, align: 'left' | 'center' }}
  */
 function headlineText(headline) {
   const style = getComputedStyle(headline);
@@ -68,13 +69,15 @@ function headlineText(headline) {
     }
   }
   if (current) lines.push(current);
-  return { text: lines.join('\n'), font, fontPx };
+  return { text: lines.join('\n'), font, fontPx, align: style.textAlign === 'center' ? 'center' : 'left' };
 }
 
 /**
  * An inner page's world (Code World W5a):
  * - the stretch's road and landmarks, the camera driving down it with the scroll through the page's
  *   spacer (`[data-world-stretch]`) and resting square on to the lead;
+ * - the ground beneath it, the hollow mist and the cursor's ripples, from the home's surroundings
+ *   (2026-11-17), laid flat under the stretch's road;
  * - the lead's code landing as the page's headline (`main h1`), where the headline stands once the
  *   spacer has scrolled away; the page itself is held back until then, so it does not rise over the
  *   world, and fades in as the world fades out;
@@ -86,9 +89,10 @@ function headlineText(headline) {
  *   tier: 'low' | 'mid' | 'high',
  *   canvas: HTMLCanvasElement,
  *   scrim: HTMLElement | null,
+ *   surroundings?: ReturnType<typeof import('./surroundings.js').createSurroundings> | null,
  * }} deps
  */
-export function createStretchWorld({ renderer, atlas, tier, canvas, scrim }) {
+export function createStretchWorld({ renderer, atlas, tier, canvas, scrim, surroundings = null }) {
   /** @type {Stretch | null} */
   let built = null;
   let builtWidth = 0;
@@ -143,6 +147,8 @@ export function createStretchWorld({ renderer, atlas, tier, canvas, scrim }) {
     layout = layoutStretch(stretch.stops, sizes, viewport);
     const world = buildStretchWorld(tier, { road: ambient.code, stops: stretch.sources }, 1, { stops: stretch.stops, layout, word: stretch.word }, read);
     const placed = renderer.setShapes(world.map((part) => part.shape));
+    // The ground and the mist under the road, as on the home's (Chris, 2026-11-17: "all the inner pages need the grid and fog").
+    surroundings?.stretch(layout.path);
     leadRange = placed[world.findIndex((part) => part.name === `landmark:${stretch.lead.id}`)] ?? null;
     unfinished = null;
     world.forEach((part, i) => {
@@ -178,7 +184,7 @@ export function createStretchWorld({ renderer, atlas, tier, canvas, scrim }) {
       .then(() => {
         const spacer = document.querySelector('[data-world-stretch]');
         if (mine !== generation || !layout || !spacer || !stretch.lead.excerptId) return;
-        const { text, fontPx } = headlineText(target);
+        const { text, fontPx, align } = headlineText(target);
         const code = stretch.sources[stretch.lead.excerptId];
         const lead = layout.landmarks[layout.landmarks.length - 1];
         const rest = cameraAt(1, layout.keys);
@@ -195,7 +201,7 @@ export function createStretchWorld({ renderer, atlas, tier, canvas, scrim }) {
             code,
             sourceBox: { x: face.left + (face.width - size.w) / 2, y: face.top + (face.height - size.h) / 2, ...size },
             codeScale: scale,
-            target: { kind: 'text', text, font, color: [1, 1, 1], align: 'left' },
+            target: { kind: 'text', text, font, color: [1, 1, 1], align },
             targetBox: { x: box.left, y: box.top - end, w: box.width, h: box.height },
             step: Math.max(3, Math.round(fontPx / STEPS_PER_FONT)),
           },
@@ -309,7 +315,8 @@ export function createStretchWorld({ renderer, atlas, tier, canvas, scrim }) {
       // not drawn past the stretch.
       const shown = (y > from + length ? 0 : 1 - smoothstep(WORLD_FADE_FROM, 1, landing)) * (drive ? drive.alpha : 1);
       canvas.style.opacity = shown.toFixed(3);
-      if (shown > 0) renderer.render(camera, now, { fades, cursor, flight, passed });
+      surroundings?.frame({ camera, now, aspect: viewport.width / viewport.height, shown: 1 });
+      if (shown > 0) renderer.render(camera, now, { fades, cursor, flight, passed, underlay: surroundings?.underlay, haze: surroundings?.haze });
 
       data.stretchProgress = p.toFixed(2);
       if (flight) data.flight = `stretch:${stretch.id}`;

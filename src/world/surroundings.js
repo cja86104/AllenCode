@@ -1,6 +1,6 @@
 // @ts-check
 import { budgetFor } from './shapes.js';
-import { createRippleTrail, GROUND_CELL, groundMesh, groundRoads, rayThrough, RIPPLE_LIFE, RIPPLE_MAX, traceGround } from './ground.js';
+import { createRippleTrail, GROUND_CELL, groundMesh, groundRoads, rayThrough, RIPPLE_LIFE, RIPPLE_MAX, stretchGroundRoads, traceGround } from './ground.js';
 
 /** @typedef {import('./shapes.js').Shape} Shape */
 /** @typedef {{ name: string, shape: Shape, stopId?: string, cursor?: number }} Part */
@@ -462,6 +462,15 @@ export function createSurroundings({ tier, renderer, canvas }) {
       roadsOf.set(layout, roads);
       ground.set(groundMesh(roads, center, WINDOW_RADIUS));
       return cutWorld(world, center, WINDOW_RADIUS);
+    },
+    /**
+     * An inner page's ground (2026-11-17): flat under its straight road, centred halfway along it.
+     * @param {ReadonlyArray<[number, number]>} path
+     */
+    stretch(path) {
+      roads = stretchGroundRoads(path);
+      const [a, b] = [path[0], path[path.length - 1]];
+      ground.set(groundMesh(roads, [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2], WINDOW_RADIUS));
     },
     /** The opening's ground, before a door is taken: flat, centred on the trunk and both branches. */
     opening() {

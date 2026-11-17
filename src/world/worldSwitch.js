@@ -104,15 +104,18 @@ const subscribeFailure = (listener) => {
 const STRETCH_PAGES = new Set(['/products', '/services', '/templates', '/about', '/contact', ...products.map((p) => `/products/${p.slug}`)]);
 
 /**
- * Which page of the world a path is, with the world on (Code World W5a): the home page's journey,
- * an inner page's stretch, or none (checkout success, an unknown page, the lab): those keep the field.
+ * Which page of the world a path is, with the world on (Code World W5a): the home page's journey, or
+ * an inner page's stretch: every page but the home has one since W7 (2026-11-17), checkout success and
+ * the 404 page (any unknown address) included; none for an unknown product, which goes on to Products.
  * @param {{ on: boolean, pathname: string }} state
  * @returns {'home' | 'stretch' | null}
  */
 export function worldPageFrom({ on, pathname }) {
   if (!on) return null;
   if (pathname === '/') return 'home';
-  return STRETCH_PAGES.has(pathname.replace(/\/+$/, '')) ? 'stretch' : null;
+  const path = pathname.replace(/\/+$/, '');
+  if (STRETCH_PAGES.has(path)) return 'stretch';
+  return /^\/products\/[^/]+$/.test(path) ? null : 'stretch';
 }
 
 /**

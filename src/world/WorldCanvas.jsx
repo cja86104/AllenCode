@@ -1,21 +1,15 @@
 // @ts-check
 import { useEffect, useRef } from 'react';
-import Lenis from 'lenis';
 import { ATLAS_CELL, ATLAS_FONT, ATLAS_FONT_FAMILY, collectGlyphs, createGlyphAtlas, loadAtlasFont } from '../field/glyphAtlas.js';
 import gate from '../content/excerpts/gate.js';
 import ambient from '../content/excerpts/ambient.js';
 import underfire from '../content/excerpts/product-underfire-ai.js';
-import { buildWorld } from './shapes.js';
-import { cameraAt, frameCamera } from './camera.js';
 import { roadGlyphs } from './route.js';
 import { createHomeWorld } from './homeWorld.js';
 import { createWorldRenderer } from './worldRenderer.js';
 import { createFrameMeter } from './frameMeter.js';
 import { useIsomorphicLayoutEffect } from '../ssr/useHydrated.js';
 
-/** @typedef {import('./camera.js').CameraKey} CameraKey */
-/** @typedef {{ eye: [number, number, number], target: [number, number, number], fov: number }} Camera */
-/** @typedef {{ progress: number, camera: Camera, resolved: number, now: number }} WorldFrame */
 /** @typedef {{ frames: number, medianMs: number, p95Ms: number }} MeterReport */
 
 /** The world is built only from approved code (spec section 5). */
@@ -23,50 +17,39 @@ export const WORLD_SOURCES_APPROVED = Boolean(gate.approved && ambient.approved 
 const SIGN_LABELS = 'business/family/';
 
 /**
- * The world's canvas and frame loop (Code World W1.2), hosted by the lab and the home page: the
- * renderer and its glyph atlas (drawn once the atlas's exact face has loaded), the camera along the
- * journey, framed for the screen's shape, and, for a host that has one, the landmark's hand-over.
- * The host says how far along the journey the visitor is (`getProgress`) and hears every frame
- * (`onFrame`) to move its own words, rail and screens. `ownScroll` steps Lenis from this loop for a
- * host without the site's `ScrollEngine`. Anything that stops the world (no WebGL2, a lost
- * context) calls `onFail`, and the host shows its plain journey.
+ * The world's canvas and frame loop (Code World W1.2), hosted by the world layer: the renderer and its
+ * glyph atlas (drawn once the atlas's exact face has loaded). Anything that stops the world (no WebGL2,
+ * a lost context) calls `onFail`, and the site shows its plain pages.
  *
- * With `home` (the home page, Code World R4) the frame is the home's world's (`createHomeWorld`): the
- * camera follows the page's track, today's chapters play over it, and their flights land in it. A
- * scrim behind a resting chapter's words is drawn with the canvas. On an inner page with a stretch
- * (`getPage`, Code World W5a) the frame is the stretch's world (`createStretch`, passed in so its code
- * stays out of this chunk); the canvas and renderer are kept from page to page, and a page with
- * neither is not drawn. Without `home` (the lab) it draws the prototype's world along `keys`.
+ * On the home page the frame is the home's world's (`createHomeWorld`): the camera follows the page's
+ * track, today's chapters play over it, and their flights land in it. A scrim behind a resting
+ * chapter's words is drawn with the canvas. On an inner page with a stretch (`getPage`, Code World W5a)
+ * the frame is the stretch's world (`createStretch`, passed in so its code stays out of this chunk);
+ * the canvas and renderer are kept from page to page, and a page with neither is not drawn. (The lab's
+ * single-scene mode went with the lab, W7.)
  *
  * @param {{
- *   getProgress?: () => number,
  *   tier: 'low' | 'mid' | 'high',
- *   home?: {
+ *   home: {
  *     route: import('./route.js').Route,
  *     getTrack: () => import('./homeWorld.js').TrackState | null,
  *     getPage: () => 'home' | import('./stretches.js').Stretch | null,
  *     createStretch: typeof import('./stretchWorld.js').createStretchWorld,
  *     createSurroundings?: typeof import('./surroundings.js').createSurroundings,
  *   },
- *   keys?: ReadonlyArray<CameraKey>,
- *   ownScroll?: boolean,
- *   landmarkResolve?: (progress: number) => number,
- *   onFrame?: (frame: WorldFrame) => void,
  *   onMeter?: (report: MeterReport) => void,
  *   onFail: () => void,
  * }} props
  */
-export default function WorldCanvas({ getProgress, tier, home, keys, ownScroll = false, landmarkResolve, onFrame, onMeter, onFail }) {
+export default function WorldCanvas({ tier, home, onMeter, onFail }) {
   const canvasRef = useRef(/** @type {HTMLCanvasElement | null} */ (null));
   const scrimRef = useRef(/** @type {HTMLDivElement | null} */ (null));
   // The latest callbacks and journey, read by the frame loop without restarting it.
-  const latest = useRef({ getProgress, home, keys, landmarkResolve, onFrame, onMeter, onFail });
+  const latest = useRef({ home, onMeter, onFail });
   useIsomorphicLayoutEffect(() => {
-    latest.current = { getProgress, home, keys, landmarkResolve, onFrame, onMeter, onFail };
+    latest.current = { home, onMeter, onFail };
   });
   const metered = Boolean(onMeter);
-  // The home may take a road at any time, so its atlas holds every road's characters.
-  const homed = home !== undefined;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -76,21 +59,19 @@ export default function WorldCanvas({ getProgress, tier, home, keys, ownScroll =
     let interval = 0;
     /** @type {ReturnType<typeof createWorldRenderer> | null} */
     let renderer = null;
-    /** @type {{ start: number, count: number } | null} */
-    let landmarkRange = null;
     /** @type {ReturnType<typeof createHomeWorld> | null} */
     let homeWorld = null;
     /** @type {ReturnType<typeof import('./stretchWorld.js').createStretchWorld> | null} */
     let stretchWorld = null;
+    /** The ground, the mist and the ripples, shared by the home's world and the stretches (2026-11-17). */
+    /** @type {ReturnType<typeof import('./surroundings.js').createSurroundings> | null} */
+    let surroundings = null;
     /** What the last frame drew: the home's world, a stretch, or nothing. */
     /** @type {'home' | 'stretch' | 'none'} */
     let drew = 'home';
     /** @type {{ indexOf: (char: string) => number } | null} */
     let glyphs = null;
     const meter = createFrameMeter();
-    const root = document.documentElement;
-    const lenis = ownScroll ? new Lenis() : null;
-    if (lenis) root.dataset.scrollEngine = 'on';
 
     const resize = () => renderer?.resize(window.innerWidth, window.innerHeight, Math.min(window.devicePixelRatio || 1, 2));
     const lost = (/** @type {Event} */ event) => {
@@ -106,17 +87,13 @@ export default function WorldCanvas({ getProgress, tier, home, keys, ownScroll =
       if (cancelled) return;
       canvas.dataset.atlasFont = faces.length > 0 ? 'loaded' : 'fallback';
       try {
-        const glyphSources = [gate.code, ambient.code, underfire.code, SIGN_LABELS, ...(homed ? [roadGlyphs()] : [])];
+        // The home may take a road at any time, so the atlas holds every road's characters.
+        const glyphSources = [gate.code, ambient.code, underfire.code, SIGN_LABELS, roadGlyphs()];
         const atlas = createGlyphAtlas(collectGlyphs(glyphSources), { cell: ATLAS_CELL, font: ATLAS_FONT });
         renderer = createWorldRenderer(canvas, atlas);
         glyphs = atlas;
-        if (homed) {
-          homeWorld = createHomeWorld({ renderer, atlas, tier, canvas, scrim: scrimRef.current, surroundings: latest.current.home?.createSurroundings?.({ tier, renderer, canvas }) ?? null });
-        } else {
-          const world = buildWorld(tier, { gate: gate.code, road: ambient.code, landmark: underfire.code }, 1);
-          const ranges = renderer.setShapes(world.map((part) => part.shape));
-          landmarkRange = ranges[world.findIndex((part) => part.name === 'landmark')] ?? null;
-        }
+        surroundings = latest.current.home.createSurroundings?.({ tier, renderer, canvas }) ?? null;
+        homeWorld = createHomeWorld({ renderer, atlas, tier, canvas, scrim: scrimRef.current, surroundings });
       } catch {
         latest.current.onFail();
         return;
@@ -124,12 +101,11 @@ export default function WorldCanvas({ getProgress, tier, home, keys, ownScroll =
       resize();
       const loop = (/** @type {number} */ now) => {
         if (cancelled || !renderer) return;
-        lenis?.raf(now);
-        const { getProgress: progressOf, home: host, keys: hostKeys, landmarkResolve: resolveOf, onFrame: report } = latest.current;
-        if (homeWorld && host) {
+        const { home: host } = latest.current;
+        if (homeWorld) {
           const page = host.getPage();
           if (page && page !== 'home' && glyphs) {
-            stretchWorld ??= host.createStretch({ renderer, atlas: glyphs, tier, canvas, scrim: scrimRef.current });
+            stretchWorld ??= host.createStretch({ renderer, atlas: glyphs, tier, canvas, scrim: scrimRef.current, surroundings });
             if (drew === 'home') homeWorld.reset();
             drew = 'stretch';
             stretchWorld.frame({ stretch: page, now });
@@ -144,14 +120,6 @@ export default function WorldCanvas({ getProgress, tier, home, keys, ownScroll =
               canvas.style.opacity = '0';
             }
           }
-        } else {
-          const progress = Math.min(1, Math.max(0, progressOf ? progressOf() : 0));
-          const camera = frameCamera(cameraAt(progress, hostKeys), window.innerWidth / window.innerHeight);
-          const resolved = resolveOf ? resolveOf(progress) : 0;
-          renderer.render(camera, now, { fades: resolveOf && landmarkRange ? [{ ...landmarkRange, amount: 1 - resolved }] : [] });
-          if (resolveOf) canvas.dataset.landmarkFade = (1 - resolved).toFixed(2);
-          report?.({ progress, camera, resolved, now });
-          canvas.dataset.progress = progress.toFixed(3);
         }
         meter.tick(now);
         canvas.dataset.ready = 'true';
@@ -174,28 +142,22 @@ export default function WorldCanvas({ getProgress, tier, home, keys, ownScroll =
       stretchWorld?.release();
       homeWorld?.destroy();
       renderer?.destroy();
-      if (lenis) {
-        lenis.destroy();
-        delete root.dataset.scrollEngine;
-      }
       delete canvas.dataset.ready;
     };
-  }, [tier, ownScroll, metered, homed]);
+  }, [tier, metered]);
 
   return (
     <>
       <canvas ref={canvasRef} data-world aria-hidden="true" className="fixed inset-0 h-screen w-screen" />
-      {homed && (
-        // Behind a resting chapter's words, so they read over the world: from the left on a screen at
-        // least as wide as tall (words left, screen right), from the top otherwise (words above).
-        <div
-          ref={scrimRef}
-          data-world-scrim
-          aria-hidden="true"
-          style={{ opacity: 0 }}
-          className="pointer-events-none fixed inset-0 bg-gradient-to-b from-night/85 via-night/30 to-transparent to-45% transition-opacity duration-500 wide:bg-gradient-to-r wide:via-night/40 wide:to-55%"
-        />
-      )}
+      {/* Behind a resting chapter's words, so they read over the world: from the left on a screen at
+          least as wide as tall (words left, screen right), from the top otherwise (words above). */}
+      <div
+        ref={scrimRef}
+        data-world-scrim
+        aria-hidden="true"
+        style={{ opacity: 0 }}
+        className="pointer-events-none fixed inset-0 bg-gradient-to-b from-night/85 via-night/30 to-transparent to-45% transition-opacity duration-500 wide:bg-gradient-to-r wide:via-night/40 wide:to-55%"
+      />
     </>
   );
 }

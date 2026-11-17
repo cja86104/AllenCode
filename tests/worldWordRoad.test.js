@@ -111,6 +111,12 @@ describe('the stretch: one screen at the end of a short road', () => {
     expect(wordFor('/contact')).toBe('CONTACT');
     expect(wordFor('/products/underfire-ai')).toBe('UNDERFIRE AI');
     expect(wordFor('/products/my-teachers-toolbox')).toBe('MY TEACHERS TOOLBOX');
-    expect(wordFor('/nope')).toBeNull();
+    // W7 (Chris, 2026-11-17: "Their own word road"): checkout success and any unknown page (the 404).
+    expect(wordFor('/checkout-success')).toBe('THANK YOU');
+    expect(wordFor('/nope')).toBe('LOST');
+    expect(wordFor('/lab/world')).toBe('LOST');
+    // The home page has its own road; an unknown product goes on to Products.
+    expect(wordFor('/')).toBeNull();
+    expect(wordFor('/products/nope')).toBeNull();
   });
 });

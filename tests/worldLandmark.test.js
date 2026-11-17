@@ -1,22 +1,10 @@
 // @ts-check
 import { describe, expect, it } from 'vitest';
-import { LANDMARK, landmarkRect, resolveAt } from '../src/world/landmark.js';
+import { LANDMARK, landmarkRect } from '../src/world/landmark.js';
 import { cameraAt, frameCamera } from '../src/world/camera.js';
 import { packShapes } from '../src/world/worldRenderer.js';
 
 describe('the landmark resolves into its real screen (Code world prototype, Task P4)', () => {
-  it('resolves from 0.80 to 0.92 of the journey: none before, all after, never backwards', () => {
-    expect(resolveAt(0)).toBe(0);
-    expect(resolveAt(0.8)).toBe(0);
-    expect(resolveAt(0.92)).toBe(1);
-    expect(resolveAt(1)).toBe(1);
-    let previous = 0;
-    for (let p = 0.8; p <= 0.92; p += 0.005) {
-      expect(resolveAt(p)).toBeGreaterThanOrEqual(previous);
-      previous = resolveAt(p);
-    }
-  });
-
   it('is the shape of the real screen: 16:10, like the 1280 x 800 poster', () => {
     expect(LANDMARK.width / LANDMARK.height).toBeCloseTo(1280 / 800, 6);
   });
