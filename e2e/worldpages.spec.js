@@ -114,7 +114,7 @@ test.describe('each inner page’s stretch (Code World W5a)', () => {
 
   test('switched off, no page has a stretch, and every headline reads', async ({ page }) => {
     for (const [path] of STRETCHES) {
-      await page.goto(path);
+      await page.goto(`${path}?world=0`);
       await expect(page.locator('main h1').first()).toBeVisible();
       await expect(page.locator('[data-world-stretch]')).toHaveCount(0);
       await expect(page.locator('canvas[data-world]')).toHaveCount(0);

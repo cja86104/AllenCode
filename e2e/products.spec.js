@@ -1,5 +1,5 @@
 // @ts-check
-import { expect, test } from '@playwright/test';
+import { expect, test } from './plain.js';
 import { visibleCodePixels } from './pixels.js';
 import crewExcerpt from '../src/content/excerpts/product-crew-advisors.js';
 import { openWithDoor } from './door.js';

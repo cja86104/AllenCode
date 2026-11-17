@@ -1,5 +1,5 @@
 // @ts-check
-import { expect, test } from '@playwright/test';
+import { expect, test } from './plain.js';
 
 const SITE = 'https://www.allencodeco.com';
 

@@ -5,6 +5,7 @@ import { Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Magnetic from './Magnetic';
 import { useDoor } from '../door/DoorProvider.jsx';
+import PlainViewToggle from './PlainViewToggle.jsx';
 
 const LINKS = Object.freeze([
   { to: '/products', label: 'Products' },
@@ -137,6 +138,7 @@ export default function Nav({ overlay = false }) {
                 </NavLink>
               ))}
               <DoorSwitcher className="mt-3 w-fit" />
+              <PlainViewToggle className="mt-4" />
               <Link
                 to={action.to}
                 viewTransition

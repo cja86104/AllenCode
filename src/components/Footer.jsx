@@ -6,6 +6,7 @@ import { services } from '../data/services.js';
 import { templateCategories } from '../data/templates.js';
 import { useHydrated } from '../ssr/useHydrated.js';
 import { BUILD_YEAR } from '../ssr/buildYear.js';
+import PlainViewToggle from './PlainViewToggle.jsx';
 
 /**
  * @param {{ title: string, links: { label: string, to: string }[] }} props
@@ -64,7 +65,10 @@ export default function Footer() {
         </div>
         <div className="mt-16 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 text-xs text-white/50 sm:flex-row">
           <p>© {year} Allen Code Co. All rights reserved.</p>
-          <p className="mono uppercase tracking-widest">Designed &amp; built by Chris Allen</p>
+          <div className="flex flex-col items-center gap-4 sm:flex-row sm:gap-8">
+            <PlainViewToggle />
+            <p className="mono uppercase tracking-widest">Designed &amp; built by Chris Allen</p>
+          </div>
         </div>
       </div>
     </footer>

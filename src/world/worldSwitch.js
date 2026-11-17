@@ -1,5 +1,5 @@
 // @ts-check
-import { useEffect, useState, useSyncExternalStore } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import { useHydrated } from '../ssr/useHydrated.js';
 import { supportsWebGL2, usePrefersReducedMotion } from '../field/environment.js';
@@ -9,44 +9,77 @@ import { products } from '../data/products.js';
 export const WORLD_STORAGE_KEY = 'allencode:world';
 
 /**
- * Whether the world is switched on: never before the page has hydrated (the prebuilt HTML never
- * depends on it); `?world=1` on, `?world=0` off, otherwise what the session remembers.
+ * Whether the world is switched on (on by default since W6, Chris 2026-11-17: "Everyone now"): never
+ * before the page has hydrated (the prebuilt HTML never depends on it); `?world=0` off and `?world=1`
+ * on; otherwise on unless this visit turned it off (the plain-view toggle, or an earlier `?world=0`).
  * @param {{ hydrated: boolean, flag: string | null, stored: string | null }} state
  */
 export function worldModeFrom({ hydrated, flag, stored }) {
   if (!hydrated) return false;
   if (flag === '1') return true;
   if (flag === '0') return false;
-  return stored === '1';
+  return stored !== '0';
 }
+
+/** The visit's choice when storage is blocked: kept for the page's life instead. @type {string | null} */
+let remembered = null;
+/** @type {Set<() => void>} */
+const preferenceListeners = new Set();
 
 /** @returns {string | null} */
 function readStored() {
   try {
     return window.sessionStorage.getItem(WORLD_STORAGE_KEY);
   } catch {
-    return null;
+    return remembered;
   }
 }
 
+/** Keeps the visit's choice ('0' off, '1' on) and tells whoever reads it. @param {'0' | '1'} value */
+function store(value) {
+  remembered = value;
+  try {
+    window.sessionStorage.setItem(WORLD_STORAGE_KEY, value);
+  } catch {
+    // Storage is blocked: the choice lasts as long as the page.
+  }
+  preferenceListeners.forEach((listener) => listener());
+}
+
+/** @param {() => void} listener */
+const subscribePreference = (listener) => {
+  preferenceListeners.add(listener);
+  return () => preferenceListeners.delete(listener);
+};
+
 /**
- * The switch for the Code World on the home page (`/?world=1`), kept for the session so the way
- * back from an inner page keeps it. Blocked storage simply forgets it.
+ * Turns the plain view on (the world off) or off, for the visit (the footer's and phone menu's
+ * toggle, W6). The page changes at once.
+ * @param {boolean} plain
+ */
+export function setPlainView(plain) {
+  store(plain ? '0' : '1');
+}
+
+/** Whether this visit has turned the world off. @returns {boolean} */
+export function usePlainView() {
+  return useSyncExternalStore(subscribePreference, () => readStored() === '0', () => false);
+}
+
+/**
+ * The switch for the Code World, on by default, kept for the visit: `?world=0` and `?world=1` are
+ * remembered, so the way back from another page keeps them.
  * @returns {boolean}
  */
 export function useWorldMode() {
   const hydrated = useHydrated();
   const [searchParams] = useSearchParams();
   const flag = searchParams.get('world');
+  const stored = useSyncExternalStore(subscribePreference, readStored, () => null);
   useEffect(() => {
-    try {
-      if (flag === '1') window.sessionStorage.setItem(WORLD_STORAGE_KEY, '1');
-      else if (flag === '0') window.sessionStorage.removeItem(WORLD_STORAGE_KEY);
-    } catch {
-      // Storage is blocked: the switch applies to this address only.
-    }
+    if (flag === '1' || flag === '0') store(flag);
   }, [flag]);
-  return worldModeFrom({ hydrated, flag, stored: hydrated ? readStored() : null });
+  return worldModeFrom({ hydrated, flag, stored: hydrated ? stored : null });
 }
 
 /** Set once the world cannot run on this page load (no WebGL2 after all, a lost context). */
@@ -91,11 +124,26 @@ export function worldPageFrom({ on, pathname }) {
 export function useWorldPage() {
   const switchedOn = useWorldMode();
   const { pathname } = useLocation();
+  const capable = useWorldCapable();
+  return worldPageFrom({ on: switchedOn && capable, pathname });
+}
+
+/** WebGL2, probed once for the page; the probe's own context is released at once (environment.js). @type {boolean | undefined} */
+let webgl2;
+
+/**
+ * Whether the world can run here: the browser has WebGL2, the visitor has not asked for reduced
+ * motion, and the world has not failed on this page load. False before hydration, so the prebuilt
+ * HTML never depends on it.
+ * @returns {boolean}
+ */
+export function useWorldCapable() {
+  const hydrated = useHydrated();
   const reducedMotion = usePrefersReducedMotion();
   const worldFailed = useSyncExternalStore(subscribeFailure, () => failed, () => false);
-  // Probed once; the probe's own context is released at once (environment.js).
-  const [webgl2] = useState(() => typeof document !== 'undefined' && supportsWebGL2());
-  return worldPageFrom({ on: switchedOn && webgl2 && !reducedMotion && !worldFailed, pathname });
+  if (!hydrated) return false;
+  webgl2 ??= supportsWebGL2();
+  return webgl2 && !reducedMotion && !worldFailed;
 }
 
 /**

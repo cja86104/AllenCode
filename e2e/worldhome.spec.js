@@ -25,10 +25,12 @@ async function forkMiddle(page) {
   });
 }
 
-test('without the switch the home page is today’s: no world, and its prebuilt HTML knows nothing of it', async ({ page, request }) => {
+test('the world is on by default (W6, Chris 2026-11-17: "Everyone now"); its prebuilt HTML knows nothing of it, and ?world=0 gives today’s page', async ({ page, request }) => {
   const body = await (await request.get('/')).text();
   expect(body).not.toContain('data-world');
   await page.goto('/');
+  await expect(page.locator('canvas[data-world][data-ready="true"]')).toHaveCount(1);
+  await page.goto('/?world=0');
   await expect(page.locator('[data-chapter="gate"]')).toHaveCount(1);
   await expect(page.locator('canvas[data-world]')).toHaveCount(0);
 });

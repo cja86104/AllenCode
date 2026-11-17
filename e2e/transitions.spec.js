@@ -1,5 +1,5 @@
 // @ts-check
-import { expect, test } from '@playwright/test';
+import { expect, test } from './plain.js';
 
 /** Pages reached from the primary nav, with a word their headline contains. */
 const NAV_PAGES = [

@@ -1,6 +1,6 @@
 // @ts-check
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test } from '@playwright/test';
+import { expect, test } from './plain.js';
 import { openWithDoor } from './door.js';
 
 /** @param {import('@playwright/test').Page} page */

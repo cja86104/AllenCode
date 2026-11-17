@@ -1,5 +1,5 @@
 // @ts-check
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { Outlet, RouterProvider, createBrowserRouter } from 'react-router-dom';
 import { Analytics } from '@vercel/analytics/react';
 import Nav from './components/Nav';
@@ -19,6 +19,7 @@ import CheckoutSuccess from './pages/CheckoutSuccess';
 import NotFound from './pages/NotFound';
 import RouteError from './pages/RouteError.jsx';
 import { useWorldPage } from './world/worldSwitch.js';
+import { useHydrated } from './ssr/useHydrated.js';
 
 // The home page is the Source to Screen experience. It loads on demand so its scenes and excerpts
 // add nothing to the bundle the inner pages download (spec section 9).
@@ -36,6 +37,12 @@ const WorldLayer = lazy(() => import('./world/WorldLayer.jsx'));
  */
 function AppShell() {
   const world = useWorldPage();
+  const hydrated = useHydrated();
+  // The stretch held before the first paint (index.html) follows whether one is drawn, once the page
+  // knows (W6): until hydration the held space stands in for the spacer.
+  useEffect(() => {
+    if (hydrated) document.documentElement.toggleAttribute('data-stretch-ahead', world === 'stretch');
+  }, [hydrated, world]);
   return (
     <DoorProvider>
       {/* The first thing a keyboard reaches: straight past the nav and the pinned scenes' chrome. */}

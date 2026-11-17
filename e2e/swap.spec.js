@@ -1,5 +1,5 @@
 // @ts-check
-import { expect, test } from '@playwright/test';
+import { expect, test } from './plain.js';
 import { products } from '../src/data/products.js';
 import { openWithDoor } from './door.js';
 

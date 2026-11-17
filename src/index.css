@@ -179,3 +179,11 @@ html.lenis {
     transition: none;
   }
 }
+
+/* Code World W6: an inner page's stretch of road, held before the first paint (index.html's script),
+   until the world's own spacer (App.jsx) takes its place in the same frame. */
+html[data-stretch-ahead] #main:not(:has(> [data-world-stretch]))::before {
+  content: '';
+  display: block;
+  height: 150vh;
+}

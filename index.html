@@ -3,6 +3,23 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Code World W6: before the first paint, an inner page with a stretch of road holds its space when
+         the world is likely to run (no ?world=0, not turned off this visit, no reduced motion, WebGL2), so
+         nothing moves as the world arrives; the app keeps the mark in step from then on. -->
+    <script>
+      (function () {
+        try {
+          var path = location.pathname.replace(/\/+$/, '');
+          if (!/^\/(products(\/[^/]+)?|services|templates|about|contact)$/.test(path)) return;
+          var flag = new URLSearchParams(location.search).get('world');
+          var off = flag === '0' || (flag !== '1' && sessionStorage.getItem('allencode:world') === '0');
+          if (off || !window.WebGL2RenderingContext || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+          document.documentElement.setAttribute('data-stretch-ahead', '');
+        } catch (e) {
+          // Storage or matchMedia unavailable: hold nothing; the page is as it is.
+        }
+      })();
+    </script>
     <title>Allen Code Co. — Custom Software, Web Design & AI for Real Businesses</title>
     <meta name="description" content="Custom development, web design, UI/UX, and AI integration — built around your business. Tailored work for small business owners and founders." />
     <meta name="theme-color" content="#0a0a0a" />

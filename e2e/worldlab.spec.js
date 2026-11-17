@@ -147,6 +147,8 @@ test.describe('scroll, stops and the rail (Task P3)', () => {
   });
 
   test('leaving the lab removes the world, its rail and its stops', async ({ page }) => {
+    // For the home page to be the plain one (the world is on by default since W6), as a visit that chose "Plain view".
+    await page.addInitScript(() => window.sessionStorage.setItem('allencode:world', '0'));
     await page.goto(LAB);
     await page.locator('canvas[data-world][data-ready="true"]').waitFor();
     await page.getByRole('link', { name: /allencodeco\.com/ }).click();
