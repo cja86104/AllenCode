@@ -1,17 +1,7 @@
 // @ts-check
-import {
-  budgetFor,
-  codeRoad,
-  EDGE_SPACING_BY_TIER,
-  editorSlab,
-  landmarkStand,
-  ROAD_DENSITY,
-  roadEdges,
-  scatterCount,
-  SCREEN_FLOOR,
-  screenSculpture,
-  unfinishedSlab,
-} from './shapes.js';
+import { budgetFor, EDGE_SPACING_BY_TIER, editorSlab, landmarkStand, roadEdges, SCREEN_FLOOR, screenSculpture, unfinishedSlab } from './shapes.js';
+import { STRETCH_LEAD_AT } from './stretchLayout.js';
+import { wordRoad } from './wordRoad.js';
 import { landedShape } from './worldFlight.js';
 
 /** @typedef {import('./shapes.js').Shape} Shape */
@@ -20,23 +10,26 @@ import { landedShape } from './worldFlight.js';
 
 /** The stretch's road is as wide as the home road beyond the fork. */
 const ROAD_WIDTH = 3.2;
+/** The word runs from the road's origin (its belt wraps there) to this short of the lead. */
+const WORD_SHORT_OF_LEAD = 2;
 
 /**
- * An inner page's world (Code World W5a): its straight road of the home road's code at the
- * opening's density, ember edges, and a landmark on a stand for each stop: a screen sculpture of its
- * excerpt for a product, service, template or portrait (with its picture in characters once read,
- * tagged by its place so the renderer shows it once passed, as on the home road), Crew Advisors' file
- * unfinished with its cursor, and the audit's and the empty file's code as slabs. Within the tier's
- * budget: edges, stands and slabs are exact, the road's scatter is laid by `ROAD_DENSITY` and gives way
- * so every screen keeps `SCREEN_FLOOR`, and the screens share what is left.
+ * An inner page's world (Code World W5a; 2026-11-17: "just have the path leading forward … with the
+ * screen at the end and that word for what section being the scrolling road"): its straight road, the
+ * page's word spelled along it in big letters of the road's characters running forward (`wordRoad`),
+ * its green and orange edges, and its one stop on a stand at the end: a screen sculpture of its excerpt
+ * for a product, service, template or portrait (with its picture in characters once read, tagged so the
+ * renderer shows it once its code lifts off), Crew Advisors' file unfinished with its cursor, or the
+ * empty file's code as a slab. Within the tier's budget: the word, edges, stand and slabs are exact, and
+ * a screen takes what is left.
  * @param {Tier} tier
  * @param {{ road: string, stops: Readonly<Record<string, string>> }} sources The road's code and each stop's by excerpt id.
  * @param {number} seed
- * @param {{ stops: ReadonlyArray<import('./roads.js').RoadStop>, layout: ReturnType<typeof import('./stretchLayout.js').layoutStretch> }} stretch
+ * @param {{ stops: ReadonlyArray<import('./roads.js').RoadStop>, layout: ReturnType<typeof import('./stretchLayout.js').layoutStretch>, word: string }} stretch
  * @param {Readonly<Record<string, Pixels>>} [landed] Each screen landmark's picture, once read.
  * @returns {Array<{ name: string, shape: Shape, stopId?: string, cursor?: number }>}
  */
-export function buildStretchWorld(tier, sources, seed, { stops, layout }, landed = {}) {
+export function buildStretchWorld(tier, sources, seed, { stops, layout, word }, landed = {}) {
   const edges = roadEdges(sources.road, { path: layout.path, width: ROAD_WIDTH, spacing: EDGE_SPACING_BY_TIER[tier] }, seed + 1);
   const stands = layout.landmarks.map((landmark, n) => landmarkStand(sources.road, landmark, seed + 10 + n));
 
@@ -58,17 +51,14 @@ export function buildStretchWorld(tier, sources, seed, { stops, layout }, landed
     }
   });
 
-  const fixed = [edges, ...stands, ...exact.map((part) => part.shape)].reduce((sum, shape) => sum + shape.glyphs.length, 0);
-  let scatter = scatterCount(ROAD_DENSITY[tier], layout.path, ROAD_WIDTH);
-  const floor = SCREEN_FLOOR[tier];
-  // The budget, not the density, is the limit: the scatter gives way so every screen keeps its floor.
-  scatter = Math.max(0, Math.min(scatter, budgetFor(tier) - fixed - floor * screens.length));
-  const remainder = budgetFor(tier) - fixed - scatter;
-  if (remainder < floor * screens.length) throw new Error(`The ${tier} budget leaves too few glyphs for the stretch's screens.`);
+  const road = wordRoad(word, { near: 0, far: -(STRETCH_LEAD_AT - WORD_SHORT_OF_LEAD), width: ROAD_WIDTH }, sources.road, seed + 2);
+  const fixed = [road, edges, ...stands, ...exact.map((part) => part.shape)].reduce((sum, shape) => sum + shape.glyphs.length, 0);
+  const remainder = budgetFor(tier) - fixed;
+  if (remainder < SCREEN_FLOOR[tier] * screens.length) throw new Error(`The ${tier} budget leaves too few glyphs for the stretch's screen.`);
   const perScreen = screens.length > 0 ? Math.floor(remainder / screens.length) : 0;
 
   return [
-    { name: 'road', shape: codeRoad(sources.road, { path: layout.path, width: ROAD_WIDTH, count: scatter }, seed + 2) },
+    { name: 'road', shape: road },
     { name: 'edges', shape: edges },
     ...layout.landmarks.map((landmark, n) => ({ name: `stand:${landmark.stopId}`, shape: stands[n] })),
     ...screens.flatMap(({ stopId, landmark, code, place }, n) => {

@@ -69,9 +69,9 @@ function AppShell() {
       <div className="relative flex min-h-screen flex-col overflow-x-clip">
         <Nav overlay />
         <main id="main" tabIndex={-1} className="flex-1 focus:outline-none">
-          {/* An inner page's stretch of road (Code World W5a): a screen and a half of the world before
+          {/* An inner page’s stretch of road (Code World W5a; a screen since 2026-11-17) of the world before
               the page, in world mode only, after hydration; the world draws it. */}
-          {world === 'stretch' && <div data-world-stretch aria-hidden="true" className="h-[150vh]" />}
+          {world === 'stretch' && <div data-world-stretch aria-hidden="true" className="h-[100vh]" />}
           <Outlet />
         </main>
         <Footer />

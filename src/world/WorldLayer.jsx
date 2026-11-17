@@ -14,7 +14,6 @@ import { journeyLength, railStops } from './rail.js';
 import { markWorldFailed, useWorldPage } from './worldSwitch.js';
 import { useIsomorphicLayoutEffect } from '../ssr/useHydrated.js';
 import { stretchFor } from './stretches.js';
-import { createStretchWorld } from './stretchWorld.js';
 import { createSurroundings } from './surroundings.js';
 
 /** The field's device tiers, as the world's glyph budgets name them. */
@@ -33,9 +32,27 @@ export default function WorldLayer() {
   const page = useWorldPage();
   const { pathname } = useLocation();
   const isHome = page === 'home';
-  // What the canvas draws, read by its frame loop: the home's journey, this page's stretch, or nothing.
+  // The inner pages' world, in a chunk of its own (2026-11-17): the home page does not wait for it,
+  // and it is fetched as soon as the world is mounted, so a drive to an inner page finds it there.
+  const stretchModule = useRef(/** @type {typeof import('./stretchWorld.js') | null} */ (null));
+  const [stretchReady, setStretchReady] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    import('./stretchWorld.js')
+      .then((module) => {
+        if (cancelled) return;
+        stretchModule.current = module;
+        setStretchReady(true);
+      })
+      .catch(() => markWorldFailed());
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  // What the canvas draws, read by its frame loop: the home's journey, this page's stretch (once its
+  // world has loaded; nothing is drawn until then), or nothing.
   /** @type {'home' | import('./stretches.js').Stretch | null} */
-  const current = isHome ? 'home' : page === 'stretch' ? stretchFor(pathname) : null;
+  const current = isHome ? 'home' : page === 'stretch' && stretchReady ? stretchFor(pathname) : null;
   const pageRef = useRef(current);
   useIsomorphicLayoutEffect(() => {
     pageRef.current = current;
@@ -75,7 +92,21 @@ export default function WorldLayer() {
       window.removeEventListener('resize', soon);
     };
   }, [route, isHome]);
-  const home = useMemo(() => ({ route, getTrack: () => trackRef.current, getPage: () => pageRef.current, createStretch: createStretchWorld, createSurroundings }), [route]);
+  const home = useMemo(
+    () => ({
+      route,
+      getTrack: () => trackRef.current,
+      getPage: () => pageRef.current,
+      /** Called only once a stretch is the page, which waits for its world to load. @param {Parameters<typeof import('./stretchWorld.js').createStretchWorld>[0]} deps */
+      createStretch: (deps) => {
+        const module = stretchModule.current;
+        if (!module) throw new Error('The inner pages’ world is not loaded yet.');
+        return module.createStretchWorld(deps);
+      },
+      createSurroundings,
+    }),
+    [route],
+  );
   const [tier] = useState(() => TIERS[detectCapabilities(readCapabilityEnv()).tier]);
   const [searchParams] = useSearchParams();
   const showMeter = searchParams.get('meter') === '1';

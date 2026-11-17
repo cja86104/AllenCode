@@ -15,7 +15,7 @@ function build(path, tier, landed) {
   const stretch = stretchFor(path);
   if (!stretch) throw new Error(`no stretch for ${path}`);
   const layout = layoutStretch(stretch.stops, roadSizes(stretch.stops, stretch.sources), { width: 1440, height: 900 });
-  return { stretch, layout, parts: buildStretchWorld(tier, { road: ambient.code, stops: stretch.sources }, 1, { stops: stretch.stops, layout }, landed) };
+  return { stretch, layout, parts: buildStretchWorld(tier, { road: ambient.code, stops: stretch.sources }, 1, { stops: stretch.stops, layout, word: stretch.word }, landed) };
 }
 
 /** A plain grey picture, as a read screen. @param {number} width @param {number} height */
@@ -41,24 +41,29 @@ describe('a stretch’s world (Code World W5a)', () => {
     }
   });
 
-  it('draws Crew Advisors unfinished with its cursor, and the empty file and the audit as slabs of their code', () => {
-    const crew = build('/products', 'mid').parts.find((p) => p.name === 'landmark:crew-advisors');
+  it('draws Crew Advisors unfinished with its cursor on its page, and the empty file as a slab of its code', () => {
+    const crew = build('/products/crew-advisors', 'mid').parts.find((p) => p.name === 'landmark:crew-advisors');
     expect(crew?.cursor).toBeGreaterThan(0);
     const contact = build('/contact', 'mid');
     const gateCode = contact.stretch.sources.gate;
     const slab = contact.parts.find((p) => p.name === 'landmark:contact');
     expect(slab?.shape.glyphs.length).toBe([...gateCode].filter((c) => c.trim() !== '').length);
-    const audit = build('/services', 'mid').parts.find((p) => p.name === 'landmark:technical-audits');
-    expect(audit?.shape.tag ?? 0).toBe(0);
   });
 
-  it('tags a screen landmark by its place on the road and its picture by minus that, once read', () => {
-    const { stretch, parts } = build('/products', 'mid', { 'my-teachers-toolbox': picture(320, 200) });
-    const place = stretch.stops.findIndex((s) => s.id === 'my-teachers-toolbox') + 1;
-    expect(parts.find((p) => p.name === 'landmark:my-teachers-toolbox')?.shape.tag).toBe(place);
-    expect(parts.find((p) => p.name === 'landed:my-teachers-toolbox')?.shape.tag).toBe(-place);
+  it('tags the screen landmark as the road’s first place and its picture by minus that, once read', () => {
+    const { parts } = build('/products', 'mid', { 'my-teachers-toolbox': picture(320, 200) });
+    expect(parts.find((p) => p.name === 'landmark:my-teachers-toolbox')?.shape.tag).toBe(1);
+    expect(parts.find((p) => p.name === 'landed:my-teachers-toolbox')?.shape.tag).toBe(-1);
     // Without its picture, a landmark is untagged code.
-    expect(parts.find((p) => p.name === 'landmark:underfire-ai')?.shape.tag ?? 0).toBe(0);
-    expect(parts.some((p) => p.name === 'landed:underfire-ai')).toBe(false);
+    const plain = build('/products', 'mid').parts;
+    expect(plain.find((p) => p.name === 'landmark:my-teachers-toolbox')?.shape.tag ?? 0).toBe(0);
+    expect(plain.some((p) => p.name === 'landed:my-teachers-toolbox')).toBe(false);
+  });
+
+  it('spells the page along its road, in big letters of the road’s characters, and nothing else on it', () => {
+    const { parts } = build('/services', 'mid');
+    const road = parts.find((p) => p.name === 'road');
+    expect(road?.shape.stream?.[3]).toBeLessThan(0);
+    expect(parts.filter((p) => p.name.startsWith('landmark:'))).toHaveLength(1);
   });
 });

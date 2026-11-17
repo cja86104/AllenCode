@@ -141,7 +141,7 @@ export function createStretchWorld({ renderer, atlas, tier, canvas, scrim }) {
     renderer.setFlight(null);
     const sizes = roadSizes(stretch.stops, stretch.sources);
     layout = layoutStretch(stretch.stops, sizes, viewport);
-    const world = buildStretchWorld(tier, { road: ambient.code, stops: stretch.sources }, 1, { stops: stretch.stops, layout }, read);
+    const world = buildStretchWorld(tier, { road: ambient.code, stops: stretch.sources }, 1, { stops: stretch.stops, layout, word: stretch.word }, read);
     const placed = renderer.setShapes(world.map((part) => part.shape));
     leadRange = placed[world.findIndex((part) => part.name === `landmark:${stretch.lead.id}`)] ?? null;
     unfinished = null;

@@ -23,26 +23,19 @@ function laid(path, viewport) {
 const distance = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
 
 describe('a stretch’s road, landmarks and camera (Code World W5a)', () => {
-  it('lasts one and a half screens: a screen of driving, then half a screen at rest, the landing from 1.05', () => {
-    expect(STRETCH.screens).toBe(1.5);
-    expect(STRETCH.drive).toBeCloseTo(1 / 1.5, 9);
-    expect(STRETCH.landFrom).toBeCloseTo(1.05 / 1.5, 9);
+  it('lasts one screen: half a screen of driving, then at rest, the landing from 0.55 (2026-11-17: shorter)', () => {
+    expect(STRETCH.screens).toBe(1);
+    expect(STRETCH.drive).toBeCloseTo(0.5, 9);
+    expect(STRETCH.landFrom).toBeCloseTo(0.55, 9);
   });
 
-  it('stands the others alternately either side of the road, and the lead across its end, all facing back up it', () => {
+  it('stands only the lead, across the road’s end, facing back up it; the road runs on past it into the fog', () => {
     const { stretch, layout } = laid('/services', VIEWPORTS[0]);
     expect(layout.landmarks.map((l) => l.stopId)).toEqual(stretch.stops.map((s) => s.id));
-    const others = layout.landmarks.slice(0, -1);
-    others.forEach((l, i) => {
-      expect(Math.sign(l.center[0])).toBe(i % 2 === 0 ? 1 : -1);
-      // Clear of the road: its near edge beyond the road's half width.
-      expect(Math.abs(l.center[0]) - l.width / 2).toBeGreaterThan(1.6);
-    });
-    const lead = layout.landmarks[layout.landmarks.length - 1];
+    expect(layout.landmarks).toHaveLength(1);
+    const lead = layout.landmarks[0];
     expect(lead.center[0]).toBe(0);
-    for (const l of layout.landmarks) expect(l.facing).toEqual([0, 0, 1]);
-    // Further down the road, each in turn, and the road runs past the lead into the fog.
-    layout.landmarks.slice(1).forEach((l, i) => expect(l.center[2]).toBeLessThan(layout.landmarks[i].center[2]));
+    expect(lead.facing).toEqual([0, 0, 1]);
     const end = layout.path[layout.path.length - 1];
     expect(end[1]).toBeLessThan(lead.center[2]);
   });

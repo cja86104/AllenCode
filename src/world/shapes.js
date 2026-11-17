@@ -25,7 +25,7 @@ import { roadAt, roadBetween, roadHeadingAt, roadLength } from './roadPath.js';
 
 /** Ember #f97316 and the pale code colour, as 0..1 rgb. */
 const EMBER = [0xf9 / 255, 0x73 / 255, 0x16 / 255];
-const PALE = [0.86, 0.86, 0.84];
+export const PALE = [0.86, 0.86, 0.84];
 const WHITE = [1, 1, 1];
 /** Tailwind's sky-400 and green-400, as bright on the night as the ember (Chris, 2026-11-16). */
 const SKY = [0x38 / 255, 0xbd / 255, 0xf8 / 255];
@@ -33,7 +33,7 @@ const GREEN = [0x4a / 255, 0xde / 255, 0x80 / 255];
 /** The road's coloured characters: ember, sky blue and green, in even shares (Chris, 2026-11-16). */
 export const ROAD_COLORS = Object.freeze([EMBER, SKY, GREEN]);
 /** The share of the road's characters in colour; the rest are pale (Chris, 2026-11-16: "more of them"). */
-const COLOURED_SHARE = 1 / 3;
+export const COLOURED_SHARE = 1 / 3;
 /**
  * Each road character runs forward along its stretch of road in a loop this long, in world units,
  * fading in and out at its ends, so the road moves the way a stand's code rises (Chris, 2026-11-16).
@@ -64,14 +64,14 @@ export function seeded(seed) {
  * @param {string} code
  * @returns {string[]}
  */
-function inkOf(code) {
+export function inkOf(code) {
   const chars = [...code].filter((c) => c.trim() !== '' && c.charCodeAt(0) <= 0xffff && c.length === 1);
   if (chars.length === 0) throw new Error('A world shape needs code with at least one visible character.');
   return chars;
 }
 
 /** @param {number} count @param {number} size */
-function emptyShape(count, size) {
+export function emptyShape(count, size) {
   return { positions: new Float32Array(count * 3), glyphs: new Uint16Array(count), colors: new Float32Array(count * 4), size };
 }
 
@@ -79,7 +79,7 @@ function emptyShape(count, size) {
  * @param {Shape} shape @param {number} i @param {number} x @param {number} y @param {number} z
  * @param {string} char @param {number[]} rgb @param {number} alpha
  */
-function put(shape, i, x, y, z, char, rgb, alpha) {
+export function put(shape, i, x, y, z, char, rgb, alpha) {
   shape.positions.set([x, y, z], i * 3);
   shape.glyphs[i] = char.charCodeAt(0);
   shape.colors.set([rgb[0], rgb[1], rgb[2], Math.min(1, Math.max(0, alpha))], i * 4);

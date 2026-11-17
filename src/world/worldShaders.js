@@ -14,6 +14,9 @@ const ROAD_SPEED = '0.0006';
 // In the shader: One glyph (an unfinished file's cursor) can be moved and blinked on its own.
 // A stand's code rises up its column from the ground and wraps (R5), fading in at the foot and out
 // at the top.
+// A negative loop (an inner page's word, 2026-11-17) is one belt: every glyph moves by the same
+// distance, each wrapping where its distance along the belt is a whole number of loops, fading in and
+// out at the belt's ends, so the letters stay whole as they run forward.
 // The road's code runs forward along its stretch of road (Chris, 2026-11-16: "a moving pathway"),
 // each character over its own loop from its own point in it, fading in and out at the loop's ends.
 // The atlas draws a glyph at two thirds of its cell, so the cell is 1.5 times the glyph's size.
@@ -66,6 +69,12 @@ void main() {
     float s = fract(seed + uTime * ${ROAD_SPEED} / aStream.w);
     position += aStream.xyz * (s - 0.5) * aStream.w;
     flowing = smoothstep(0.0, 0.1, s) * (1.0 - smoothstep(0.9, 1.0, s));
+  } else if (aStream.w < 0.0) {
+    float loop = -aStream.w;
+    float here = dot(position, aStream.xyz) / loop;
+    float s = fract(here + uTime * ${ROAD_SPEED} / loop);
+    position += aStream.xyz * (s - fract(here)) * loop;
+    flowing = smoothstep(0.0, 0.05, s) * (1.0 - smoothstep(0.92, 1.0, s));
   }
   vec4 clip = uViewProjection * vec4(position, 1.0);
   gl_Position = clip;

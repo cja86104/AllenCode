@@ -1,13 +1,15 @@
 // @ts-check
 import { getExcerpt } from '../content/excerpts/index.js';
 import { businessRoadStops, familyRoadStops, MEETING_STOPS } from './roads.js';
+import { products as catalogue } from '../data/products.js';
 
 /** @typedef {import('./roads.js').RoadStop} RoadStop */
 
 /**
- * An inner page's short stretch of road (Code World W5a): its stops in road order, the lead last
- * (the stop whose code lands as the page's headline), and each stop's approved code by excerpt id.
- * @typedef {{ id: string, stops: RoadStop[], lead: RoadStop, sources: Record<string, string> }} Stretch
+ * An inner page's short stretch of road (Code World W5a): its one stop, the lead, at the end of the
+ * road (2026-11-17: the boards beside the road gone, "just have the one screen at the end"), whose
+ * code lands as the page's headline; its code by excerpt id; and the word its road spells.
+ * @typedef {{ id: string, stops: RoadStop[], lead: RoadStop, sources: Record<string, string>, word: string }} Stretch
  */
 
 /** The empty file, Contact's stop: the site's first screen comes back as the start of a project. */
@@ -17,22 +19,32 @@ const CONTACT_STOP = Object.freeze({ id: 'contact', name: 'Contact', kind: /** @
 const known = new Map();
 
 /**
- * A stretch from its stops: the lead moved to the end of the road, the rest kept in page order.
+ * A stretch from its page's stops: the first, the lead, alone at the end of the road.
  * @param {string} id
  * @param {ReadonlyArray<RoadStop>} stops In page order; the first is the lead.
+ * @param {string} word What the road spells.
  * @returns {Stretch | null}
  */
-function stretchOf(id, stops) {
-  if (stops.length === 0) return null;
-  const [lead, ...rest] = stops;
-  /** @type {Record<string, string>} */
-  const sources = {};
-  for (const stop of stops) {
-    const excerpt = stop.excerptId ? getExcerpt(stop.excerptId) : null;
-    if (!excerpt || !stop.excerptId) return null;
-    sources[stop.excerptId] = excerpt.code;
-  }
-  return { id, stops: [...rest, lead], lead, sources };
+function stretchOf(id, stops, word) {
+  const lead = stops[0];
+  const excerpt = lead?.excerptId ? getExcerpt(lead.excerptId) : null;
+  if (!lead?.excerptId || !excerpt) return null;
+  return { id, stops: [lead], lead, sources: { [lead.excerptId]: excerpt.code }, word };
+}
+
+/**
+ * The word a page's road spells (Chris, 2026-11-17: "spell out what it is"): its section, or on a
+ * product's page the product's name; null for a page without a stretch.
+ * @param {string} pathname
+ * @returns {string | null}
+ */
+export function wordFor(pathname) {
+  const path = pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname;
+  const sections = /** @type {Record<string, string>} */ ({ '/products': 'PRODUCTS', '/services': 'SERVICES', '/templates': 'TEMPLATES', '/about': 'ABOUT', '/contact': 'CONTACT' });
+  if (sections[path]) return sections[path];
+  if (!path.startsWith('/products/')) return null;
+  const product = catalogue.find((p) => p.slug === path.slice('/products/'.length));
+  return product ? product.name.toUpperCase() : null;
 }
 
 /**
@@ -53,15 +65,17 @@ export function stretchFor(pathname) {
   const workshop = MEETING_STOPS.filter((s) => s.kind === 'portrait');
   /** @type {Stretch | null} */
   let stretch = null;
-  if (path === '/products') stretch = stretchOf('products', products);
+  const word = wordFor(path);
+  if (!word) stretch = null;
+  else if (path === '/products') stretch = stretchOf('products', products, word);
   else if (path.startsWith('/products/')) {
     const slug = path.slice('/products/'.length);
     const product = products.find((s) => s.id === slug);
-    stretch = product ? stretchOf(`product:${slug}`, [product]) : null;
-  } else if (path === '/services') stretch = stretchOf('services', services);
-  else if (path === '/templates') stretch = stretchOf('templates', houses);
-  else if (path === '/about') stretch = stretchOf('about', workshop);
-  else if (path === '/contact') stretch = stretchOf('contact', [CONTACT_STOP]);
+    stretch = product ? stretchOf(`product:${slug}`, [product], word) : null;
+  } else if (path === '/services') stretch = stretchOf('services', services, word);
+  else if (path === '/templates') stretch = stretchOf('templates', houses, word);
+  else if (path === '/about') stretch = stretchOf('about', workshop, word);
+  else if (path === '/contact') stretch = stretchOf('contact', [CONTACT_STOP], word);
   known.set(path, stretch);
   return stretch;
 }

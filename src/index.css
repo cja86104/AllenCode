@@ -185,5 +185,5 @@ html.lenis {
 html[data-stretch-ahead] #main:not(:has(> [data-world-stretch]))::before {
   content: '';
   display: block;
-  height: 150vh;
+  height: 100vh;
 }

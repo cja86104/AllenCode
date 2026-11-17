@@ -6,10 +6,9 @@ import { stretchFor } from '../src/world/stretches.js';
 const ids = (path) => stretchFor(path)?.stops.map((s) => s.id);
 
 describe('each inner page’s stretch of road (Code World W5a)', () => {
-  it('Products: the others in page order, then MyTeachersToolbox, the lead, at the end', () => {
-    expect(ids('/products')).toEqual(['underfire-ai', 'founders-helm', 'crew-advisors', 'my-teachers-toolbox']);
+  it('Products: MyTeachersToolbox alone, the lead, at the end (2026-11-17: no boards beside the road)', () => {
+    expect(ids('/products')).toEqual(['my-teachers-toolbox']);
     expect(stretchFor('/products')?.lead.id).toBe('my-teachers-toolbox');
-    expect(stretchFor('/products')?.stops.find((s) => s.id === 'crew-advisors')?.kind).toBe('unfinished');
   });
 
   it('each product page: that product alone, Crew Advisors unfinished', () => {
@@ -20,13 +19,12 @@ describe('each inner page’s stretch of road (Code World W5a)', () => {
     expect(stretchFor('/products/crew-advisors')?.lead.kind).toBe('unfinished');
   });
 
-  it('Services: the others in the road’s order, then MVP Sprints, the lead; the audit as its file', () => {
-    expect(ids('/services')).toEqual(['custom-saas-builds', 'custom-web-development', 'ui-ux-design', 'ai-integration', 'technical-audits', 'mvp-sprints']);
-    expect(stretchFor('/services')?.stops.find((s) => s.id === 'technical-audits')?.kind).toBe('audit');
+  it('Services: MVP Sprints alone, the lead', () => {
+    expect(ids('/services')).toEqual(['mvp-sprints']);
   });
 
-  it('Templates: the family road’s houses, Evergreen the lead', () => {
-    expect(ids('/templates')).toEqual(['keepsake', 'vow', 'gather', 'folio', 'evergreen']);
+  it('Templates: Evergreen alone, the lead', () => {
+    expect(ids('/templates')).toEqual(['evergreen']);
   });
 
   it('About: the builder as a portrait; Contact: the empty file as a slab', () => {
