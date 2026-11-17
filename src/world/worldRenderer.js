@@ -16,8 +16,8 @@ const FLIGHT_LIFT = 2.1;
 /** Where the world fades out: glyphs farther than FOG_FAR are not drawn. */
 const FOG_NEAR = 14;
 const FOG_FAR = 46;
-/** Floats per glyph: x, y, z, atlas cell, r, g, b, a, size, tag, flow. */
-const STRIDE = 11;
+/** Floats per glyph: x, y, z, atlas cell, r, g, b, a, size, tag, flow, and its run along the road (dx, dz, loop). */
+const STRIDE = 14;
 
 /**
  * @param {WebGL2RenderingContext} gl
@@ -64,6 +64,7 @@ export function packShapes(shapes, indexOf) {
       data[o + 8] = shape.sizes ? shape.sizes[i] : shape.size;
       data[o + 9] = shape.tag ?? 0;
       data[o + 10] = shape.flow ? shape.flow[i] : 0;
+      if (shape.stream) data.set(shape.stream.subarray(i * 3, i * 3 + 3), o + 11);
       count += 1;
     }
     ranges.push({ start, count: count - start });
@@ -164,6 +165,8 @@ export function createWorldRenderer(canvas, atlas) {
   gl.vertexAttribPointer(4, 1, gl.FLOAT, false, bytes, 36);
   gl.enableVertexAttribArray(5);
   gl.vertexAttribPointer(5, 1, gl.FLOAT, false, bytes, 40);
+  gl.enableVertexAttribArray(6);
+  gl.vertexAttribPointer(6, 3, gl.FLOAT, false, bytes, 44);
   gl.bindVertexArray(null);
 
   gl.useProgram(flightProgram);

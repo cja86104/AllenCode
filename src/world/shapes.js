@@ -13,7 +13,9 @@ import { roadAt, roadBetween, roadLength } from './roadPath.js';
  * `sizes` (R5), when present, gives each glyph its own size in place of `size`. `flow` (R5), when
  * present, is one float per glyph: 0 stands still; above 0, the glyph rises up a column that height
  * from the ground, wrapping (the stands' code between their posts).
- * @typedef {{ positions: Float32Array, glyphs: Uint16Array, colors: Float32Array, size: number, tag?: number, sizes?: Float32Array, flow?: Float32Array }} Shape
+ * `stream` (Chris, 2026-11-16), when present, gives each glyph a run forward along the road: its
+ * direction on the ground (x, z) and the length of its loop, three floats a glyph.
+ * @typedef {{ positions: Float32Array, glyphs: Uint16Array, colors: Float32Array, size: number, tag?: number, sizes?: Float32Array, flow?: Float32Array, stream?: Float32Array }} Shape
  * @typedef {[number, number, number]} Vec3
  * @typedef {[number, number]} Point2 A point on the ground: x and z.
  * @typedef {'low' | 'mid' | 'high'} Tier
@@ -23,6 +25,21 @@ import { roadAt, roadBetween, roadLength } from './roadPath.js';
 const EMBER = [0xf9 / 255, 0x73 / 255, 0x16 / 255];
 const PALE = [0.86, 0.86, 0.84];
 const WHITE = [1, 1, 1];
+/** Tailwind's sky-400 and green-400, as bright on the night as the ember (Chris, 2026-11-16). */
+const SKY = [0x38 / 255, 0xbd / 255, 0xf8 / 255];
+const GREEN = [0x4a / 255, 0xde / 255, 0x80 / 255];
+/** The road's coloured characters: ember, sky blue and green, in even shares (Chris, 2026-11-16). */
+export const ROAD_COLORS = Object.freeze([EMBER, SKY, GREEN]);
+/** The share of the road's characters in colour; the rest are pale (Chris, 2026-11-16: "more of them"). */
+const COLOURED_SHARE = 1 / 3;
+/**
+ * Each road character runs forward along its stretch of road in a loop this long, in world units,
+ * fading in and out at its ends, so the road moves the way a stand's code rises (Chris, 2026-11-16).
+ */
+export const ROAD_FLOW_LOOP = 1.6;
+/** The road's orange edges are this many lines wide, this far apart, inward from the edge (Chris, 2026-11-16). */
+export const EDGE_LINES = 3;
+const EDGE_GAP = 0.15;
 
 /**
  * A small seeded random generator (mulberry32), so the same seed always builds the same world.
@@ -201,11 +218,12 @@ export function distanceToPath(point, path) {
 
 /**
  * A road of code: `count` glyphs scattered on the ground within half `width` of `path`, its
- * characters taken from `code` in reading order, mostly pale with a few ember sparks.
+ * characters taken from `code` in reading order, a third of them in colour (ember, sky blue, green,
+ * in even shares) and the rest pale, each running forward along its stretch of the path (`stream`).
  * @param {string} code
  * @param {{ path: ReadonlyArray<Point2>, width: number, count: number }} options
  * @param {number} seed
- * @returns {Shape}
+ * @returns {Shape & { stream: Float32Array }}
  */
 export function codeRoad(code, { path, width, count }, seed) {
   const ink = inkOf(code);
@@ -218,6 +236,7 @@ export function codeRoad(code, { path, width, count }, seed) {
     total += length;
   }
   const shape = emptyShape(count, 0.09);
+  const stream = new Float32Array(count * 3);
   for (let i = 0; i < count; i += 1) {
     const along = random() * total;
     const segment = segments.find((s) => along <= s.start + s.length) ?? segments[segments.length - 1];
@@ -228,10 +247,14 @@ export function codeRoad(code, { path, width, count }, seed) {
     const offset = ((random() + random()) / 2 - 0.5) * width;
     const x = segment.from[0] + (segment.to[0] - segment.from[0]) * t - dz * offset;
     const z = segment.from[1] + (segment.to[1] - segment.from[1]) * t + dx * offset;
-    const spark = random() < 0.07;
-    put(shape, i, x, (random() - 0.5) * 0.2, z, ink[i % ink.length], spark ? EMBER : PALE, spark ? 0.9 : 0.45 + 0.45 * random());
+    const pick = random();
+    const colour = pick < COLOURED_SHARE ? ROAD_COLORS[Math.min(ROAD_COLORS.length - 1, Math.floor((pick / COLOURED_SHARE) * ROAD_COLORS.length))] : null;
+    put(shape, i, x, (random() - 0.5) * 0.2, z, ink[i % ink.length], colour ?? PALE, colour ? 0.9 : 0.45 + 0.45 * random());
+    stream[i * 3] = dx;
+    stream[i * 3 + 1] = dz;
+    stream[i * 3 + 2] = ROAD_FLOW_LOOP;
   }
-  return shape;
+  return { ...shape, stream };
 }
 
 /** @param {ReadonlyArray<ReadonlyArray<number>>} path */
@@ -250,9 +273,11 @@ export function scatterCount(density, path, width) {
 }
 
 /**
- * The road's edges: a line of ember characters along each side of `path`, `spacing` apart, at half
- * `width` from its centre, so the road reads as a road and not a scatter (Chris, 2026-11-10). The
- * characters follow `code` in reading order.
+ * The road's edges: ember characters along each side of `path`, so the road reads as a road and not
+ * a scatter (Chris, 2026-11-10), in `EDGE_LINES` lines a side (Chris, 2026-11-16: "three lines
+ * wide"), the outer at half `width` from the centre and the others `EDGE_GAP` apart inside it, each
+ * line's characters `spacing` apart and staggered a third of that from its neighbour's. They stay
+ * still. The characters follow `code` in reading order.
  * - `from`: the first characters stand this far along the path (R5: a road that carries on from
  *   another's end keeps its spacing instead of doubling the joint).
  * - `highlights`: edge characters within `HIGHLIGHT_RADIUS` of one of these points are drawn at full
@@ -281,19 +306,21 @@ export function roadEdges(code, { path, width, spacing, from = 0, highlights = [
   /** @type {Array<{ x: number, z: number, char: string, lit: boolean }>} */
   const placed = [];
   for (const side of [-1, 1]) {
-    for (let k = 0; k < perSide; k += 1) {
-      const along = Math.min(total, from + k * spacing);
-      const segment = segments.find((s) => along <= s.start + s.length) ?? segments[segments.length - 1];
-      const t = segment.length === 0 ? 0 : (along - segment.start) / segment.length;
-      const dx = (segment.to[0] - segment.from[0]) / (segment.length || 1);
-      const dz = (segment.to[1] - segment.from[1]) / (segment.length || 1);
-      // A hair of jitter so the line looks drawn, never more than 2 cm off the edge.
-      const offset = side * (width / 2) + (random() - 0.5) * 0.04;
-      const x = segment.from[0] + (segment.to[0] - segment.from[0]) * t - dz * offset;
-      const z = segment.from[1] + (segment.to[1] - segment.from[1]) * t + dx * offset;
-      if (openings && openings.points.some(([px, pz]) => Math.hypot(x - px, z - pz) < openings.radius)) continue;
-      const lit = highlights.some(([px, pz]) => Math.hypot(x - px, z - pz) <= HIGHLIGHT_RADIUS);
-      placed.push({ x, z, char: ink[(k + (side > 0 ? 7 : 0)) % ink.length], lit });
+    for (let line = 0; line < EDGE_LINES; line += 1) {
+      for (let k = 0; k < perSide; k += 1) {
+        const along = Math.min(total, from + k * spacing + (line * spacing) / EDGE_LINES);
+        const segment = segments.find((s) => along <= s.start + s.length) ?? segments[segments.length - 1];
+        const t = segment.length === 0 ? 0 : (along - segment.start) / segment.length;
+        const dx = (segment.to[0] - segment.from[0]) / (segment.length || 1);
+        const dz = (segment.to[1] - segment.from[1]) / (segment.length || 1);
+        // A hair of jitter so the line looks drawn, never more than 2 cm off the edge.
+        const offset = side * (width / 2 - line * EDGE_GAP) + (random() - 0.5) * 0.04;
+        const x = segment.from[0] + (segment.to[0] - segment.from[0]) * t - dz * offset;
+        const z = segment.from[1] + (segment.to[1] - segment.from[1]) * t + dx * offset;
+        if (openings && openings.points.some(([px, pz]) => Math.hypot(x - px, z - pz) < openings.radius)) continue;
+        const lit = highlights.some(([px, pz]) => Math.hypot(x - px, z - pz) <= HIGHLIGHT_RADIUS);
+        placed.push({ x, z, char: ink[(k + (side > 0 ? 7 : 0) + line * 13) % ink.length], lit });
+      }
     }
   }
   const shape = emptyShape(placed.length, size);
@@ -507,13 +534,14 @@ export function budgetFor(tier) {
   return { low: 12000, mid: 24000, high: 40000 }[tier];
 }
 
-/** Distance between the characters lining the road's edges, in world units. */
-const EDGE_SPACING = 0.35;
 /**
- * The road's edge characters' spacing by tier: 0.5 on the low tier (2026-11-16: with the services
- * first and two more of them, the business road's long edges are the phone budget's largest fixed cost).
+ * The road's edge characters' spacing along each of its `EDGE_LINES` lines, by tier, in world units.
+ * One line was 0.35 apart (0.5 on the low tier once the business road grew, 2026-11-16). With three
+ * lines a side, each staggered a third of the spacing from its neighbour (Chris, 2026-11-16), the band
+ * reads three times as dense as one line: 0.5 on the high tier, 0.6 on the mid, 1 on the low ("three
+ * lines, spaced out" on phones, Chris).
  */
-export const EDGE_SPACING_BY_TIER = Object.freeze({ low: 0.5, mid: EDGE_SPACING, high: EDGE_SPACING });
+export const EDGE_SPACING_BY_TIER = Object.freeze({ low: 1, mid: 0.6, high: 0.5 });
 
 /** The road's centre lines: the trunk to the fork, then a branch each way. */
 export const ROAD_PATHS = Object.freeze({
@@ -584,10 +612,11 @@ export const SCREEN_FLOOR = Object.freeze({ low: 300, mid: 400, high: 400 });
 /**
  * The road between the landmarks, as a share of `ROAD_DENSITY`, by tier (W3.1: a half; W4: a third
  * on the low tier; 2026-11-16, with two more services on the business road: a quarter on the low
- * tier and 0.45 on the mid, so the business road fits at the same density as the family road's,
- * without thinning the opening).
+ * tier and 0.45 on the mid; then, for the three-line edges (Chris, 2026-11-16): 0.15, 0.35 and 0.42,
+ * measured so that on both roads and every tier the opening keeps its full density and the landmarks
+ * at least nine tenths of their glyphs).
  */
-export const BETWEEN_SHARE = Object.freeze({ low: 1 / 4, mid: 0.45, high: 1 / 2 });
+export const BETWEEN_SHARE = Object.freeze({ low: 0.15, mid: 0.35, high: 0.42 });
 /** Half the onward road's width, and half a side path's (R5). */
 const ROAD_HALF = 1.6;
 const SPUR_HALF = 0.8;

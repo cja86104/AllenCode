@@ -6,6 +6,7 @@ import {
   buildWorld,
   codeRoad,
   distanceToPath,
+  EDGE_LINES,
   editorSlab,
   forkSigns,
   landmarkStand,
@@ -42,6 +43,12 @@ const charsOf = (shape) => new Set([...shape.glyphs].map((c) => String.fromCharC
 const charsIn = (code) => new Set([...code].filter((c) => c.trim() !== ''));
 /** Positions are 32-bit floats (what the GPU reads), so bounds are checked to that precision. */
 const F32 = 1e-5;
+/**
+ * How far a distance from the road's centre is from the nearest of its edge lines: the outer at
+ * `half`, the others 15 cm apart inside it (Chris, 2026-11-16: three lines wide).
+ * @param {number} distance @param {number} half
+ */
+const offEdgeLine = (distance, half) => Math.min(...Array.from({ length: EDGE_LINES }, (_, line) => Math.abs(distance - (half - line * 0.15))));
 
 describe('world shapes (Code world prototype, Task P1)', () => {
   it('draws only characters of its own approved source: real code, never invented', () => {
@@ -101,15 +108,15 @@ describe('world shapes (Code world prototype, Task P1)', () => {
     expect(words).toBe(board);
   });
 
-  it('edges the road with a line of ember characters on both sides, evenly spaced (Chris, 2026-11-10)', () => {
+  it('edges the road with lines of ember characters on both sides, evenly spaced (Chris, 2026-11-10; three lines, 2026-11-16)', () => {
     const edges = roadEdges(ambient.code, { path: TRUNK, width: 4, spacing: 0.35 }, 1);
     const length = 37;
-    expect(edges.glyphs.length).toBe(2 * (Math.floor(length / 0.35) + 1));
+    expect(edges.glyphs.length).toBe(2 * EDGE_LINES * (Math.floor(length / 0.35) + 1));
     const allowed = charsIn(ambient.code);
     for (let i = 0; i < edges.glyphs.length; i += 1) {
       const x = edges.positions[i * 3];
       const z = edges.positions[i * 3 + 2];
-      expect(Math.abs(distanceToPath([x, z], TRUNK) - 2)).toBeLessThanOrEqual(0.05 + F32);
+      expect(offEdgeLine(distanceToPath([x, z], TRUNK), 2)).toBeLessThanOrEqual(0.05 + F32);
       expect(allowed.has(String.fromCharCode(edges.glyphs[i]))).toBe(true);
       const [r, g, b] = edges.colors.subarray(i * 4, i * 4 + 3);
       expect([r, g, b].map((v) => Math.round(v * 255))).toEqual([0xf9, 0x73, 0x16]);
@@ -296,7 +303,7 @@ describe('the road’s edges, side paths and stands (Code World R5)', () => {
 
   it('keeps every edge glyph on its edge line, commits included', () => {
     const edges = part('onward-edges');
-    for (let i = 0; i < edges.glyphs.length; i += 1) expect(Math.abs(distanceToPath(ground(edges, i), onwardPath) - 1.6)).toBeLessThanOrEqual(0.05);
+    for (let i = 0; i < edges.glyphs.length; i += 1) expect(offEdgeLine(distanceToPath(ground(edges, i), onwardPath), 1.6)).toBeLessThanOrEqual(0.05);
   });
 
   it('lights the edge at each of How I work’s commits: ember, full alpha, larger', () => {
@@ -559,7 +566,7 @@ describe('where the roads meet (Code World W4.2)', () => {
         const edges = parts.find((p) => p.name === 'other-edges')?.shape;
         if (!edges) throw new Error('no other edges');
         for (let i = 0; i < edges.glyphs.length; i += 1) {
-          expect(Math.abs(distanceToPath([edges.positions[i * 3], edges.positions[i * 3 + 2]], road.layout.other) - 1.6)).toBeLessThanOrEqual(0.05);
+          expect(offEdgeLine(distanceToPath([edges.positions[i * 3], edges.positions[i * 3 + 2]], road.layout.other), 1.6)).toBeLessThanOrEqual(0.05);
         }
         expect(parts.reduce((sum, p) => sum + p.shape.glyphs.length, 0)).toBeLessThanOrEqual(budgetFor(tier));
       }

@@ -2,11 +2,13 @@
 
 /** How fast a stand's code rises, in world units per millisecond (0.35 a second). */
 const FLOW_SPEED = '0.00035';
+/** How fast the road's code runs forward, in world units per millisecond (0.6 a second, Chris 2026-11-16). */
+const ROAD_SPEED = '0.0006';
 
 /**
  * The code world: every glyph is a point in 3D (Code world prototype, Task P2). Its on-screen size
  * follows its distance, it fades into the dark with distance (fog) and very close to the camera,
- * and ember sparks twinkle; up to four ranges of glyphs fade on their own (P4, W2.4, R3), and one glyph, a cursor, can move and blink (W2.3), and a stand's code flows up between its posts (R5). The fragment shader is the field's (src/field/shaders.js): characters
+ * and ember sparks twinkle; up to four ranges of glyphs fade on their own (P4, W2.4, R3), and one glyph, a cursor, can move and blink (W2.3), a stand's code flows up between its posts (R5), and the road's code runs forward along it (2026-11-16). The fragment shader is the field's (src/field/shaders.js): characters
  * stay characters.
  */
 export const WORLD_VERTEX_SHADER = `#version 300 es
@@ -18,6 +20,7 @@ layout(location = 2) in vec4 aColor;
 layout(location = 3) in float aSize;
 layout(location = 4) in float aTag;
 layout(location = 5) in float aFlow;
+layout(location = 6) in vec3 aStream;
 
 uniform mat4 uViewProjection;
 uniform float uProjScale;
@@ -50,6 +53,14 @@ void main() {
     position.y = s * aFlow;
     flowing = smoothstep(0.0, 0.15, s) * (1.0 - smoothstep(0.85, 1.0, s));
   }
+  // The road's code runs forward along its stretch of road (Chris, 2026-11-16: "a moving pathway"),
+  // each character over its own loop from its own point in it, fading in and out at the loop's ends.
+  float seed = fract(sin(dot(aPosition.xz, vec2(12.9898, 78.233))) * 43758.5453);
+  if (aStream.z > 0.0) {
+    float s = fract(seed + uTime * ${ROAD_SPEED} / aStream.z);
+    position.xz += aStream.xy * (s - 0.5) * aStream.z;
+    flowing = smoothstep(0.0, 0.1, s) * (1.0 - smoothstep(0.9, 1.0, s));
+  }
   vec4 clip = uViewProjection * vec4(position, 1.0);
   gl_Position = clip;
   float depth = max(clip.w, 0.0001);
@@ -60,7 +71,6 @@ void main() {
   float fog = 1.0 - smoothstep(uFogNear, uFogFar, depth);
   float near = smoothstep(0.25, 1.2, depth);
   float ember = step(0.9, aColor.r) * step(aColor.g, 0.5);
-  float seed = fract(sin(dot(position.xz, vec2(12.9898, 78.233))) * 43758.5453);
   float twinkle = mix(1.0, 0.55 + 0.45 * sin(uTime * 0.002 + seed * 6.2831), ember);
 
   vGlyph = aGlyph;
