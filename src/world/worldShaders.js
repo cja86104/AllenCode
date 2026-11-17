@@ -20,7 +20,7 @@ layout(location = 2) in vec4 aColor;
 layout(location = 3) in float aSize;
 layout(location = 4) in float aTag;
 layout(location = 5) in float aFlow;
-layout(location = 6) in vec3 aStream;
+layout(location = 6) in vec4 aStream;
 
 uniform mat4 uViewProjection;
 uniform float uProjScale;
@@ -56,9 +56,9 @@ void main() {
   // The road's code runs forward along its stretch of road (Chris, 2026-11-16: "a moving pathway"),
   // each character over its own loop from its own point in it, fading in and out at the loop's ends.
   float seed = fract(sin(dot(aPosition.xz, vec2(12.9898, 78.233))) * 43758.5453);
-  if (aStream.z > 0.0) {
-    float s = fract(seed + uTime * ${ROAD_SPEED} / aStream.z);
-    position.xz += aStream.xy * (s - 0.5) * aStream.z;
+  if (aStream.w > 0.0) {
+    float s = fract(seed + uTime * ${ROAD_SPEED} / aStream.w);
+    position += aStream.xyz * (s - 0.5) * aStream.w;
     flowing = smoothstep(0.0, 0.1, s) * (1.0 - smoothstep(0.9, 1.0, s));
   }
   vec4 clip = uViewProjection * vec4(position, 1.0);

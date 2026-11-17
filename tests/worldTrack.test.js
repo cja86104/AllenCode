@@ -2,6 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { buildTrack, measureSections } from '../src/world/worldTrack.js';
 import { landmarkRect } from '../src/world/landmark.js';
+import { distanceAlongRoad, EYE_HEIGHT, ROAD_SHAPE, roadAt } from '../src/world/roadLayout.js';
 import { routeFor } from '../src/world/route.js';
 import { restPose } from '../src/world/restPose.js';
 import { flightGeometry } from '../src/scenes/flight.jsx';
@@ -163,11 +164,14 @@ describe('buildTrack on the family road (Code World W3.3)', () => {
       const rest = sections.find((s) => s.stopId === 'done-for-you');
       if (!rest) throw new Error('no done for you');
       const along = family.layout.along[family.stops.findIndex((s) => s.id === 'done-for-you')];
-      const { origin, direction } = family.layout;
       const camera = track.cameraAt((rest.from + rest.to) / 2);
-      expect(camera.eye[0]).toBeCloseTo(origin[0] + direction[0] * (along - 6), 6);
-      expect(camera.eye[2]).toBeCloseTo(origin[1] + direction[1] * (along - 6), 6);
-      expect(camera.target[0]).toBeCloseTo(origin[0] + direction[0] * (along + 10), 6);
+      // On the road 6 before the stop, looking 10 past it, along the road (it turns, 2026-11-16).
+      const eye = roadAt(family.layout, along - 6).point;
+      const look = roadAt(family.layout, along + 10).point;
+      expect(camera.eye[0]).toBeCloseTo(eye[0], 6);
+      expect(camera.eye[2]).toBeCloseTo(eye[1], 6);
+      expect(camera.target[0]).toBeCloseTo(look[0], 6);
+      expect(camera.target[2]).toBeCloseTo(look[1], 6);
     });
   }
 });
@@ -175,7 +179,7 @@ describe('buildTrack on the family road (Code World W3.3)', () => {
 describe('the camera keeps to the road (Chris 2026-11-16: "the camera on family road runs to the right of the road")', () => {
   /**
    * The eye's signed distance from a path's centre line (positive: right of travel) and how far along.
-   * @param {[number, number]} p @param {ReadonlyArray<ReadonlyArray<number>>} path
+   * @param {[number, number]} p @param {ReadonlyArray<Readonly<[number, number, number?]> | ReadonlyArray<number>>} path
    */
   function offRoad(p, path) {
     let best = { d: Infinity, side: 0, along: 0 };
@@ -210,6 +214,26 @@ describe('the camera keeps to the road (Chris 2026-11-16: "the camera on family 
           const { eye } = track.cameraAt(y);
           expect(offRoad([eye[0], eye[2]], path).d, `scroll ${y}`).toBeLessThanOrEqual(0.15);
         }
+      });
+
+      it(`through the middle of the road between two stops the eye rides the hills, eye height above the ground (${label})`, () => {
+        const rests = sections.filter((s) => s.kind === 'rest');
+        let highest = 0;
+        for (let k = 1; k < rests.length; k += 1) {
+          const from = rests[k - 1].to;
+          const to = rests[k].from;
+          for (let share = 0.35; share <= 0.65; share += 0.05) {
+            const { eye } = track.cameraAt(from + (to - from) * share);
+            const ground = roadAt(theRoad.layout, distanceAlongRoad(theRoad.layout, [eye[0], eye[2]])).height;
+            highest = Math.max(highest, ground);
+            // Within 15 cm: the camera's travel keys sample the ground a tenth of the way apart, so on the
+            // long stretch round the bend its curve can ride a little off a hill's shape between them
+            // (closer keys there make the camera speed up past the never-jumps limit).
+            expect(Math.abs(eye[1] - (ground + EYE_HEIGHT)), `${rests[k].stopId} at ${share.toFixed(2)}`).toBeLessThanOrEqual(0.15);
+          }
+        }
+        // The road does climb: the camera has been over a crest.
+        expect(highest).toBeGreaterThan(ROAD_SHAPE.hill * 0.5);
       });
 
       it(`through the middle of the road between two stops the eye is on the centre line, looking down the road (${label})`, () => {

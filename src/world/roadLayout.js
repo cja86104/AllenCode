@@ -1,13 +1,13 @@
 // @ts-check
 import { serviceScreens } from '../data/serviceScreens.js';
 import { ROAD_PATHS, SLAB_METRICS } from './shapes.js';
-import { distanceAlongRoad, roadAt } from './roadPath.js';
+import { distanceAlongRoad, roadAt, roadHeadingAt } from './roadPath.js';
 
-export { distanceAlongRoad, roadAt, roadBetween, roadLength } from './roadPath.js';
+export { distanceAlongRoad, roadAt, roadBetween, roadHeadingAt, roadLength } from './roadPath.js';
 
 /** @typedef {import('./roads.js').RoadStop} RoadStop */
 /** @typedef {[number, number, number]} Vec3 */
-/** @typedef {[number, number]} Point2 A point on the ground: x and z. */
+/** @typedef {[number, number, number?]} Point2 A point on the ground: x and z, and the ground's height there (2026-11-16: hills), 0 when absent. */
 
 /**
  * A landmark beside the road: its centre, the unit direction its face looks (back up the road,
@@ -24,7 +24,7 @@ const FIRST_AT = 7;
 /** Half the branch road's width: its edges, where the commits of how I work stand. */
 const ROAD_HALF_WIDTH = 1.6;
 /** The three commits of how I work, this far apart along the edge. */
-const COMMIT_GAP = 4;
+export const COMMIT_GAP = 4;
 /** How far the road runs on past its last stop: past the fog's far edge (46) seen from the camera's
  * last rest, so it fades out instead of ending in front of the camera (Chris, 2026-11-12: "messed up
  * at the end"). */
@@ -41,6 +41,67 @@ const BEND_PIECES = 10;
 const SHARED_HEADING = /** @type {Point2} */ ([0, -1]);
 /** Stops on the shared road, where the roads meet. */
 const MEETING_KINDS = Object.freeze(['portrait', 'sketch']);
+
+/**
+ * Each road's shape between its branch's end and the bend where the roads meet (Chris, 2026-11-16: "A
+ * with C on business, B with C on family"), in radians and world units:
+ * - `swing`: the business road's heading swings this far either side of its start, a swing a stop (A);
+ * - `corner` and `cornerLength`: the family road turns this far, over this length of road, between
+ *   Hearth and the templates, and back before Done for you (B);
+ * - `hill`: on both, the ground rises this high midway between stops and is flat at each stop (C).
+ * Both ease in from nothing at the branch's end and out to nothing at the bend.
+ */
+export const ROAD_SHAPE = Object.freeze({ swing: (18 * Math.PI) / 180, corner: (35 * Math.PI) / 180, cornerLength: 12, hill: 2.5 });
+
+/** @param {number} a @param {number} b @param {number} x */
+function smoothstep(a, b, x) {
+  const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
+  return t * t * (3 - 2 * t);
+}
+
+/**
+ * The onward road from the branch's end to `length` along it, in 1-unit pieces, shaped for its door:
+ * the business road winds (each stop on the outside of its curve), the family road turns its corners,
+ * and both roll over hills with every stop in a hollow. Each point carries the ground's height.
+ * @param {Point2} origin @param {Point2} heading The road's heading at the branch's end.
+ * @param {'a' | 'b'} door @param {number} length @param {number} lastRoad Where the last road stop stands.
+ * @param {ReadonlyArray<RoadStop>} roadStops
+ * @returns {Point2[]}
+ */
+function shapedRoad(origin, heading, door, length, lastRoad, roadStops) {
+  const base = Math.atan2(heading[1], heading[0]);
+  // Eases in before the first stop and out after the last, each finished a piece clear of the stop so
+  // the road is even either side of every stop; gone a piece before the end, so the last piece runs
+  // exactly on the starting heading.
+  const ease = (/** @type {number} */ s) => smoothstep(0, FIRST_AT - 1, s) * (1 - smoothstep(lastRoad + 1, length - 1, s));
+  // From one stop to the next is one swing; at each stop the heading is the road's own.
+  const wave = (/** @type {number} */ s) => (s - FIRST_AT) / ROAD_STEP;
+  const hearthAt = roadStops.findIndex((stop) => stop.id === 'hearth');
+  const doneAt = roadStops.findIndex((stop) => stop.kind === 'words');
+  const cornerAt = (/** @type {number} */ index) => FIRST_AT + ROAD_STEP * (index + 0.5);
+  /** @param {number} s */
+  const turn = (s) => {
+    if (door === 'a') return ROAD_SHAPE.swing * ease(s) * Math.sin(Math.PI * wave(s));
+    let total = 0;
+    if (hearthAt >= 0) total += smoothstep(cornerAt(hearthAt) - ROAD_SHAPE.cornerLength / 2, cornerAt(hearthAt) + ROAD_SHAPE.cornerLength / 2, s);
+    if (doneAt > 0) total -= smoothstep(cornerAt(doneAt - 1) - ROAD_SHAPE.cornerLength / 2, cornerAt(doneAt - 1) + ROAD_SHAPE.cornerLength / 2, s);
+    return ROAD_SHAPE.corner * total;
+  };
+  const ground = (/** @type {number} */ s) => (ROAD_SHAPE.hill * ease(s) * (1 - Math.cos(2 * Math.PI * wave(s)))) / 2;
+  const pieces = Math.max(1, Math.ceil(length));
+  const piece = length / pieces;
+  /** @type {Point2[]} */
+  const points = [];
+  let [x, z] = origin;
+  for (let i = 1; i <= pieces; i += 1) {
+    // Each piece runs at the heading halfway through it.
+    const angle = base + turn((i - 0.5) * piece);
+    x += Math.cos(angle) * piece;
+    z += Math.sin(angle) * piece;
+    points.push([x, z, ground(i * piece)]);
+  }
+  return points;
+}
 
 /** A side path stops this far short of its landmark's foot, just before the stand's near post. */
 const SPUR_SHORT = 0.6;
@@ -135,11 +196,13 @@ export function layoutRoad(stops, door, sizes) {
   /** @type {Point2[]} */
   let other = [];
   let junction = lastRoad + RUN_ON;
+  // The onward road takes its door's shape (2026-11-16), ending flat on its starting heading.
   if (meetingStops.length === 0) {
-    road.push(step(origin, heading, lastRoad + RUN_ON));
+    road.push(...shapedRoad(origin, heading, door, lastRoad + RUN_ON, lastRoad, roadStops));
   } else {
-    const bendStart = step(origin, heading, lastRoad + BEND_AFTER);
-    road.push(bendStart);
+    road.push(...shapedRoad(origin, heading, door, lastRoad + BEND_AFTER, lastRoad, roadStops));
+    const bendIndex = road.length - 1;
+    const bendStart = road[bendIndex];
     const from = Math.atan2(heading[1], heading[0]);
     const to = Math.atan2(SHARED_HEADING[1], SHARED_HEADING[0]);
     const piece = BEND_LENGTH / BEND_PIECES;
@@ -156,7 +219,7 @@ export function layoutRoad(stops, door, sizes) {
     // The other road: the bend's mirror image about the shared road's centre line, run back into the fog.
     const jx = at[0];
     const mirror = (/** @type {Point2} */ p) => /** @type {Point2} */ ([2 * jx - p[0], p[1]]);
-    const bend = road.slice(1, 2 + BEND_PIECES).map(mirror);
+    const bend = road.slice(bendIndex, bendIndex + 1 + BEND_PIECES).map(mirror);
     const straight = OTHER_ROAD - BEND_LENGTH;
     const startOther = mirror(step(bendStart, heading, -straight));
     other = [startOther, ...bend];
@@ -177,12 +240,15 @@ export function layoutRoad(stops, door, sizes) {
    * @param {RoadStop} stop @param {number} distance @param {number} side
    */
   const place = (stop, distance, side) => {
-    const { point, heading: here } = roadAt(layoutSoFar, distance);
+    const { point } = roadAt(layoutSoFar, distance);
+    const here = roadHeadingAt(layoutSoFar, distance);
     const right = /** @type {Point2} */ ([-here[1], here[0]]);
     if (stop.kind === 'commits') {
+      // Each commit on the edge square off the road where it stands (the road may be curving).
       for (const offset of [-COMMIT_GAP, 0, COMMIT_GAP]) {
         const p = roadAt(layoutSoFar, distance + offset).point;
-        commits.push([p[0] + right[0] * side * ROAD_HALF_WIDTH, p[1] + right[1] * side * ROAD_HALF_WIDTH]);
+        const h = roadHeadingAt(layoutSoFar, distance + offset);
+        commits.push([p[0] - h[1] * side * ROAD_HALF_WIDTH, p[1] + h[0] * side * ROAD_HALF_WIDTH]);
       }
       return;
     }
@@ -220,7 +286,8 @@ export function layoutRoad(stops, door, sizes) {
   }
 
   if (door === 'b') {
-    const flip = (/** @type {Point2} */ p) => /** @type {Point2} */ ([-p[0], p[1]]);
+    // Mirrored across, keeping the ground's height.
+    const flip = (/** @type {Point2} */ p) => /** @type {Point2} */ (p.length > 2 ? [-p[0], p[1], p[2]] : [-p[0], p[1]]);
     for (const landmark of landmarks) {
       landmark.center[0] = -landmark.center[0];
       landmark.facing[0] = noNegativeZero(-landmark.facing[0]);
@@ -237,7 +304,7 @@ function noNegativeZero(v) {
   return v === 0 ? 0 : v;
 }
 
-/** @param {Point2} from @param {ReadonlyArray<number>} heading @param {number} distance @returns {Point2} */
+/** @param {Readonly<Point2>} from @param {Readonly<Point2>} heading @param {number} distance @returns {Point2} */
 function step(from, heading, distance) {
   return [from[0] + heading[0] * distance, from[1] + heading[1] * distance];
 }
@@ -253,7 +320,12 @@ function step(from, heading, distance) {
 export function spurPaths(layout) {
   return layout.landmarks.map((landmark) => {
     const foot = /** @type {Point2} */ ([landmark.center[0], landmark.center[2]]);
-    const from = roadAt(layout, distanceAlongRoad(layout, foot)).point;
+    // Back across to the road square to the way the landmark faces (back up the road at its stop), as
+    // far as it was set off it: the road's point at its stop, also where the road is curving.
+    const right = [landmark.facing[2], -landmark.facing[0]];
+    const near = roadAt(layout, distanceAlongRoad(layout, foot)).point;
+    const side = Math.sign((foot[0] - near[0]) * right[0] + (foot[1] - near[1]) * right[1]) || 1;
+    const from = /** @type {Point2} */ ([foot[0] - right[0] * side * LATERAL, foot[1] - right[1] * side * LATERAL]);
     const length = Math.hypot(foot[0] - from[0], foot[1] - from[1]);
     const reach = (length - SPUR_SHORT) / length;
     const to = /** @type {Point2} */ ([from[0] + (foot[0] - from[0]) * reach, from[1] + (foot[1] - from[1]) * reach]);

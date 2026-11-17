@@ -1,6 +1,6 @@
 // @ts-check
 import { describe, expect, it } from 'vitest';
-import { layoutRoad, roadAt, roadSizes, spurPaths, ROAD_STEP, LATERAL, BEND_AFTER, BEND_LENGTH, OTHER_ROAD, RUN_ON } from '../src/world/roadLayout.js';
+import { layoutRoad, roadAt, roadHeadingAt, roadSizes, spurPaths, ROAD_STEP, LATERAL, BEND_AFTER, BEND_LENGTH, OTHER_ROAD, RUN_ON } from '../src/world/roadLayout.js';
 import { businessRoadStops, familyRoadStops, MEETING_STOPS } from '../src/world/roads.js';
 import { getExcerpt } from '../src/content/excerpts/index.js';
 import { distanceToPath } from '../src/world/shapes.js';
@@ -82,14 +82,17 @@ describe('layoutRoad (Code World W2.2)', () => {
     expect(road.landmarks[0].center[0]).toBeLessThan(-6);
   });
 
-  it('mirrors in x for the family road', () => {
+  it('starts the family road where the family branch ends (the business branch mirrored), and faces each landmark back up its own road (each road its own shape, 2026-11-16)', () => {
     const family = layoutRoad(stops, 'b', sizes);
-    family.landmarks.forEach((landmark, i) => {
-      const business = road.landmarks[i];
-      expect(landmark.center[0]).toBeCloseTo(-business.center[0], 9);
-      expect(landmark.center[2]).toBeCloseTo(business.center[2], 9);
-      expect(landmark.facing[0]).toBeCloseTo(-business.facing[0], 9);
+    [[0, -40], [3, -48], [6, -55]].forEach((p, i) => {
+      expect(family.path[i][0]).toBeCloseTo(p[0], 9);
+      expect(family.path[i][1]).toBeCloseTo(p[1], 9);
     });
+    for (const landmark of family.landmarks) {
+      const heading = roadHeadingAt(family, family.along[stops.findIndex((s) => s.id === landmark.stopId)]);
+      expect(landmark.facing[0]).toBeCloseTo(-heading[0], 9);
+      expect(landmark.facing[2]).toBeCloseTo(-heading[1], 9);
+    }
   });
 });
 
@@ -100,8 +103,8 @@ describe('the road runs on, and a side path leads to each landmark (Code World R
     const lastStop = road.along[road.along.length - 1];
 
     it(`door ${door}: runs on past How I work beyond the fog’s far edge (46) from its rest`, () => {
-      const past = (last[0] - road.origin[0]) * road.direction[0] + (last[1] - road.origin[1]) * road.direction[1];
-      expect(past - lastStop).toBeGreaterThanOrEqual(46 + 10);
+      const there = roadAt(road, lastStop).point;
+      expect(Math.hypot(last[0] - there[0], last[1] - there[1])).toBeGreaterThanOrEqual(46 + 10);
     });
 
     it(`door ${door}: one straight spur per landmark, square off the road on its side, from the centre line to just short of its foot`, () => {
@@ -116,8 +119,8 @@ describe('the road runs on, and a side path leads to each landmark (Code World R
         const dx = to[0] - from[0];
         const dz = to[1] - from[1];
         const length = Math.hypot(dx, dz);
-        // Perpendicular to the road.
-        expect(Math.abs((dx * road.direction[0] + dz * road.direction[1]) / length)).toBeLessThan(1e-9);
+        // Perpendicular to the road there: square to the way its landmark faces, back up the road.
+        expect(Math.abs((dx * landmark.facing[0] + dz * landmark.facing[2]) / length)).toBeLessThan(1e-9);
         // On the landmark's side, toward its foot.
         const toFoot = [landmark.center[0] - from[0], landmark.center[2] - from[1]];
         expect(dx * toFoot[0] + dz * toFoot[1]).toBeGreaterThan(0);
@@ -156,15 +159,14 @@ describe('the road bends and meets a shared road (Code World W4.1)', () => {
   const meetingSizes = { m1: { width: 6, height: 7.5 }, m2: { width: 6, height: 4.5 } };
   const all = [...stops, ...meeting];
   const both = { ...sizes, ...meetingSizes };
-  const near = (/** @type {number[]} */ a, /** @type {number[]} */ b, eps = 1e-9) => a.every((v, i) => Math.abs(v - b[i]) <= eps);
+  const near = (/** @type {ReadonlyArray<number | undefined>} */ a, /** @type {ReadonlyArray<number | undefined>} */ b, eps = 1e-9) => a.every((v, i) => Math.abs((v ?? 0) - (b[i] ?? 0)) <= eps);
 
-  it('keeps the straight road where it was: roadAt matches origin + direction × distance at every road stop', () => {
+  it('lays each road stop a step along the road from the branch’s end, the business road running on its starting heading at each (2026-11-16: it winds between them)', () => {
     const road = layoutRoad(all, 'a', both);
-    for (const distance of road.along.slice(0, stops.length)) {
-      const { point, heading } = roadAt(road, distance);
-      expect(near(point, [road.origin[0] + road.direction[0] * distance, road.origin[1] + road.direction[1] * distance])).toBe(true);
-      expect(near(heading, road.direction)).toBe(true);
-    }
+    road.along.slice(0, stops.length).forEach((distance, k) => {
+      expect(distance).toBe(7 + ROAD_STEP * k);
+      expect(near(roadHeadingAt(road, distance), road.direction)).toBe(true);
+    });
   });
 
   for (const door of /** @type {const} */ (['a', 'b'])) {
@@ -173,7 +175,8 @@ describe('the road bends and meets a shared road (Code World W4.1)', () => {
 
     it(`door ${door}: bends from the branch's heading to straight down −z, turning one way only, and the shared road starts at the junction`, () => {
       expect(road.junction).toBeCloseTo(last + BEND_AFTER + BEND_LENGTH, 9);
-      expect(near(roadAt(road, road.junction).heading, [0, -1], 1e-9)).toBe(true);
+      // Just past the junction (exactly on the joint, the sum of the road's many short pieces can round either way).
+      expect(near(roadAt(road, road.junction + 0.01).heading, [0, -1], 1e-9)).toBe(true);
       expect(near(roadAt(road, last + BEND_AFTER - 0.01).heading, road.direction, 1e-9)).toBe(true);
       let previous = Math.abs(roadAt(road, last + BEND_AFTER).heading[0]);
       for (let d = last + BEND_AFTER; d <= road.junction; d += 0.5) {
@@ -216,19 +219,19 @@ describe('the road bends and meets a shared road (Code World W4.1)', () => {
     });
   }
 
-  it('door b is door a mirrored in x, the other road included', () => {
+  it('door b’s fork is door a’s mirrored in x, and the roads meet as far along each (each road its own shape between, 2026-11-16)', () => {
     const a = layoutRoad(all, 'a', both);
     const b = layoutRoad(all, 'b', both);
     expect(b.junction).toBeCloseTo(a.junction, 9);
-    a.path.forEach((p, i) => expect(near(b.path[i], [-p[0], p[1]], 1e-9)).toBe(true));
-    a.other.forEach((p, i) => expect(near(b.other[i], [-p[0], p[1]], 1e-9)).toBe(true));
+    a.path.slice(0, 3).forEach((p, i) => expect(near(b.path[i], [-p[0], p[1]], 1e-9)).toBe(true));
   });
 
   it('every side path leaves the road square to its heading, including on the shared road', () => {
     const road = layoutRoad(all, 'a', both);
     for (const spur of spurPaths(road)) {
       const k = all.findIndex((s) => s.id === spur.stopId);
-      const { point, heading } = roadAt(road, road.along[k]);
+      const { point } = roadAt(road, road.along[k]);
+      const heading = roadHeadingAt(road, road.along[k]);
       expect(near(spur.path[0], point, 1e-6)).toBe(true);
       const dx = spur.path[1][0] - spur.path[0][0];
       const dz = spur.path[1][1] - spur.path[0][1];
@@ -237,7 +240,7 @@ describe('the road bends and meets a shared road (Code World W4.1)', () => {
   });
 });
 
-/** The point `back` units before a path's end, walking back along it. @param {Array<[number, number]>} path @param {number} back */
+/** The point `back` units before a path's end, walking back along it. @param {ReadonlyArray<Readonly<[number, number, number?]>>} path @param {number} back */
 function pointBack(path, back) {
   let left = back;
   for (let i = path.length - 1; i > 0; i -= 1) {

@@ -34,7 +34,7 @@ const TRAVEL_SHARES = Object.freeze([0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]);
 /** How far ahead the camera looks down the road while it travels. */
 const TRAVEL_LOOK = 10;
 
-/** @typedef {[number, number]} Point2 */
+/** @typedef {[number, number, number?]} Point2 x and z, and the ground's height there (2026-11-16: hills). */
 
 /**
  * A point on a path at a distance along it (before its start: back along its first segment; past
@@ -131,10 +131,11 @@ export function buildTrack(route, sections, viewport) {
 
   // Distances along the road and places on it, round the bend where the roads meet (W4).
   const along = (/** @type {Vec3} */ p) => (layout ? distanceAlongRoad(layout, [p[0], p[2]]) : 0);
+  // `y` above the ground there (2026-11-16: the road rolls over hills).
   const onRoad = (/** @type {number} */ distance, /** @type {number} */ y) => {
     if (!layout) return /** @type {Vec3} */ ([0, y, 0]);
-    const { point } = roadAt(layout, distance);
-    return /** @type {Vec3} */ ([point[0], y, point[1]]);
+    const { point, height } = roadAt(layout, distance);
+    return /** @type {Vec3} */ ([point[0], height + y, point[1]]);
   };
 
   for (const section of sections) {

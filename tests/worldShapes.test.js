@@ -7,6 +7,7 @@ import {
   codeRoad,
   distanceToPath,
   EDGE_LINES,
+  EDGE_SPACING_BY_TIER,
   editorSlab,
   forkSigns,
   landmarkStand,
@@ -25,7 +26,7 @@ import {
 import { businessRoadStops, familyRoadStops, MEETING_STOPS } from '../src/world/roads.js';
 import builder from '../src/content/excerpts/builder.js';
 import { routeFor } from '../src/world/route.js';
-import { layoutRoad, roadSizes, spurPaths } from '../src/world/roadLayout.js';
+import { distanceAlongRoad, layoutRoad, roadSizes, spurPaths } from '../src/world/roadLayout.js';
 import { getExcerpt } from '../src/content/excerpts/index.js';
 import gate from '../src/content/excerpts/gate.js';
 import ambient from '../src/content/excerpts/ambient.js';
@@ -326,29 +327,34 @@ describe('the road’s edges, side paths and stands (Code World R5)', () => {
     }
   });
 
-  it('carries each edge evenly from the branch onto the road: no gap, no double', () => {
+  it('carries each edge line evenly from the branch onto the road: no gap, no double (three lines, a road that may curve, 2026-11-16)', () => {
     const business = part('business-edges');
     const onward = part('onward-edges');
     const end = layout.origin;
     const [dx, dz] = layout.direction;
+    const spacing = EDGE_SPACING_BY_TIER.mid;
     for (const side of [-1, 1]) {
-      /** @type {number[]} */
-      const along = [];
-      for (const shape of [business, onward]) {
-        for (let i = 0; i < shape.glyphs.length; i += 1) {
-          const [x, z] = ground(shape, i);
-          const rel = [x - end[0], z - end[1]];
-          if (Math.hypot(rel[0], rel[1]) > 3) continue;
-          // Which side: the cross product of the road's direction and the offset.
-          if (Math.sign(dx * rel[1] - dz * rel[0]) !== side) continue;
-          along.push(rel[0] * dx + rel[1] * dz);
+      for (let line = 0; line < EDGE_LINES; line += 1) {
+        /** @type {number[]} */
+        const along = [];
+        for (const shape of [business, onward]) {
+          for (let i = 0; i < shape.glyphs.length; i += 1) {
+            const [x, z] = ground(shape, i);
+            const rel = [x - end[0], z - end[1]];
+            if (Math.hypot(rel[0], rel[1]) > 3) continue;
+            // Which side: the cross product of the road's direction and the offset.
+            if (Math.sign(dx * rel[1] - dz * rel[0]) !== side) continue;
+            // Which line: the outer at the road's half width, the others 15 cm inside it.
+            if (Math.round((1.6 - distanceToPath([x, z], layout.path)) / 0.15) !== line) continue;
+            along.push(distanceAlongRoad(layout, [x, z]));
+          }
         }
-      }
-      along.sort((a, b) => a - b);
-      expect(along.length).toBeGreaterThan(8);
-      for (let i = 1; i < along.length; i += 1) {
-        expect(along[i] - along[i - 1]).toBeGreaterThanOrEqual(0.35 / 2);
-        expect(along[i] - along[i - 1]).toBeLessThanOrEqual(0.35 * 1.5);
+        along.sort((a, b) => a - b);
+        expect(along.length, `side ${side}, line ${line}`).toBeGreaterThan(4);
+        for (let i = 1; i < along.length; i += 1) {
+          expect(along[i] - along[i - 1], `side ${side}, line ${line}`).toBeGreaterThanOrEqual(spacing / 2);
+          expect(along[i] - along[i - 1], `side ${side}, line ${line}`).toBeLessThanOrEqual(spacing * 1.5);
+        }
       }
     }
   });
@@ -441,7 +447,7 @@ describe('the road is as full on every door (Code World W3.1)', () => {
   }
   const layout = layoutRoad(stops, 'a', roadSizes(stops, stopSources));
   const sources = { gate: gate.code, road: ambient.code, stops: stopSources };
-  const area = (/** @type {ReadonlyArray<ReadonlyArray<number>>} */ path, /** @type {number} */ width) =>
+  const area = (/** @type {ReadonlyArray<Readonly<[number, number, number?]>>} */ path, /** @type {number} */ width) =>
     width * path.slice(1).reduce((sum, p, i) => sum + Math.hypot(p[0] - path[i][0], p[1] - path[i][1]), 0);
   const count = (/** @type {Array<{ name: string, shape: import('../src/world/shapes.js').Shape }>} */ parts, /** @type {string} */ name) =>
     parts.find((p) => p.name === name)?.shape.glyphs.length ?? 0;

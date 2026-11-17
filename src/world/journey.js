@@ -1,6 +1,6 @@
 // @ts-check
 import { cameraAt } from './camera.js';
-import { EYE_HEIGHT, LOOK_BELOW, layoutRoad, roadAt } from './roadLayout.js';
+import { COMMIT_GAP, distanceAlongRoad, EYE_HEIGHT, LOOK_BELOW, layoutRoad, roadAt } from './roadLayout.js';
 
 /** @typedef {[number, number, number]} Vec3 */
 /** @typedef {import('./roads.js').RoadStop} RoadStop */
@@ -27,7 +27,7 @@ import { EYE_HEIGHT, LOOK_BELOW, layoutRoad, roadAt } from './roadLayout.js';
  *   screens: number,
  *   splitAt: number,
  *   landmarks: JourneyLandmark[],
- *   commits: { from: number, to: number, along: number[], origin: [number, number], direction: [number, number] } | null,
+ *   commits: { from: number, to: number, along: number[], road: ReturnType<typeof layoutRoad> } | null,
  * }} Journey
  */
 
@@ -167,17 +167,17 @@ export function buildJourney(door, roadStops = [], sizes = {}) {
  */
 function placeRoad(door, roadStops, sizes, start, placed) {
   const layout = layoutRoad(roadStops, door, sizes);
-  const { origin, direction } = layout;
   // Places on the road by distance along it, round the bend where the roads meet (W4).
+  // `y` above the ground there (2026-11-16: the road rolls over hills).
   const onRoad = (/** @type {number} */ along, /** @type {number} */ y) => {
-    const { point } = roadAt(layout, along);
-    return /** @type {Vec3} */ ([point[0], y, point[1]]);
+    const { point, height } = roadAt(layout, along);
+    return /** @type {Vec3} */ ([point[0], height + y, point[1]]);
   };
   /** @type {JourneyStop[]} */
   const stops = [];
   /** @type {Array<Landmark & { from: number, to: number, arriveAt: number, holdAt: number }>} */
   const landmarks = [];
-  /** @type {{ from: number, to: number, along: number[], origin: [number, number], direction: [number, number] } | null} */
+  /** @type {{ from: number, to: number, along: number[], road: ReturnType<typeof layoutRoad> } | null} */
   let commits = null;
 
   for (const [k, stop] of roadStops.entries()) {
@@ -196,8 +196,8 @@ function placeRoad(door, roadStops, sizes, start, placed) {
           still: i === COMMIT_EYES.length - 1,
         });
       });
-      const gap = layout.commits.length > 1 ? Math.hypot(layout.commits[1][0] - layout.commits[0][0], layout.commits[1][1] - layout.commits[0][1]) : 0;
-      commits = { from, to, along: [along - gap, along, along + gap], origin: [origin[0], origin[1]], direction: [direction[0], direction[1]] };
+      // The commits stand a gap apart along the road, which may be curving (2026-11-16).
+      commits = { from, to, along: [along - COMMIT_GAP, along, along + COMMIT_GAP], road: layout };
       continue;
     }
     if (stop.kind === 'words') {
@@ -275,7 +275,7 @@ export function commitsAt(journey, progress) {
   const commits = journey.commits;
   if (!commits || progress < commits.from) return 0;
   const { eye } = cameraAt(progress, journey.keys);
-  const along = (eye[0] - commits.origin[0]) * commits.direction[0] + (eye[2] - commits.origin[1]) * commits.direction[1];
+  const along = distanceAlongRoad(commits.road, [eye[0], eye[2]]);
   return commits.along.filter((point) => point < along).length;
 }
 

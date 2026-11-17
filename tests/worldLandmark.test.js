@@ -73,8 +73,8 @@ describe('packShapes tells where each shape sits in the buffer (Task P4: the lan
     const own = { ...plain, glyphs: Uint16Array.from([97, 98]), positions: new Float32Array(6), colors: new Float32Array(8), sizes: Float32Array.from([0.1, 0.16]), flow: Float32Array.from([0, 1.04]) };
     const { data } = packShapes([plain, own], (c) => 'ab'.indexOf(c));
     const stride = data.length / 3;
-    // Eleven floats, and three more for a run along the road (2026-11-16).
-    expect(stride).toBe(14);
+    // Eleven floats, and four more for a run along the road: x, y, z and its loop (2026-11-16).
+    expect(stride).toBe(15);
     expect([data[8], data[10]]).toEqual([Math.fround(0.1), 0]);
     expect([data[stride + 8], data[stride * 2 + 8]]).toEqual([Math.fround(0.1), Math.fround(0.16)]);
     expect([data[stride + 10], data[stride * 2 + 10]]).toEqual([0, Math.fround(1.04)]);

@@ -1,6 +1,6 @@
 // @ts-check
 import { describe, expect, it } from 'vitest';
-import { buildRoadWorld, codeRoad, roadEdges, ROAD_COLORS, EDGE_LINES } from '../src/world/shapes.js';
+import { buildRoadWorld, codeRoad, roadEdges, roadGateway, ROAD_COLORS, EDGE_LINES } from '../src/world/shapes.js';
 import { packShapes } from '../src/world/worldRenderer.js';
 import { WORLD_VERTEX_SHADER } from '../src/world/worldShaders.js';
 import { routeFor } from '../src/world/route.js';
@@ -40,11 +40,13 @@ describe('the road’s code (Chris, 2026-11-16)', () => {
     const road = codeRoad(CODE, { path: PATH, width: 3.2, count: 400 }, 3);
     expect(road.stream).toBeInstanceOf(Float32Array);
     const stream = /** @type {Float32Array} */ (road.stream);
-    expect(stream.length).toBe(400 * 3);
+    // Four floats a glyph: its run in x, y and z, and its loop (2026-11-16: on hills it runs up and down too).
+    expect(stream.length).toBe(400 * 4);
     const first = [0, -1];
     const second = [Math.SQRT1_2, -Math.SQRT1_2];
     for (let i = 0; i < 400; i += 1) {
-      const [dx, dz, loop] = [stream[i * 3], stream[i * 3 + 1], stream[i * 3 + 2]];
+      const [dx, dy, dz, loop] = [stream[i * 4], stream[i * 4 + 1], stream[i * 4 + 2], stream[i * 4 + 3]];
+      expect(dy).toBe(0);
       expect(Math.hypot(dx, dz)).toBeCloseTo(1, 6);
       const along = (dx - first[0]) ** 2 + (dz - first[1]) ** 2 < 1e-9 || (dx - second[0]) ** 2 + (dz - second[1]) ** 2 < 1e-9;
       expect(along, `glyph ${i} runs (${dx}, ${dz})`).toBe(true);
@@ -77,16 +79,16 @@ describe('the moving road in the renderer', () => {
     const road = codeRoad('ab', { path: [[0, 0], [0, -4]], width: 1, count: 2 }, 1);
     const still = roadEdges('ab', { path: [[0, 0], [0, -1]], width: 1, spacing: 1 }, 1);
     const { data } = packShapes([road, still], () => 0);
-    const stride = 14;
+    const stride = 15;
     expect(data.length).toBe((2 + still.glyphs.length) * stride);
-    expect([...data.subarray(11, 14)]).toEqual([...(road.stream ?? []).subarray(0, 3)]);
-    expect([...data.subarray(2 * stride + 11, 2 * stride + 14)]).toEqual([0, 0, 0]);
+    expect([...data.subarray(11, 15)]).toEqual([...(road.stream ?? []).subarray(0, 4)]);
+    expect([...data.subarray(2 * stride + 11, 2 * stride + 15)]).toEqual([0, 0, 0, 0]);
   });
 
   it('moves a glyph with a run along it over time, fading at the ends of its loop', () => {
-    expect(WORLD_VERTEX_SHADER).toContain('layout(location = 6) in vec3 aStream;');
-    expect(WORLD_VERTEX_SHADER).toMatch(/if \(aStream\.z > 0\.0\)/);
-    expect(WORLD_VERTEX_SHADER).toMatch(/position\.xz \+= aStream\.xy \*/);
+    expect(WORLD_VERTEX_SHADER).toContain('layout(location = 6) in vec4 aStream;');
+    expect(WORLD_VERTEX_SHADER).toMatch(/if \(aStream\.w > 0\.0\)/);
+    expect(WORLD_VERTEX_SHADER).toMatch(/position \+= aStream\.xyz \*/);
   });
 });
 
@@ -107,5 +109,44 @@ describe('the budget with three-line edges', () => {
         expect(sum('landmark'), `${door} ${tier} landmarks`).toBeGreaterThanOrEqual(Math.floor(BEFORE[door][tier].landmark * 0.9));
       }
     }
+  });
+});
+
+describe('the road’s characters on the hills (Chris, 2026-11-16: C)', () => {
+  // Up a rise of 2 over 10, then down it again.
+  const HILL = /** @type {Array<[number, number, number]>} */ ([[0, 0, 0], [0, -10, 2], [0, -20, 0]]);
+  /** The ground's height under a point on this path. @param {number} z */
+  const groundAt = (z) => (z > -10 ? (-z / 10) * 2 : 2 - ((-z - 10) / 10) * 2);
+
+  it('lays the scatter on the ground, each character running along the slope it stands on', () => {
+    const road = codeRoad(CODE, { path: HILL, width: 3.2, count: 800 }, 4);
+    const stream = /** @type {Float32Array} */ (road.stream);
+    for (let i = 0; i < 800; i += 1) {
+      const z = road.positions[i * 3 + 2];
+      expect(Math.abs(road.positions[i * 3 + 1] - groundAt(z)), `glyph ${i}`).toBeLessThanOrEqual(0.11);
+      const [dx, dy, dz] = [stream[i * 4], stream[i * 4 + 1], stream[i * 4 + 2]];
+      expect(Math.hypot(dx, dy, dz)).toBeCloseTo(1, 6);
+      // Up the first half, down the second: the slope is 2 in 10.
+      expect(dy / Math.hypot(dx, dz)).toBeCloseTo(z > -10 ? 0.2 : -0.2, 6);
+    }
+  });
+
+  it('lays the edges on the ground', () => {
+    const edges = roadEdges(CODE, { path: HILL, width: 3.2, spacing: 0.5 }, 5);
+    for (let i = 0; i < edges.glyphs.length; i += 1) {
+      expect(Math.abs(edges.positions[i * 3 + 1] - groundAt(edges.positions[i * 3 + 2]))).toBeLessThanOrEqual(0.03);
+    }
+  });
+
+  it('stands the "our work/" sign on the ground where it crosses the road', () => {
+    const sign = roadGateway('our work/', { at: [0, -10], heading: [0, -1], halfWidth: 1.6, ground: 2 }, 1);
+    /** @type {number[]} */
+    const posts = [];
+    /** @type {number[]} */
+    const label = [];
+    for (let i = 0; i < sign.glyphs.length; i += 1) (sign.colors[i * 4 + 1] === 1 ? label : posts).push(sign.positions[i * 3 + 1]);
+    // Stored as 32-bit floats: to five places.
+    expect(Math.min(...posts)).toBeCloseTo(2, 5);
+    for (const y of label) expect(y).toBeCloseTo(2 + 3.3, 5);
   });
 });

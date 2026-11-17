@@ -5,7 +5,11 @@
  * is found by its distance along it, not by one straight heading.
  */
 
-/** @typedef {[number, number]} Point2 A point on the ground: x and z. */
+/**
+ * A point on the road: x and z, and the ground's height there (Chris, 2026-11-16: hills), 0 when
+ * absent.
+ * @typedef {[number, number, number?]} Point2
+ */
 /** @typedef {{ path: ReadonlyArray<Point2>, origin: Point2 }} RoadLike A layout from `layoutRoad`: its path passes its origin, the branch's end. */
 
 /**
@@ -20,10 +24,11 @@ function roadFrom(layout) {
 
 /**
  * Where the road is at a distance along it from the branch's end, and which way it runs there (W4: the
- * road is no longer one straight line). Before its start and past its end it carries straight on.
+ * road is no longer one straight line), and the ground's height there (2026-11-16: hills). Before its
+ * start and past its end it carries straight on, at its first or last height.
  * @param {RoadLike} layout
  * @param {number} distance
- * @returns {{ point: Point2, heading: Point2 }}
+ * @returns {{ point: [number, number], heading: [number, number], height: number }}
  */
 export function roadAt(layout, distance) {
   const road = roadFrom(layout);
@@ -32,21 +37,40 @@ export function roadAt(layout, distance) {
     const [ax, az] = road[i];
     const [bx, bz] = road[i + 1];
     const length = Math.hypot(bx - ax, bz - az);
-    const heading = /** @type {Point2} */ ([(bx - ax) / length, (bz - az) / length]);
+    const heading = /** @type {[number, number]} */ ([(bx - ax) / length, (bz - az) / length]);
     if (distance < walked + length || i === road.length - 2) {
       const t = distance - walked;
-      return { point: [ax + heading[0] * t, az + heading[1] * t], heading };
+      const share = Math.min(1, Math.max(0, t / length));
+      const height = (road[i][2] ?? 0) + ((road[i + 1][2] ?? 0) - (road[i][2] ?? 0)) * share;
+      return { point: [ax + heading[0] * t, az + heading[1] * t], heading, height };
     }
     walked += length;
   }
-  return { point: [road[0][0], road[0][1]], heading: [0, -1] };
+  return { point: [road[0][0], road[0][1]], heading: [0, -1], height: road[0][2] ?? 0 };
+}
+
+/**
+ * Which way the road runs at a distance along it, smoothed across the joint between its short pieces
+ * (2026-11-16: the shaped road is laid in 1-unit pieces, and a stop stands where two meet): the mean of
+ * the headings half a unit either side. On a straight road it is the road's heading.
+ * @param {RoadLike} layout
+ * @param {number} distance
+ * @returns {[number, number]}
+ */
+export function roadHeadingAt(layout, distance) {
+  const before = roadAt(layout, distance - 0.5).heading;
+  const after = roadAt(layout, distance + 0.5).heading;
+  const x = before[0] + after[0];
+  const z = before[1] + after[1];
+  const length = Math.hypot(x, z) || 1;
+  return [x / length, z / length];
 }
 
 /**
  * How far along the road (from the branch's end) a point on the ground lies: the distance to its
  * nearest point on the road; before the road's start or past its end, along its first or last heading.
  * @param {RoadLike} layout
- * @param {ReadonlyArray<number>} p
+ * @param {Readonly<Point2>} p
  */
 export function distanceAlongRoad(layout, p) {
   const road = roadFrom(layout);
@@ -69,20 +93,23 @@ export function distanceAlongRoad(layout, p) {
 }
 
 /**
- * The road's centre line between two distances along it.
+ * The road's centre line between two distances along it, each point with the ground's height.
  * @param {RoadLike} layout @param {number} from @param {number} to
- * @returns {Point2[]}
+ * @returns {Array<[number, number, number]>}
  */
 export function roadBetween(layout, from, to) {
   const road = roadFrom(layout);
-  /** @type {Point2[]} */
-  const points = [roadAt(layout, from).point];
+  const at = (/** @type {number} */ distance) => {
+    const { point, height } = roadAt(layout, distance);
+    return /** @type {[number, number, number]} */ ([point[0], point[1], height]);
+  };
+  const points = [at(from)];
   let walked = 0;
   for (let i = 0; i < road.length - 1; i += 1) {
     walked += Math.hypot(road[i + 1][0] - road[i][0], road[i + 1][1] - road[i][1]);
-    if (walked > from && walked < to) points.push([road[i + 1][0], road[i + 1][1]]);
+    if (walked > from && walked < to) points.push([road[i + 1][0], road[i + 1][1], road[i + 1][2] ?? 0]);
   }
-  points.push(roadAt(layout, to).point);
+  points.push(at(to));
   return points;
 }
 

@@ -1,7 +1,7 @@
 // @ts-check
 import { LANDMARK } from './landmark.js';
 import { landedShape } from './worldFlight.js';
-import { roadAt, roadBetween, roadLength } from './roadPath.js';
+import { roadAt, roadBetween, roadHeadingAt, roadLength } from './roadPath.js';
 
 /**
  * The prototype world, generated in code from real approved excerpts (no models, nothing invented).
@@ -14,10 +14,12 @@ import { roadAt, roadBetween, roadLength } from './roadPath.js';
  * present, is one float per glyph: 0 stands still; above 0, the glyph rises up a column that height
  * from the ground, wrapping (the stands' code between their posts).
  * `stream` (Chris, 2026-11-16), when present, gives each glyph a run forward along the road: its
- * direction on the ground (x, z) and the length of its loop, three floats a glyph.
+ * direction (x, y, z: on a hill it runs up or down the slope) and the length of its loop, four floats
+ * a glyph.
  * @typedef {{ positions: Float32Array, glyphs: Uint16Array, colors: Float32Array, size: number, tag?: number, sizes?: Float32Array, flow?: Float32Array, stream?: Float32Array }} Shape
  * @typedef {[number, number, number]} Vec3
- * @typedef {[number, number]} Point2 A point on the ground: x and z.
+ * @typedef {[number, number, number?]} Point2 A point on the ground: x and z, and the ground's height there
+ *   (2026-11-16: hills), 0 when absent.
  * @typedef {'low' | 'mid' | 'high'} Tier
  */
 
@@ -236,7 +238,7 @@ export function codeRoad(code, { path, width, count }, seed) {
     total += length;
   }
   const shape = emptyShape(count, 0.09);
-  const stream = new Float32Array(count * 3);
+  const stream = new Float32Array(count * 4);
   for (let i = 0; i < count; i += 1) {
     const along = random() * total;
     const segment = segments.find((s) => along <= s.start + s.length) ?? segments[segments.length - 1];
@@ -247,17 +249,22 @@ export function codeRoad(code, { path, width, count }, seed) {
     const offset = ((random() + random()) / 2 - 0.5) * width;
     const x = segment.from[0] + (segment.to[0] - segment.from[0]) * t - dz * offset;
     const z = segment.from[1] + (segment.to[1] - segment.from[1]) * t + dx * offset;
+    // On the ground beneath it (2026-11-16: hills), and running up or down the slope it stands on.
+    const low = segment.from[2] ?? 0;
+    const rise = (segment.to[2] ?? 0) - low;
+    const run = Math.hypot(segment.length, rise) || 1;
     const pick = random();
     const colour = pick < COLOURED_SHARE ? ROAD_COLORS[Math.min(ROAD_COLORS.length - 1, Math.floor((pick / COLOURED_SHARE) * ROAD_COLORS.length))] : null;
-    put(shape, i, x, (random() - 0.5) * 0.2, z, ink[i % ink.length], colour ?? PALE, colour ? 0.9 : 0.45 + 0.45 * random());
-    stream[i * 3] = dx;
-    stream[i * 3 + 1] = dz;
-    stream[i * 3 + 2] = ROAD_FLOW_LOOP;
+    put(shape, i, x, low + rise * t + (random() - 0.5) * 0.2, z, ink[i % ink.length], colour ?? PALE, colour ? 0.9 : 0.45 + 0.45 * random());
+    stream[i * 4] = (dx * segment.length) / run;
+    stream[i * 4 + 1] = rise / run;
+    stream[i * 4 + 2] = (dz * segment.length) / run;
+    stream[i * 4 + 3] = ROAD_FLOW_LOOP;
   }
   return { ...shape, stream };
 }
 
-/** @param {ReadonlyArray<ReadonlyArray<number>>} path */
+/** @param {ReadonlyArray<Readonly<Point2>>} path */
 function pathLength(path) {
   return path.slice(1).reduce((sum, p, i) => sum + Math.hypot(p[0] - path[i][0], p[1] - path[i][1]), 0);
 }
@@ -265,7 +272,7 @@ function pathLength(path) {
 /**
  * How many scatter glyphs a stretch of road gets at a density, in glyphs per unit of ground.
  * @param {number} density
- * @param {ReadonlyArray<ReadonlyArray<number>>} path
+ * @param {ReadonlyArray<Readonly<Point2>>} path
  * @param {number} width
  */
 export function scatterCount(density, path, width) {
@@ -303,7 +310,7 @@ export function roadEdges(code, { path, width, spacing, from = 0, highlights = [
   }
   const size = 0.1;
   const perSide = total >= from ? Math.floor((total - from) / spacing) + 1 : 0;
-  /** @type {Array<{ x: number, z: number, char: string, lit: boolean }>} */
+  /** @type {Array<{ x: number, y: number, z: number, char: string, lit: boolean }>} */
   const placed = [];
   for (const side of [-1, 1]) {
     for (let line = 0; line < EDGE_LINES; line += 1) {
@@ -317,16 +324,18 @@ export function roadEdges(code, { path, width, spacing, from = 0, highlights = [
         const offset = side * (width / 2 - line * EDGE_GAP) + (random() - 0.5) * 0.04;
         const x = segment.from[0] + (segment.to[0] - segment.from[0]) * t - dz * offset;
         const z = segment.from[1] + (segment.to[1] - segment.from[1]) * t + dx * offset;
+        // On the ground beneath it (2026-11-16: hills).
+        const y = (segment.from[2] ?? 0) + ((segment.to[2] ?? 0) - (segment.from[2] ?? 0)) * t;
         if (openings && openings.points.some(([px, pz]) => Math.hypot(x - px, z - pz) < openings.radius)) continue;
         const lit = highlights.some(([px, pz]) => Math.hypot(x - px, z - pz) <= HIGHLIGHT_RADIUS);
-        placed.push({ x, z, char: ink[(k + (side > 0 ? 7 : 0) + line * 13) % ink.length], lit });
+        placed.push({ x, y, z, char: ink[(k + (side > 0 ? 7 : 0) + line * 13) % ink.length], lit });
       }
     }
   }
   const shape = emptyShape(placed.length, size);
   const sizes = highlights.length > 0 ? new Float32Array(placed.length).fill(size) : null;
-  placed.forEach(({ x, z, char, lit }, i) => {
-    put(shape, i, x, 0.02, z, char, EMBER, lit ? 1 : 0.85);
+  placed.forEach(({ x, y, z, char, lit }, i) => {
+    put(shape, i, x, y + 0.02, z, char, EMBER, lit ? 1 : 0.85);
     if (sizes && lit) sizes[i] = size * 1.6;
   });
   return sizes ? { ...shape, sizes } : shape;
@@ -467,11 +476,11 @@ export function forkSigns(labels, { at }, seed) {
  * above the road, its characters repeated up an ember post at each of the road's edges, facing back
  * up the road so the camera reads it as it drives under.
  * @param {string} label
- * @param {{ at: Point2, heading: Point2, halfWidth: number }} options Where on the road's centre line, which way it runs there, and half its width.
+ * @param {{ at: Point2, heading: Point2, halfWidth: number, ground?: number }} options Where on the road's centre line, which way it runs there, half its width, and the ground's height there (2026-11-16: hills; 0 when absent).
  * @param {number} seed
  * @returns {Shape}
  */
-export function roadGateway(label, { at, heading, halfWidth }, seed) {
+export function roadGateway(label, { at, heading, halfWidth, ground = 0 }, seed) {
   const random = seeded(seed);
   const ink = inkOf(label);
   const postGlyphs = 17;
@@ -486,14 +495,14 @@ export function roadGateway(label, { at, heading, halfWidth }, seed) {
   slots.forEach((slot, j) => {
     if (!slot.trim()) return;
     const [x, z] = place((j - (slots.length - 1) / 2) * 0.3);
-    put(shape, i, x, 3.3, z, ink[k], WHITE, 1);
+    put(shape, i, x, ground + 3.3, z, ink[k], WHITE, 1);
     i += 1;
     k += 1;
   });
   for (const side of [-1, 1]) {
     for (let k = 0; k < postGlyphs; k += 1) {
       const [x, z] = place(side * halfWidth);
-      put(shape, i, x + (random() - 0.5) * 0.001, k * 0.19, z, ink[k % ink.length], EMBER, 0.55);
+      put(shape, i, x + (random() - 0.5) * 0.001, ground + k * 0.19, z, ink[k % ink.length], EMBER, 0.55);
       i += 1;
     }
   }
@@ -679,8 +688,9 @@ export function buildRoadWorld(tier, sources, seed, road, landed = {}) {
   const otherEdges = other.length > 1 ? roadEdges(sources.road, { path: other, width: ROAD_HALF * 2, spacing: edgeSpacing }, seed + 13) : null;
   // Signs across the road ("our work/" before the products, 2026-11-16).
   const gateways = (layout.signs ?? []).map((sign, n) => {
-    const { point, heading } = roadAt(layout, sign.along);
-    return { name: `sign:${sign.label}`, shape: roadGateway(sign.label, { at: point, heading, halfWidth: ROAD_HALF }, seed + 70 + n) };
+    const { point, height } = roadAt(layout, sign.along);
+    const heading = roadHeadingAt(layout, sign.along);
+    return { name: `sign:${sign.label}`, shape: roadGateway(sign.label, { at: point, heading, halfWidth: ROAD_HALF, ground: height }, seed + 70 + n) };
   });
 
   /** @type {Array<{ name: string, shape: Shape, stopId?: string, cursor?: number }>} */
