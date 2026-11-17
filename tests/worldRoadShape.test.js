@@ -1,7 +1,7 @@
 // @ts-check
 import { describe, expect, it } from 'vitest';
 import { routeFor } from '../src/world/route.js';
-import { LATERAL, ROAD_SHAPE, ROAD_STEP, BEND_AFTER, roadAt } from '../src/world/roadLayout.js';
+import { LATERAL, ROAD_SHAPE, ROAD_STEP, BEND_AFTER, BUSINESS_STEP, roadAt } from '../src/world/roadLayout.js';
 import { distanceToPath, ROAD_PATHS } from '../src/world/shapes.js';
 
 /**
@@ -31,11 +31,17 @@ describe('both roads', () => {
   for (const door of /** @type {const} */ (['a', 'b'])) {
     const { layout, roadStops, bendAt } = road(door);
 
-    it(`door ${door}: every stop stands in a hollow, a crest midway to the next`, () => {
+    it(`door ${door}: every stop stands in a hollow, with its hills between the stops`, () => {
       for (const { stop, along } of roadStops) expect(roadAt(layout, along).height, stop.id).toBeCloseTo(0, 6);
       for (let k = 1; k < roadStops.length; k += 1) {
-        const crest = roadAt(layout, (roadStops[k - 1].along + roadStops[k].along) / 2).height;
-        expect(Math.abs(crest - ROAD_SHAPE.hill) / ROAD_SHAPE.hill, `between ${roadStops[k - 1].stop.id} and ${roadStops[k].stop.id}`).toBeLessThan(0.05);
+        const from = roadStops[k - 1].along;
+        const span = roadStops[k].along - from;
+        const label = `between ${roadStops[k - 1].stop.id} and ${roadStops[k].stop.id}`;
+        // Business: one crest midway. Family (2026-11-17): a tall crest midway, then two rolling ones, by turns.
+        const crests = door === 'a' ? [[0.5, ROAD_SHAPE.hill]] : (k - 1) % 2 === 0 ? [[0.5, ROAD_SHAPE.tallHill]] : [[0.25, ROAD_SHAPE.hill], [0.75, ROAD_SHAPE.hill]];
+        for (const [share, height] of crests) {
+          expect(Math.abs(roadAt(layout, from + span * share).height - height) / height, label).toBeLessThan(0.05);
+        }
       }
     });
 
@@ -102,24 +108,28 @@ describe('the family road turns at each section (B)', () => {
   const base = angle(layout.direction);
   const at = (/** @type {string} */ id) => roadStops.find(({ stop }) => stop.id === id)?.along ?? Number.NaN;
 
-  it('runs straight through Hearth, turns a corner into the templates, and turns back before Done for you', () => {
+  it('meets Hearth on its heading, turns a corner into the templates, and turns back before Done for you', () => {
+    // Within 0.06°: the road is laid in 1-unit pieces, each on the heading at its middle, and the gentle
+    // bends (2026-11-17) leave a stop's neighbouring pieces a hair off its own heading.
+    const STOP_HEADING = 1e-3;
     const hearth = at('hearth');
     const templates = roadStops.filter(({ stop }) => stop.kind === 'template' && stop.id !== 'hearth');
     const done = at('done-for-you');
-    expect(Math.abs(turnBetween(base, angle(roadAt(layout, hearth).heading)))).toBeLessThan(1e-6);
+    expect(Math.abs(turnBetween(base, angle(roadAt(layout, hearth).heading)))).toBeLessThan(STOP_HEADING);
     const through = angle(roadAt(layout, templates[0].along).heading);
-    expect(Math.abs(Math.abs(turnBetween(base, through)) - ROAD_SHAPE.corner)).toBeLessThan(1e-6);
-    // Straight through the templates: one heading from the first to the last.
+    expect(Math.abs(Math.abs(turnBetween(base, through)) - ROAD_SHAPE.corner)).toBeLessThan(STOP_HEADING);
+    // Through the templates the road bends gently (2026-11-17), back to the corner's heading at each.
+    for (const { stop, along } of templates) expect(Math.abs(turnBetween(through, angle(roadAt(layout, along).heading))), stop.id).toBeLessThan(STOP_HEADING);
     for (let s = templates[0].along; s <= templates[templates.length - 1].along; s += 0.5) {
-      expect(Math.abs(turnBetween(through, angle(roadAt(layout, s).heading))), `at ${s}`).toBeLessThan(1e-6);
+      expect(Math.abs(turnBetween(through, angle(roadAt(layout, s).heading))), `at ${s}`).toBeLessThan(ROAD_SHAPE.bend * 1.05);
     }
-    expect(Math.abs(turnBetween(base, angle(roadAt(layout, done).heading)))).toBeLessThan(1e-6);
+    expect(Math.abs(turnBetween(base, angle(roadAt(layout, done).heading)))).toBeLessThan(STOP_HEADING);
   });
 
-  it('turns each corner over its corner length, between the stops', () => {
+  it('turns each corner over its corner length, scaled with the step, between the stops', () => {
     const hearth = at('hearth');
     const first = roadStops[1].along;
-    expect(first - hearth).toBe(ROAD_STEP);
-    expect(ROAD_SHAPE.cornerLength).toBeLessThan(ROAD_STEP - 1);
+    expect(first - hearth).toBe(BUSINESS_STEP);
+    expect((ROAD_SHAPE.cornerLength * BUSINESS_STEP) / ROAD_STEP).toBeLessThan(BUSINESS_STEP - 1);
   });
 });

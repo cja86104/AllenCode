@@ -22,9 +22,14 @@ export const WINDOW_RADIUS = FOG_FAR + RECUT_AFTER;
  * camera. The business road (three steps between stops, 2026-11-16) is built larger: enough that its
  * road keeps the family road's density and each of its landmarks about the family road's glyphs
  * (696 / 1131 / 1770 by tier), while no cut holds more than the tier's budget
- * (`tests/worldSurroundings.test.js`). The family road keeps its whole-world budget, as before.
+ * (`tests/worldSurroundings.test.js`). The family road, three steps between stops too (2026-11-17), is
+ * built larger by as much as keeps each of its landmarks the glyphs it had on the short road (348 / 565 /
+ * 885 by tier) and the opening full.
  */
-export const WORLD_SCALE = Object.freeze({ a: Object.freeze({ low: 1.55, mid: 1.7, high: 1.75 }), b: Object.freeze({ low: 1, mid: 1, high: 1 }) });
+export const WORLD_SCALE = Object.freeze({
+  a: Object.freeze({ low: 1.55, mid: 1.7, high: 1.75 }),
+  b: Object.freeze({ low: 1.165, mid: 1.275, high: 1.31 }),
+});
 
 /**
  * The glyphs a door's whole road may hold on a tier.

@@ -13,11 +13,11 @@ import IdeaSketch from './IdeaSketch.jsx';
 import { businessRoadStops, familyRoadStops } from '../world/roads.js';
 
 /**
- * Scroll of road before each of a door's road chapters, while the camera travels to its landmark: the
- * business road's stops stand three times as far apart (Chris, 2026-11-16), so three times the scroll,
- * at the family road's pace.
+ * Scroll of road before each of a door's road chapters, while the camera travels to its landmark: both
+ * roads' stops stand three times as far apart as they did (business 2026-11-16, family 2026-11-17), so
+ * three times the scroll, at the same pace.
  */
-const ROAD_BEFORE = Object.freeze({ a: '240vh', b: '80vh' });
+const ROAD_BEFORE = Object.freeze({ a: '240vh', b: '240vh' });
 /** The road before your idea, on the shared road (the same for both doors). */
 const MEETING_BEFORE = '80vh';
 /** The road before the workshop: the bend where the roads meet is about three ordinary stretches (W4). */

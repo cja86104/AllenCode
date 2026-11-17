@@ -81,8 +81,16 @@ describe('cutting the world around the camera', () => {
 });
 
 describe('the budget, cut by cut', () => {
-  it('the family road keeps its whole-world budget, as before', () => {
-    for (const tier of TIERS) expect(worldBudgetFor('b', tier)).toBe(budgetFor(tier));
+  it('the long family road (2026-11-17) keeps each landmark’s glyphs from the short road, within 2%, and the opening full', () => {
+    // Each family landmark's glyphs on the 14-unit road, measured at the commit before the change.
+    const before = { low: 348, mid: 565, high: 885 };
+    for (const tier of TIERS) {
+      const { parts } = world('b', tier);
+      for (const part of parts.filter((p) => p.name.startsWith('landmark:') && p.name !== 'landmark:your-idea')) {
+        expect(Math.abs(part.shape.glyphs.length / before[tier] - 1), `${tier} ${part.name}`).toBeLessThan(0.02);
+      }
+      expect(parts.find((p) => p.name === 'trunk-road')?.shape.glyphs.length, tier).toBe({ low: 1776, mid: 3848, high: 6808 }[tier]);
+    }
   });
 
   for (const door of /** @type {const} */ (['a', 'b'])) {

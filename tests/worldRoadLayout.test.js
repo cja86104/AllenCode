@@ -1,6 +1,6 @@
 // @ts-check
 import { describe, expect, it } from 'vitest';
-import { layoutRoad, roadAt, roadHeadingAt, roadSizes, roadStepFor, spurPaths, ROAD_STEP, LATERAL, BEND_AFTER, BEND_LENGTH, OTHER_ROAD, RUN_ON } from '../src/world/roadLayout.js';
+import { layoutRoad, roadAt, roadHeadingAt, roadSizes, roadStepFor, spurPaths, BUSINESS_STEP, ROAD_SHAPE, ROAD_STEP, LATERAL, BEND_AFTER, BEND_LENGTH, OTHER_ROAD, RUN_ON } from '../src/world/roadLayout.js';
 import { businessRoadStops, familyRoadStops, MEETING_STOPS } from '../src/world/roads.js';
 import { getExcerpt } from '../src/content/excerpts/index.js';
 import { distanceToPath } from '../src/world/shapes.js';
@@ -220,11 +220,11 @@ describe('the road bends and meets a shared road (Code World W4.1)', () => {
     });
   }
 
-  it('door b’s fork is door a’s mirrored in x; the business road, the longer, meets the shared road further along (2026-11-16)', () => {
+  it('door b’s fork is door a’s mirrored in x; with the same stops at the same spacing, both meet the shared road as far along (2026-11-17)', () => {
     const a = layoutRoad(all, 'a', both);
     const b = layoutRoad(all, 'b', both);
-    // The business road is the longer (2026-11-16): it meets the shared road further along.
-    expect(a.junction).toBeGreaterThan(b.junction);
+    // Both roads' stops stand three steps apart (2026-11-17), so the same stops reach the shared road equally far along.
+    expect(a.junction).toBe(b.junction);
     a.path.slice(0, 3).forEach((p, i) => expect(near(b.path[i], [-p[0], p[1]], 1e-9)).toBe(true));
   });
 
@@ -274,9 +274,10 @@ describe('the "our work/" sign between the services and the products (Chris, 202
 });
 
 describe('each road’s stop spacing (Chris, 2026-11-16: "the business side road needs to be longer … spread out")', () => {
-  it('the business road’s stops stand three family steps apart; the family road’s as before', () => {
+  it('both roads’ stops stand three steps apart (Chris, 2026-11-17: "extend the family side as well")', () => {
     expect(roadStepFor('a')).toBe(42);
-    expect(roadStepFor('b')).toBe(ROAD_STEP);
+    expect(roadStepFor('b')).toBe(BUSINESS_STEP);
+    expect(BUSINESS_STEP).toBe(3 * ROAD_STEP);
     expect(ROAD_STEP).toBe(14);
     for (const door of /** @type {const} */ (['a', 'b'])) {
       const road = layoutRoad(stops, door, sizes);
@@ -285,3 +286,53 @@ describe('each road’s stop spacing (Chris, 2026-11-16: "the business side road
   });
 });
 
+
+describe('the long family road’s ground and curves (Chris, 2026-11-17: "Mix: one tall, then rolling", "Corners + gentle bends")', () => {
+  const family = familyRoadStops();
+  const road = layoutRoad(family, 'b', roadSizes(family, sourcesOf(family)));
+  /** The road stops' distances along the road, in order (the meeting stops left out). */
+  const at = family.flatMap((stop, i) => (stop.kind === 'portrait' || stop.kind === 'sketch' ? [] : [road.along[i]]));
+  const height = (/** @type {number} */ d) => roadAt(road, d).height;
+  const heading = (/** @type {number} */ d) => Math.atan2(roadHeadingAt(road, d)[1], roadHeadingAt(road, d)[0]);
+  /** The difference of two angles, wrapped to ±π. @param {number} a @param {number} b */
+  const turned = (a, b) => Math.atan2(Math.sin(a - b), Math.cos(a - b));
+  const hearth = family.findIndex((s) => s.id === 'hearth');
+  const done = family.findIndex((s) => s.kind === 'words');
+  const corners = [hearth, done - 1];
+
+  it('sits every stop in a hollow, and alternates a tall hill with rolling ground from stretch to stretch', () => {
+    for (const d of at) expect(Math.abs(height(d))).toBeLessThan(0.02);
+    for (let k = 0; k < at.length - 1; k += 1) {
+      const span = at[k + 1] - at[k];
+      if (k % 2 === 0) {
+        expect(height(at[k] + span / 2), `stretch ${k}`).toBeCloseTo(ROAD_SHAPE.tallHill, 1);
+      } else {
+        // Two rolling hills: wide enough for the camera's travel keys to ride (three slipped between them).
+        for (const share of [1 / 4, 3 / 4]) expect(height(at[k] + span * share), `stretch ${k}`).toBeCloseTo(ROAD_SHAPE.hill, 1);
+        expect(Math.abs(height(at[k] + span / 2)), `stretch ${k}`).toBeLessThan(0.05);
+      }
+    }
+    expect(ROAD_SHAPE.tallHill).toBe(7);
+  });
+
+  it('bends gently through each stretch without a corner, the sign alternating, and keeps each corner clean', () => {
+    expect(ROAD_SHAPE.bend).toBeCloseTo((12 * Math.PI) / 180, 9);
+    /** Each bending stretch's index and the sign of its bend. @type {Array<[number, number]>} */
+    const bends = [];
+    for (let k = 0; k < at.length - 1; k += 1) {
+      const middle = (at[k] + at[k + 1]) / 2;
+      const swing = turned(heading(middle), heading(at[k]));
+      if (corners.includes(k)) {
+        // Half the corner at its middle (left after Hearth, back before Done for you), and no bend.
+        expect(Math.abs(Math.abs(swing) - ROAD_SHAPE.corner / 2), `stretch ${k}`).toBeLessThan(0.01);
+        continue;
+      }
+      expect(Math.abs(swing), `stretch ${k}`).toBeCloseTo(ROAD_SHAPE.bend, 2);
+      bends.push([k, Math.sign(swing)]);
+    }
+    expect(bends.length).toBeGreaterThan(1);
+    // The sign flips from one stretch to the next: (−1)^k, times the first bend's.
+    const [k0, s0] = bends[0];
+    for (const [k, sign] of bends) expect(sign, `stretch ${k}`).toBe((k - k0) % 2 === 0 ? s0 : -s0);
+  });
+});

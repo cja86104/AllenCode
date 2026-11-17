@@ -101,7 +101,7 @@ describe('the journey rail (Code World W4.4)', () => {
 });
 
 describe('the page between stops (Chris, 2026-11-16: the business road three times as long)', () => {
-  for (const [door, height] of /** @type {const} */ ([['a', '240vh'], ['b', '80vh']])) {
+  for (const [door, height] of /** @type {const} */ ([['a', '240vh'], ['b', '240vh']])) {
     it(`door ${door}: ${height} of road before each of its road's chapters`, () => {
       fieldBus.set({ mode: 'webgl' });
       render(

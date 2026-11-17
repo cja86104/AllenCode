@@ -20,7 +20,9 @@ export const ROAD_STEP = 14;
 /**
  * The business road's stops stand three steps apart (Chris, 2026-11-16: "the business side road needs to
  * be longer … and it items along the way need to be spread out"; "3x: one in view"): beyond the fog's
- * far edge (46) from each other, so one landmark is in view at a time. The family road keeps `ROAD_STEP`.
+ * far edge (46) from each other, so one landmark is in view at a time. The family road too (Chris,
+ * 2026-11-17: "extend the family side as well. just like you did for business"). The meeting stops keep
+ * `ROAD_STEP`.
  */
 export const BUSINESS_STEP = 3 * ROAD_STEP;
 
@@ -29,7 +31,8 @@ export const BUSINESS_STEP = 3 * ROAD_STEP;
  * @param {'a' | 'b'} door
  */
 export function roadStepFor(door) {
-  return door === 'a' ? BUSINESS_STEP : ROAD_STEP;
+  void door;
+  return BUSINESS_STEP;
 }
 /** How far beside the road's centre line each landmark stands. */
 export const LATERAL = 4.2;
@@ -62,10 +65,24 @@ const MEETING_KINDS = Object.freeze(['portrait', 'sketch']);
  * - `swing`: the business road's heading swings this far either side of its start, a swing a stop (A);
  * - `corner` and `cornerLength`: the family road turns this far, over this length of road, between
  *   Hearth and the templates, and back before Done for you (B);
- * - `hill`: on both, the ground rises this high midway between stops and is flat at each stop (C).
+ *   (each corner's length is for a `ROAD_STEP` stretch, scaled with the road's step, 2026-11-17);
+ * - `hill`: on the business road the ground rises this high midway between stops and is flat at each
+ *   stop (C);
+ * - the long family road (Chris, 2026-11-17: "Mix: one tall, then rolling", "Corners + gentle bends"):
+ *   stretch by stretch, one `tallHill` hill, then two `hill` hills, every stop in a hollow (three were
+ *   too narrow for the camera's travel keys to ride); and each
+ *   stretch without a corner bends `bend` either way, alternating, back to the road's own heading at
+ *   each stop.
  * Both ease in from nothing at the branch's end and out to nothing at the bend.
  */
-export const ROAD_SHAPE = Object.freeze({ swing: (18 * Math.PI) / 180, corner: (35 * Math.PI) / 180, cornerLength: 12, hill: 2.5 });
+export const ROAD_SHAPE = Object.freeze({
+  swing: (18 * Math.PI) / 180,
+  corner: (35 * Math.PI) / 180,
+  cornerLength: 12,
+  hill: 2.5,
+  tallHill: 7,
+  bend: (12 * Math.PI) / 180,
+});
 
 /** @param {number} a @param {number} b @param {number} x */
 function smoothstep(a, b, x) {
@@ -94,15 +111,31 @@ function shapedRoad(origin, heading, door, length, lastRoad, roadStops) {
   const hearthAt = roadStops.findIndex((stop) => stop.id === 'hearth');
   const doneAt = roadStops.findIndex((stop) => stop.kind === 'words');
   const cornerAt = (/** @type {number} */ index) => FIRST_AT + spacing * (index + 0.5);
+  const cornerHalf = (ROAD_SHAPE.cornerLength * spacing) / ROAD_STEP / 2;
+  /** The stretches the family road turns a corner in. */
+  const cornered = [hearthAt, doneAt - 1].filter((index) => index >= 0);
+  /** Which stretch `s` is in (0 from the first stop to the second), and how far through it. @param {number} s */
+  const stretch = (s) => {
+    const k = Math.floor(wave(s));
+    return { k, f: wave(s) - k };
+  };
   /** @param {number} s */
   const turn = (s) => {
     if (door === 'a') return ROAD_SHAPE.swing * ease(s) * Math.sin(Math.PI * wave(s));
     let total = 0;
-    if (hearthAt >= 0) total += smoothstep(cornerAt(hearthAt) - ROAD_SHAPE.cornerLength / 2, cornerAt(hearthAt) + ROAD_SHAPE.cornerLength / 2, s);
-    if (doneAt > 0) total -= smoothstep(cornerAt(doneAt - 1) - ROAD_SHAPE.cornerLength / 2, cornerAt(doneAt - 1) + ROAD_SHAPE.cornerLength / 2, s);
-    return ROAD_SHAPE.corner * total;
+    if (hearthAt >= 0) total += smoothstep(cornerAt(hearthAt) - cornerHalf, cornerAt(hearthAt) + cornerHalf, s);
+    if (doneAt > 0) total -= smoothstep(cornerAt(doneAt - 1) - cornerHalf, cornerAt(doneAt - 1) + cornerHalf, s);
+    const { k, f } = stretch(s);
+    // Flat at both ends, so each stop meets the road's own heading whatever its neighbour does.
+    const bend = cornered.includes(k) ? 0 : (ROAD_SHAPE.bend * ease(s) * (1 - Math.cos(2 * Math.PI * f)) * (k % 2 === 0 ? 1 : -1)) / 2;
+    return ROAD_SHAPE.corner * total + bend;
   };
-  const ground = (/** @type {number} */ s) => (ROAD_SHAPE.hill * ease(s) * (1 - Math.cos(2 * Math.PI * wave(s)))) / 2;
+  /** @param {number} s */
+  const ground = (s) => {
+    if (door === 'a') return (ROAD_SHAPE.hill * ease(s) * (1 - Math.cos(2 * Math.PI * wave(s)))) / 2;
+    const { k, f } = stretch(s);
+    return k % 2 === 0 ? (ROAD_SHAPE.tallHill * ease(s) * (1 - Math.cos(2 * Math.PI * f))) / 2 : (ROAD_SHAPE.hill * ease(s) * (1 - Math.cos(4 * Math.PI * f))) / 2;
+  };
   const pieces = Math.max(1, Math.ceil(length));
   const piece = length / pieces;
   /** @type {Point2[]} */
