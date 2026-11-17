@@ -105,9 +105,9 @@ describe('the business road (Code World W2.2)', () => {
     expect(buildJourney('b')).toEqual(buildJourney('b', [], {}));
   });
 
-  it('runs a stop of 1.5 screens per road stop after the turn, named in order', () => {
+  it('runs a stop of 1.5 screens per road stop after the turn, three times that on the business road (its stops three steps apart, 2026-11-16), named in order', () => {
     // W2's nine road stops, and the two services added on 2026-11-16.
-    expect(journey.screens).toBeCloseTo(6.8 + 11 * 1.5, 9);
+    expect(journey.screens).toBeCloseTo(6.8 + 11 * 1.5 * 3, 9);
     expect(journey.stops.map((s) => s.name)).toEqual([
       'Empty file',
       'Into the code',
@@ -124,8 +124,9 @@ describe('the business road (Code World W2.2)', () => {
 
   it('moves smoothly all the way down the road', () => {
     let previous = cameraAt(0, journey.keys);
-    // Sampled finer than the family road's: the business road is longer (2026-11-16).
-    for (let p = 0.0005; p <= 1; p += 0.0005) {
+    // Sampled finer than the family road's: the business road is longer (2026-11-16), so a share of it
+    // is more screens; this is about a hundredth of a screen a sample, as the family road's.
+    for (let p = 0.0002; p <= 1; p += 0.0002) {
       const camera = cameraAt(p, journey.keys);
       expect(distance(camera.eye, previous.eye)).toBeLessThan(0.5);
       previous = camera;

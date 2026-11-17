@@ -1,6 +1,6 @@
 // @ts-check
 import { cameraAt } from './camera.js';
-import { COMMIT_GAP, distanceAlongRoad, EYE_HEIGHT, LOOK_BELOW, layoutRoad, roadAt } from './roadLayout.js';
+import { COMMIT_GAP, distanceAlongRoad, EYE_HEIGHT, LOOK_BELOW, layoutRoad, roadAt, roadStepFor, ROAD_STEP } from './roadLayout.js';
 
 /** @typedef {[number, number, number]} Vec3 */
 /** @typedef {import('./roads.js').RoadStop} RoadStop */
@@ -180,15 +180,20 @@ function placeRoad(door, roadStops, sizes, start, placed) {
   /** @type {{ from: number, to: number, along: number[], road: ReturnType<typeof layoutRoad> } | null} */
   let commits = null;
 
+  let at = start;
   for (const [k, stop] of roadStops.entries()) {
-    const from = start + STOP_SCREENS * k;
-    const to = from + STOP_SCREENS;
+    // A road stop's timing stretches with its road's step (2026-11-16: the business road's stops stand
+    // three steps apart), so the camera keeps its pace; the stops where the roads meet keep theirs.
+    const stretch = stop.kind === 'portrait' || stop.kind === 'sketch' ? 1 : roadStepFor(door) / ROAD_STEP;
+    const from = at;
+    const to = from + STOP_SCREENS * stretch;
+    at = to;
     stops.push({ id: stop.id, name: stop.name, from, to });
     if (stop.kind === 'commits') {
       const along = layout.along[k];
       COMMIT_EYES.forEach((offset, i) => {
         placed.push({
-          screens: from + (STOP_SCREENS * (i + 1)) / COMMIT_EYES.length,
+          screens: from + (STOP_SCREENS * stretch * (i + 1)) / COMMIT_EYES.length,
           stop: stop.name,
           eye: onRoad(along + offset, EYE_HEIGHT),
           target: onRoad(along + offset + 10, 0.8),
@@ -211,13 +216,13 @@ function placeRoad(door, roadStops, sizes, start, placed) {
     const look = /** @type {Vec3} */ ([landmark.center[0], landmark.center[1] - LOOK_BELOW * landmark.height, landmark.center[2]]);
     const distance = restDistance(landmark);
     const eye = /** @type {Vec3} */ ([look[0] + landmark.facing[0] * distance, look[1], look[2] + landmark.facing[2] * distance]);
-    const arriveAt = from + ARRIVE_SCREENS;
-    const holdAt = from + HOLD_SCREENS;
+    const arriveAt = from + ARRIVE_SCREENS * stretch;
+    const holdAt = from + HOLD_SCREENS * stretch;
     for (const screens of [arriveAt, holdAt]) placed.push({ screens, stop: stop.name, eye: [...eye], target: [...look], fov: ROAD_FOV, still: true });
     landmarks.push({ ...landmark, from, to, arriveAt, holdAt });
   }
 
-  const end = start + STOP_SCREENS * roadStops.length;
+  const end = at;
   const last = placed[placed.length - 1];
   if (last.screens < end) placed.push({ ...last, screens: end, eye: [...last.eye], target: [...last.target], still: true });
   return { stops, landmarks, commits, end };

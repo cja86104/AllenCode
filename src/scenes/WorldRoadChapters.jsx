@@ -12,8 +12,14 @@ import Builder from './Builder.jsx';
 import IdeaSketch from './IdeaSketch.jsx';
 import { businessRoadStops, familyRoadStops } from '../world/roads.js';
 
-/** Scroll of road before each chapter, while the camera travels to its landmark. */
-const ROAD_BEFORE = '80vh';
+/**
+ * Scroll of road before each of a door's road chapters, while the camera travels to its landmark: the
+ * business road's stops stand three times as far apart (Chris, 2026-11-16), so three times the scroll,
+ * at the family road's pace.
+ */
+const ROAD_BEFORE = Object.freeze({ a: '240vh', b: '80vh' });
+/** The road before your idea, on the shared road (the same for both doors). */
+const MEETING_BEFORE = '80vh';
 /** The road before the workshop: the bend where the roads meet is about three ordinary stretches (W4). */
 const ROAD_TO_MEETING = '240vh';
 /** A stop of words (done for you) holds on screen this long, so the camera rests on the road there. */
@@ -62,7 +68,7 @@ export default function WorldRoadChapters({ door, includeDrafts }) {
         if (!chapter) return null;
         return (
           <div key={stop.id}>
-            <div aria-hidden="true" style={{ height: ROAD_BEFORE }} />
+            <div aria-hidden="true" style={{ height: ROAD_BEFORE[door] }} />
             <div data-world-segment="rest" data-world-stop={stop.id}>
               {chapter}
             </div>
@@ -74,7 +80,7 @@ export default function WorldRoadChapters({ door, includeDrafts }) {
       <div data-world-segment="rest" data-world-stop="workshop">
         <Builder />
       </div>
-      <div aria-hidden="true" style={{ height: ROAD_BEFORE }} />
+      <div aria-hidden="true" style={{ height: MEETING_BEFORE }} />
       <div data-world-segment="rest" data-world-stop="your-idea" data-world-hold="visible">
         <IdeaSketch />
       </div>

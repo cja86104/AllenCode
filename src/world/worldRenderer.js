@@ -196,6 +196,8 @@ export function createWorldRenderer(canvas, atlas) {
   let pixelRatio = 1;
 
   return {
+    /** The renderer's WebGL context, for a layer drawn beneath the glyphs (the ground, 2026-11-16). */
+    context: gl,
     /**
      * Replaces everything drawn. Returns each shape's place in the buffer, for `render`'s fade.
      * @param {ReadonlyArray<Shape>} shapes
@@ -238,12 +240,14 @@ export function createWorldRenderer(canvas, atlas) {
      *   cursor?: { index: number, position: [number, number, number], visible: boolean },
      *   flight?: { progress: number, fade: number },
      *   passed?: number,
+     *   underlay?: (frame: { viewProjection: Float32Array, fogNear: number, fogFar: number }) => void,
      * }} [options] Ranges of glyphs drawn at `amount` of their alpha (at most `MAX_FADES`); one glyph (by
      *   its place in the buffer) drawn at `position`, shown or hidden (an unfinished file's cursor); and
      *   the flight set by `setFlight`, at its progress and fade; and how many road landmarks the visitor
-     *   has passed (each shows its picture instead of its code).
+     *   has passed (each shows its picture instead of its code); and a layer drawn beneath the glyphs,
+     *   after the canvas is cleared (the ground, 2026-11-16).
      */
-    render(camera, time, { fades = [], cursor, flight: flying, passed = 0 } = {}) {
+    render(camera, time, { fades = [], cursor, flight: flying, passed = 0, underlay } = {}) {
       const viewProjection = viewProjectionFor(camera, width / height);
       const projScale = 1 / Math.tan((camera.fov * Math.PI) / 360);
       gl.useProgram(program);
@@ -270,6 +274,10 @@ export function createWorldRenderer(canvas, atlas) {
       gl.uniform1f(u.time, time);
       gl.clearColor(0, 0, 0, 0);
       gl.clear(gl.COLOR_BUFFER_BIT);
+      if (underlay) {
+        underlay({ viewProjection, fogNear: FOG_NEAR, fogFar: FOG_FAR });
+        gl.useProgram(program);
+      }
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, texture);
       gl.bindVertexArray(vao);

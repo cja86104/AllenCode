@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { buildTrack, measureSections } from '../src/world/worldTrack.js';
 import { landmarkRect } from '../src/world/landmark.js';
-import { distanceAlongRoad, EYE_HEIGHT, ROAD_SHAPE, roadAt } from '../src/world/roadLayout.js';
+import { distanceAlongRoad, EYE_HEIGHT, ROAD_SHAPE, roadAt, roadStepFor } from '../src/world/roadLayout.js';
 import { routeFor } from '../src/world/route.js';
 import { restPose } from '../src/world/restPose.js';
 import { flightGeometry } from '../src/scenes/flight.jsx';
@@ -40,7 +40,9 @@ function page(viewport, onRoute = route) {
   at += (openingScreens + 1) * h;
   for (const stop of stopsOf.stops) {
     // The workshop comes after the bend where the roads meet, about three ordinary stretches of road (W4).
-    at += (stop.id === 'workshop' ? 2.4 : 0.8) * h;
+    // The business road's stops three times as far apart, with three times the page (2026-11-16).
+    const before = stop.id === 'workshop' ? 2.4 : stop.kind === 'portrait' || stop.kind === 'sketch' ? 0.8 : 0.8 * (roadStepFor(onRoute.road?.door ?? 'b') / 14);
+    at += before * h;
     /** @type {TrackSection} */
     const rest = { kind: 'rest', stopId: stop.id, from: at, to: at + 1.2 * h };
     const code = stop.excerptId ? stopsOf.sources[stop.excerptId] : '';

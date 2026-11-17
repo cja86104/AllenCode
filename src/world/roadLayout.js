@@ -17,6 +17,20 @@ export { distanceAlongRoad, roadAt, roadBetween, roadHeadingAt, roadLength } fro
 
 /** Distance along the road between one landmark and the next, in world units. */
 export const ROAD_STEP = 14;
+/**
+ * The business road's stops stand three steps apart (Chris, 2026-11-16: "the business side road needs to
+ * be longer … and it items along the way need to be spread out"; "3x: one in view"): beyond the fog's
+ * far edge (46) from each other, so one landmark is in view at a time. The family road keeps `ROAD_STEP`.
+ */
+export const BUSINESS_STEP = 3 * ROAD_STEP;
+
+/**
+ * The distance between a door's road stops.
+ * @param {'a' | 'b'} door
+ */
+export function roadStepFor(door) {
+  return door === 'a' ? BUSINESS_STEP : ROAD_STEP;
+}
 /** How far beside the road's centre line each landmark stands. */
 export const LATERAL = 4.2;
 /** How far past the branch's end the first landmark stands. */
@@ -75,10 +89,11 @@ function shapedRoad(origin, heading, door, length, lastRoad, roadStops) {
   // exactly on the starting heading.
   const ease = (/** @type {number} */ s) => smoothstep(0, FIRST_AT - 1, s) * (1 - smoothstep(lastRoad + 1, length - 1, s));
   // From one stop to the next is one swing; at each stop the heading is the road's own.
-  const wave = (/** @type {number} */ s) => (s - FIRST_AT) / ROAD_STEP;
+  const spacing = roadStepFor(door);
+  const wave = (/** @type {number} */ s) => (s - FIRST_AT) / spacing;
   const hearthAt = roadStops.findIndex((stop) => stop.id === 'hearth');
   const doneAt = roadStops.findIndex((stop) => stop.kind === 'words');
-  const cornerAt = (/** @type {number} */ index) => FIRST_AT + ROAD_STEP * (index + 0.5);
+  const cornerAt = (/** @type {number} */ index) => FIRST_AT + spacing * (index + 0.5);
   /** @param {number} s */
   const turn = (s) => {
     if (door === 'a') return ROAD_SHAPE.swing * ease(s) * Math.sin(Math.PI * wave(s));
@@ -187,7 +202,8 @@ export function layoutRoad(stops, door, sizes) {
   const heading = /** @type {Point2} */ ([direction[0], direction[1]]);
   const roadStops = stops.filter((s) => !MEETING_KINDS.includes(s.kind));
   const meetingStops = stops.filter((s) => MEETING_KINDS.includes(s.kind));
-  const lastRoad = roadStops.length > 0 ? FIRST_AT + ROAD_STEP * (roadStops.length - 1) : 0;
+  const spacing = roadStepFor(door);
+  const lastRoad = roadStops.length > 0 ? FIRST_AT + spacing * (roadStops.length - 1) : 0;
 
   // The centre line from the branch's end: straight on, then (with meeting stops) the bend and the
   // shared road.
@@ -277,9 +293,9 @@ export function layoutRoad(stops, door, sizes) {
       place(stop, distance, meetingIndex % 2 === 0 ? -1 : 1);
       meetingIndex += 1;
     } else {
-      const distance = FIRST_AT + ROAD_STEP * roadIndex;
+      const distance = FIRST_AT + spacing * roadIndex;
       along.push(distance);
-      if (stop.signBefore) signs.push({ label: stop.signBefore, along: distance - ROAD_STEP / 2 });
+      if (stop.signBefore) signs.push({ label: stop.signBefore, along: distance - spacing / 2 });
       place(stop, distance, roadIndex % 2 === 0 ? -1 : 1);
       roadIndex += 1;
     }

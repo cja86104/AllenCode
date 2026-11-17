@@ -27,6 +27,7 @@ import { businessRoadStops, familyRoadStops, MEETING_STOPS } from '../src/world/
 import builder from '../src/content/excerpts/builder.js';
 import { routeFor } from '../src/world/route.js';
 import { distanceAlongRoad, layoutRoad, roadSizes, spurPaths } from '../src/world/roadLayout.js';
+import { worldBudgetFor } from '../src/world/surroundings.js';
 import { getExcerpt } from '../src/content/excerpts/index.js';
 import gate from '../src/content/excerpts/gate.js';
 import ambient from '../src/content/excerpts/ambient.js';
@@ -220,9 +221,9 @@ describe('the business road’s shapes (Code World W2.3)', () => {
     }
     const layout = layoutRoad(stops, 'a', roadSizes(stops, stopSources));
     for (const tier of /** @type {const} */ (['low', 'mid', 'high'])) {
-      const parts = buildRoadWorld(tier, { gate: gate.code, road: ambient.code, stops: stopSources }, 1, { stops, layout });
+      const parts = buildRoadWorld(tier, { gate: gate.code, road: ambient.code, stops: stopSources }, 1, { stops, layout, budget: worldBudgetFor('a', tier) });
       const total = parts.reduce((sum, part) => sum + part.shape.glyphs.length, 0);
-      expect(total).toBeLessThanOrEqual(budgetFor(tier));
+      expect(total).toBeLessThanOrEqual(worldBudgetFor('a', tier));
       expect(parts.some((part) => part.name === 'landmark')).toBe(false);
       for (const stop of stops.filter((s) => s.kind !== 'commits')) {
         const part = parts.find((p) => p.stopId === stop.id);
@@ -257,8 +258,8 @@ describe('passed landmarks show their picture (Code World R4)', () => {
 
   it('tags each screen landmark’s sculpture and picture with its place on the road, within every tier’s budget', () => {
     for (const tier of /** @type {const} */ (['low', 'mid', 'high'])) {
-      const parts = buildRoadWorld(tier, { gate: gate.code, road: ambient.code, stops: stopSources }, 1, { stops, layout }, landed);
-      expect(parts.reduce((sum, part) => sum + part.shape.glyphs.length, 0)).toBeLessThanOrEqual(budgetFor(tier));
+      const parts = buildRoadWorld(tier, { gate: gate.code, road: ambient.code, stops: stopSources }, 1, { stops, layout, budget: worldBudgetFor('a', tier) }, landed);
+      expect(parts.reduce((sum, part) => sum + part.shape.glyphs.length, 0)).toBeLessThanOrEqual(worldBudgetFor('a', tier));
       layout.landmarks.forEach((landmark, k) => {
         const sculpture = parts.find((p) => p.name === `landmark:${landmark.stopId}`);
         const picture = parts.find((p) => p.name === `landed:${landmark.stopId}`);
@@ -276,7 +277,7 @@ describe('passed landmarks show their picture (Code World R4)', () => {
   });
 
   it('without pictures to show, builds exactly as before', () => {
-    const before = buildRoadWorld('mid', { gate: gate.code, road: ambient.code, stops: stopSources }, 1, { stops, layout });
+    const before = buildRoadWorld('mid', { gate: gate.code, road: ambient.code, stops: stopSources }, 1, { stops, layout, budget: worldBudgetFor('a', 'mid') });
     expect(before.some((p) => p.name.startsWith('landed:'))).toBe(false);
   });
 });
@@ -291,7 +292,7 @@ describe('the road’s edges, side paths and stands (Code World R5)', () => {
   }
   const layout = layoutRoad(stops, 'a', roadSizes(stops, stopSources));
   const sources = { gate: gate.code, road: ambient.code, stops: stopSources };
-  const parts = buildRoadWorld('mid', sources, 1, { stops, layout });
+  const parts = buildRoadWorld('mid', sources, 1, { stops, layout, budget: worldBudgetFor('a', 'mid') });
   const part = (/** @type {string} */ name) => {
     const found = parts.find((p) => p.name === name);
     if (!found) throw new Error(`No part ${name}.`);
@@ -455,7 +456,7 @@ describe('the road is as full on every door (Code World W3.1)', () => {
   for (const tier of /** @type {const} */ (['low', 'mid', 'high'])) {
     it(`${tier}: the opening's scatter is ROAD_DENSITY per unit of ground, the same with or without a road`, () => {
       const opening = buildWorld(tier, { gate: gate.code, road: ambient.code, landmark: ambient.code }, 1);
-      const withRoad = buildRoadWorld(tier, sources, 1, { stops, layout });
+      const withRoad = buildRoadWorld(tier, sources, 1, { stops, layout, budget: worldBudgetFor('a', tier) });
       for (const [name, path, width] of /** @type {const} */ ([
         ['trunk-road', ROAD_PATHS.trunk, 4],
         ['business-road', ROAD_PATHS.business, 3.2],
@@ -468,7 +469,7 @@ describe('the road is as full on every door (Code World W3.1)', () => {
     });
 
     it(`${tier}: the road between the landmarks is BETWEEN_SHARE of the opening's density, the run-on an eighth, the side paths the road's`, () => {
-      const parts = buildRoadWorld(tier, sources, 1, { stops, layout });
+      const parts = buildRoadWorld(tier, sources, 1, { stops, layout, budget: worldBudgetFor('a', tier) });
       const onward = layout.path.slice(ROAD_PATHS.business.length - 1);
       const last = layout.along[layout.along.length - 1];
       const between = Math.floor(ROAD_DENSITY[tier] * BETWEEN_SHARE[tier] * 3.2 * last);
@@ -482,12 +483,12 @@ describe('the road is as full on every door (Code World W3.1)', () => {
     });
 
     it(`${tier}: the screens share what the budget leaves, SCREEN_FLOOR each at least, and the whole fits`, () => {
-      const parts = buildRoadWorld(tier, sources, 1, { stops, layout });
+      const parts = buildRoadWorld(tier, sources, 1, { stops, layout, budget: worldBudgetFor('a', tier) });
       const screens = stops.filter((s) => s.kind === 'product' || s.kind === 'service');
       const sizes = screens.map((s) => count(parts, `landmark:${s.id}`));
       expect(Math.min(...sizes)).toBeGreaterThanOrEqual(SCREEN_FLOOR[tier]);
       expect(Math.max(...sizes) - Math.min(...sizes)).toBeLessThanOrEqual(1);
-      expect(parts.reduce((sum, p) => sum + p.shape.glyphs.length, 0)).toBeLessThanOrEqual(budgetFor(tier));
+      expect(parts.reduce((sum, p) => sum + p.shape.glyphs.length, 0)).toBeLessThanOrEqual(worldBudgetFor('a', tier));
     });
   }
 
@@ -560,7 +561,7 @@ describe('where the roads meet (Code World W4.2)', () => {
       if (!road) throw new Error('no road');
       const sources = { gate: gate.code, road: ambient.code, stops: road.sources };
       for (const tier of /** @type {const} */ (['low', 'mid', 'high'])) {
-        const parts = buildRoadWorld(tier, sources, 1, { stops: road.stops, layout: road.layout });
+        const parts = buildRoadWorld(tier, sources, 1, { stops: road.stops, layout: road.layout, budget: worldBudgetFor(door, tier) });
         const count = (/** @type {string} */ name) => parts.find((p) => p.name === name)?.shape.glyphs.length ?? 0;
         expect(count('landmark:workshop'), tier).toBeGreaterThanOrEqual(SCREEN_FLOOR[tier]);
         // Neither door's road is thinned to fit: the opening is at its full density on every tier.
@@ -574,7 +575,7 @@ describe('where the roads meet (Code World W4.2)', () => {
         for (let i = 0; i < edges.glyphs.length; i += 1) {
           expect(offEdgeLine(distanceToPath([edges.positions[i * 3], edges.positions[i * 3 + 2]], road.layout.other), 1.6)).toBeLessThanOrEqual(0.05);
         }
-        expect(parts.reduce((sum, p) => sum + p.shape.glyphs.length, 0)).toBeLessThanOrEqual(budgetFor(tier));
+        expect(parts.reduce((sum, p) => sum + p.shape.glyphs.length, 0)).toBeLessThanOrEqual(worldBudgetFor(door, tier));
       }
       expect(road.sources.builder).toBe(builder.code);
       expect(MEETING_STOPS.every((stop) => road.stops.includes(stop))).toBe(true);
@@ -626,9 +627,9 @@ describe('the "our work/" sign across the road (Chris, 2026-11-16)', () => {
     const road = routeFor('a').road;
     if (!road) throw new Error('no road');
     for (const tier of /** @type {const} */ (['low', 'mid', 'high'])) {
-      const parts = buildRoadWorld(tier, { gate: gate.code, road: ambient.code, stops: road.sources }, 1, { stops: road.stops, layout: road.layout });
+      const parts = buildRoadWorld(tier, { gate: gate.code, road: ambient.code, stops: road.sources }, 1, { stops: road.stops, layout: road.layout, budget: worldBudgetFor('a', tier) });
       expect(parts.find((p) => p.name === 'sign:our work/')?.shape.glyphs.length).toBeGreaterThan(8);
-      expect(parts.reduce((sum, p) => sum + p.shape.glyphs.length, 0)).toBeLessThanOrEqual(budgetFor(tier));
+      expect(parts.reduce((sum, p) => sum + p.shape.glyphs.length, 0)).toBeLessThanOrEqual(worldBudgetFor('a', tier));
       expect(parts.find((p) => p.name === 'trunk-road')?.shape.glyphs.length, `${tier}: the trunk at full density`).toBe(Math.floor(ROAD_DENSITY[tier] * 4 * 37));
     }
   });

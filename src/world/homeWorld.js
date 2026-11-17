@@ -46,15 +46,19 @@ const clamp01 = (x) => Math.min(1, Math.max(0, x));
  * code under its chapter's box, keeps Crew Advisors' untyped code hidden with its cursor at the caret,
  * and shows the picture of every landmark already passed. It marks the canvas for tests and shows the
  * scrim behind a chapter's words.
+ * With `surroundings` (2026-11-16, passed in from the world layer) the road is built whole once, at its
+ * door's world budget, and drawn cut to what stands around the camera, cut again as the camera travels
+ * (`surroundings.js`), so a road of any length fits the tier's budget.
  * @param {{
  *   renderer: ReturnType<typeof import('./worldRenderer.js').createWorldRenderer>,
  *   atlas: { indexOf: (char: string) => number },
  *   tier: 'low' | 'mid' | 'high',
  *   canvas: HTMLCanvasElement,
  *   scrim: HTMLElement | null,
+ *   surroundings?: ReturnType<typeof import('./surroundings.js').createSurroundings> | null,
  * }} deps
  */
-export function createHomeWorld({ renderer, atlas, tier, canvas, scrim }) {
+export function createHomeWorld({ renderer, atlas, tier, canvas, scrim, surroundings = null }) {
   /** The road built for (undefined: nothing yet), and how many pictures it had. */
   /** @type {Route['road'] | undefined} */
   let builtFor;
@@ -67,6 +71,11 @@ export function createHomeWorld({ renderer, atlas, tier, canvas, scrim }) {
   let editor = null;
   /** @type {{ start: number, cursor: number, code: string, center: Vec3, facing: Vec3, stopId: string } | null} */
   let unfinished = null;
+  /** The road's whole world, while it is drawn cut around the camera, and where it was last cut. */
+  /** @type {ReturnType<typeof buildRoadWorld> | null} */
+  let whole = null;
+  /** @type {[number, number] | null} */
+  let cutAt = null;
 
   /** The flight claimed through the bus, once resolved, and the track version it was placed for. */
   /** @type {string | null} */
@@ -76,20 +85,16 @@ export function createHomeWorld({ renderer, atlas, tier, canvas, scrim }) {
   let placedFor = -1;
   let flightKey = '';
 
-  /** @param {Route['road']} road */
-  const build = (road) => {
-    builtFor = road;
-    picturesBuilt = Object.keys(read).length;
+  /**
+   * Draws a road's world (whole, or as cut around the camera), and finds in the buffer the parts each
+   * frame needs: the editor, each landmark's range, and the unfinished file's cursor.
+   * @param {NonNullable<Route['road']>} road @param {ReturnType<typeof buildRoadWorld>} world
+   */
+  const draw = (road, world) => {
     ranges = new Map();
     unfinished = null;
-    if (!road) {
-      const world = buildWorld(tier, { gate: gate.code, road: ambient.code, landmark: underfire.code }, 1);
-      const placed = renderer.setShapes(world.map((part) => part.shape));
-      editor = placed[world.findIndex((part) => part.name === 'editor')] ?? null;
-      return;
-    }
-    const world = buildRoadWorld(tier, { gate: gate.code, road: ambient.code, stops: road.sources }, 1, { stops: road.stops, layout: road.layout }, read);
     const placed = renderer.setShapes(world.map((part) => part.shape));
+    canvas.dataset.cut = String(world.reduce((sum, part) => sum + part.shape.glyphs.length, 0));
     editor = placed[world.findIndex((part) => part.name === 'editor')] ?? null;
     world.forEach((part, i) => {
       if (!part.stopId || !part.name.startsWith('landmark:')) return;
@@ -100,6 +105,28 @@ export function createHomeWorld({ renderer, atlas, tier, canvas, scrim }) {
         unfinished = { start: placed[i].start, cursor: part.cursor, code: road.sources[stop.excerptId], center: landmark.center, facing: landmark.facing, stopId: stop.id };
       }
     });
+  };
+
+  /** @param {Route['road']} road */
+  const build = (road) => {
+    builtFor = road;
+    picturesBuilt = Object.keys(read).length;
+    ranges = new Map();
+    unfinished = null;
+    whole = null;
+    cutAt = null;
+    if (!road) {
+      const world = buildWorld(tier, { gate: gate.code, road: ambient.code, landmark: underfire.code }, 1);
+      const placed = renderer.setShapes(world.map((part) => part.shape));
+      editor = placed[world.findIndex((part) => part.name === 'editor')] ?? null;
+      surroundings?.opening();
+      return;
+    }
+    const budget = surroundings ? surroundings.worldBudget(road.door) : undefined;
+    const world = buildRoadWorld(tier, { gate: gate.code, road: ambient.code, stops: road.sources }, 1, { stops: road.stops, layout: road.layout, budget }, read);
+    // Cut around the camera from its first frame on; drawn whole without surroundings.
+    if (surroundings) whole = world;
+    else draw(road, world);
     // Each screen landmark's picture, read once; the road is rebuilt as they arrive.
     for (const stop of road.stops) {
       const src = screenOf(stop);
@@ -144,8 +171,15 @@ export function createHomeWorld({ renderer, atlas, tier, canvas, scrim }) {
      * Forgets what it built and the flight it placed, so its next frame builds the home's world again
      * (an inner page's stretch drew over the renderer meanwhile, Code World W5a).
      */
+    /** Lets go of the surroundings: the cursor's listener and the ground's layer. */
+    destroy() {
+      surroundings?.destroy();
+    },
+
     reset() {
       builtFor = undefined;
+      whole = null;
+      cutAt = null;
       picturesBuilt = -1;
       claimed = null;
       resolved = null;
@@ -164,6 +198,11 @@ export function createHomeWorld({ renderer, atlas, tier, canvas, scrim }) {
       const viewport = { width: window.innerWidth, height: window.innerHeight };
       const y = window.scrollY;
       const camera = state ? state.track.cameraAt(y) : { eye: /** @type {Vec3} */ ([0, 1.6, 7]), target: /** @type {Vec3} */ ([0, 1.6, 0]), fov: 45 };
+      // The road cut around the camera, and cut again once it has travelled far enough.
+      if (surroundings && whole && road && (!cutAt || Math.hypot(camera.eye[0] - cutAt[0], camera.eye[2] - cutAt[1]) > surroundings.recutAfter)) {
+        cutAt = [camera.eye[0], camera.eye[2]];
+        draw(road, surroundings.cut(whole, cutAt, road.layout));
+      }
       const section = state ? state.track.sectionAt(y) : null;
       const sections = state?.sections ?? [];
 
@@ -233,7 +272,9 @@ export function createHomeWorld({ renderer, atlas, tier, canvas, scrim }) {
       // The world fades out over the screen before the brief (W4); faded out, it is not drawn at all.
       const shown = state ? state.track.fadeAt(y) : 1;
       canvas.style.opacity = shown.toFixed(3);
-      if (shown > 0) renderer.render(camera, now, { fades, cursor, flight, passed });
+      // The ground and the cursor's ripples beneath it all, shown as the world's editor is (2026-11-16).
+      surroundings?.frame({ camera, now, aspect: viewport.width / viewport.height, shown: editorShown });
+      if (shown > 0) renderer.render(camera, now, { fades, cursor, flight, passed, underlay: surroundings?.underlay });
 
       const data = canvas.dataset;
       data.page = 'home';

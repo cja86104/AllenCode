@@ -99,3 +99,24 @@ describe('the journey rail (Code World W4.4)', () => {
     expect(rail.querySelector('[aria-current="step"]')?.textContent).toBe('Shipped');
   });
 });
+
+describe('the page between stops (Chris, 2026-11-16: the business road three times as long)', () => {
+  for (const [door, height] of /** @type {const} */ ([['a', '240vh'], ['b', '80vh']])) {
+    it(`door ${door}: ${height} of road before each of its road's chapters`, () => {
+      fieldBus.set({ mode: 'webgl' });
+      render(
+        <MemoryRouter>
+          <WorldRoadChapters door={door} includeDrafts={false} />
+        </MemoryRouter>,
+      );
+      const rests = [...document.querySelectorAll('[data-world-segment="rest"][data-world-stop]')].filter((el) => !['workshop', 'your-idea'].includes(String(el.getAttribute('data-world-stop'))));
+      expect(rests.length).toBeGreaterThan(4);
+      for (const rest of rests) {
+        const before = /** @type {HTMLElement} */ (rest.previousElementSibling);
+        expect(before.getAttribute('aria-hidden')).toBe('true');
+        expect(before.style.height, String(rest.getAttribute('data-world-stop'))).toBe(height);
+      }
+    });
+  }
+});
+

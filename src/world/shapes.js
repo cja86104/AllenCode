@@ -642,7 +642,9 @@ const SPUR_HALF = 0.8;
  * @param {{ gate: string, road: string, stops: Readonly<Record<string, string>> }} sources Approved
  *   code: the empty file's, the road's, and each stop's by excerpt id.
  * @param {number} seed
- * @param {{ stops: ReadonlyArray<import('./roads.js').RoadStop>, layout: ReturnType<typeof import('./roadLayout.js').layoutRoad> }} road
+ * @param {{ stops: ReadonlyArray<import('./roads.js').RoadStop>, layout: ReturnType<typeof import('./roadLayout.js').layoutRoad>, budget?: number }} road
+ *   `budget`: the glyphs the whole road may hold, `budgetFor(tier)` when absent; larger when the world is
+ *   cut around the camera before it is drawn (2026-11-16, `surroundings.js`).
  * @param {Readonly<Record<string, { data: Uint8ClampedArray, width: number, height: number }>>} [landed] Each
  *   screen landmark's real screen, once loaded (R4): with one, the landmark's share is split between its
  *   code sculpture and its picture in characters, tagged so the renderer shows the picture once passed.
@@ -737,11 +739,12 @@ export function buildRoadWorld(tier, sources, seed, road, landed = {}) {
     spurs: spurs.map((spur) => Math.max(1, scatterCount(density * BETWEEN_SHARE[tier], spur.path, SPUR_HALF * 2))),
   };
   const scattered = scatter.trunk + scatter.business + scatter.family + scatter.between + scatter.runOn + scatter.other + scatter.spurs.reduce((sum, n) => sum + n, 0);
-  let remainder = budgetFor(tier) - fixed - scattered;
+  const budget = road.budget ?? budgetFor(tier);
+  let remainder = budget - fixed - scattered;
   const floor = SCREEN_FLOOR[tier];
   if (screens.length > 0 && remainder < floor * screens.length) {
     // The budget, not the density, is the limit: the scatter gives way so every screen keeps its floor.
-    const keep = Math.max(0, budgetFor(tier) - fixed - floor * screens.length) / scattered;
+    const keep = Math.max(0, budget - fixed - floor * screens.length) / scattered;
     for (const key of /** @type {const} */ (['trunk', 'business', 'family', 'between', 'runOn', 'other'])) scatter[key] = Math.floor(scatter[key] * keep);
     scatter.spurs = scatter.spurs.map((n) => Math.max(1, Math.floor(n * keep)));
     remainder = floor * screens.length;

@@ -1,6 +1,6 @@
 // @ts-check
 import { describe, expect, it } from 'vitest';
-import { layoutRoad, roadAt, roadHeadingAt, roadSizes, spurPaths, ROAD_STEP, LATERAL, BEND_AFTER, BEND_LENGTH, OTHER_ROAD, RUN_ON } from '../src/world/roadLayout.js';
+import { layoutRoad, roadAt, roadHeadingAt, roadSizes, roadStepFor, spurPaths, ROAD_STEP, LATERAL, BEND_AFTER, BEND_LENGTH, OTHER_ROAD, RUN_ON } from '../src/world/roadLayout.js';
 import { businessRoadStops, familyRoadStops, MEETING_STOPS } from '../src/world/roads.js';
 import { getExcerpt } from '../src/content/excerpts/index.js';
 import { distanceToPath } from '../src/world/shapes.js';
@@ -51,7 +51,8 @@ describe('layoutRoad (Code World W2.2)', () => {
     expect(rest.length).toBeGreaterThan(0);
     const along = road.landmarks.map((l) => l.center);
     for (let i = 1; i < along.length; i += 1) {
-      expect(Math.hypot(along[i][0] - along[i - 1][0], along[i][2] - along[i - 1][2])).toBeGreaterThanOrEqual(ROAD_STEP);
+      // The business road's stops, a long step apart (2026-11-16), less a little for its swing.
+      expect(Math.hypot(along[i][0] - along[i - 1][0], along[i][2] - along[i - 1][2])).toBeGreaterThanOrEqual(roadStepFor('a') - 1);
     }
     let lastSide = 0;
     for (const landmark of road.landmarks) {
@@ -164,7 +165,7 @@ describe('the road bends and meets a shared road (Code World W4.1)', () => {
   it('lays each road stop a step along the road from the branch’s end, the business road running on its starting heading at each (2026-11-16: it winds between them)', () => {
     const road = layoutRoad(all, 'a', both);
     road.along.slice(0, stops.length).forEach((distance, k) => {
-      expect(distance).toBe(7 + ROAD_STEP * k);
+      expect(distance).toBe(7 + roadStepFor('a') * k);
       expect(near(roadHeadingAt(road, distance), road.direction)).toBe(true);
     });
   });
@@ -219,10 +220,11 @@ describe('the road bends and meets a shared road (Code World W4.1)', () => {
     });
   }
 
-  it('door b’s fork is door a’s mirrored in x, and the roads meet as far along each (each road its own shape between, 2026-11-16)', () => {
+  it('door b’s fork is door a’s mirrored in x; the business road, the longer, meets the shared road further along (2026-11-16)', () => {
     const a = layoutRoad(all, 'a', both);
     const b = layoutRoad(all, 'b', both);
-    expect(b.junction).toBeCloseTo(a.junction, 9);
+    // The business road is the longer (2026-11-16): it meets the shared road further along.
+    expect(a.junction).toBeGreaterThan(b.junction);
     a.path.slice(0, 3).forEach((p, i) => expect(near(b.path[i], [-p[0], p[1]], 1e-9)).toBe(true));
   });
 
@@ -265,8 +267,21 @@ describe('the "our work/" sign between the services and the products (Chris, 202
   it('stands half a stretch before the first product, on door a; door b has none', () => {
     const road = layoutRoad(stops, 'a', sizes);
     const first = stops.findIndex((s) => s.signBefore);
-    expect(road.signs).toEqual([{ label: 'our work/', along: road.along[first] - ROAD_STEP / 2 }]);
+    expect(road.signs).toEqual([{ label: 'our work/', along: road.along[first] - roadStepFor('a') / 2 }]);
     const family = familyRoadStops();
     expect(layoutRoad(family, 'b', roadSizes(family, sourcesOf(family))).signs).toEqual([]);
   });
 });
+
+describe('each road’s stop spacing (Chris, 2026-11-16: "the business side road needs to be longer … spread out")', () => {
+  it('the business road’s stops stand three family steps apart; the family road’s as before', () => {
+    expect(roadStepFor('a')).toBe(42);
+    expect(roadStepFor('b')).toBe(ROAD_STEP);
+    expect(ROAD_STEP).toBe(14);
+    for (const door of /** @type {const} */ (['a', 'b'])) {
+      const road = layoutRoad(stops, door, sizes);
+      road.along.forEach((distance, k) => expect(distance).toBe(7 + roadStepFor(door) * k));
+    }
+  });
+});
+

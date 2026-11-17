@@ -15,6 +15,7 @@ import { markWorldFailed, useWorldPage } from './worldSwitch.js';
 import { useIsomorphicLayoutEffect } from '../ssr/useHydrated.js';
 import { stretchFor } from './stretches.js';
 import { createStretchWorld } from './stretchWorld.js';
+import { createSurroundings } from './surroundings.js';
 
 /** The field's device tiers, as the world's glyph budgets name them. */
 const TIERS = /** @type {const} */ ({ low: 'low', medium: 'mid', high: 'high' });
@@ -74,7 +75,7 @@ export default function WorldLayer() {
       window.removeEventListener('resize', soon);
     };
   }, [route, isHome]);
-  const home = useMemo(() => ({ route, getTrack: () => trackRef.current, getPage: () => pageRef.current, createStretch: createStretchWorld }), [route]);
+  const home = useMemo(() => ({ route, getTrack: () => trackRef.current, getPage: () => pageRef.current, createStretch: createStretchWorld, createSurroundings }), [route]);
   const [tier] = useState(() => TIERS[detectCapabilities(readCapabilityEnv()).tier]);
   const [searchParams] = useSearchParams();
   const showMeter = searchParams.get('meter') === '1';

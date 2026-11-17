@@ -46,6 +46,7 @@ const SIGN_LABELS = 'business/family/';
  *     getTrack: () => import('./homeWorld.js').TrackState | null,
  *     getPage: () => 'home' | import('./stretches.js').Stretch | null,
  *     createStretch: typeof import('./stretchWorld.js').createStretchWorld,
+ *     createSurroundings?: typeof import('./surroundings.js').createSurroundings,
  *   },
  *   keys?: ReadonlyArray<CameraKey>,
  *   ownScroll?: boolean,
@@ -110,7 +111,7 @@ export default function WorldCanvas({ getProgress, tier, home, keys, ownScroll =
         renderer = createWorldRenderer(canvas, atlas);
         glyphs = atlas;
         if (homed) {
-          homeWorld = createHomeWorld({ renderer, atlas, tier, canvas, scrim: scrimRef.current });
+          homeWorld = createHomeWorld({ renderer, atlas, tier, canvas, scrim: scrimRef.current, surroundings: latest.current.home?.createSurroundings?.({ tier, renderer, canvas }) ?? null });
         } else {
           const world = buildWorld(tier, { gate: gate.code, road: ambient.code, landmark: underfire.code }, 1);
           const ranges = renderer.setShapes(world.map((part) => part.shape));
@@ -169,8 +170,9 @@ export default function WorldCanvas({ getProgress, tier, home, keys, ownScroll =
       window.clearInterval(interval);
       window.removeEventListener('resize', resize);
       canvas.removeEventListener('webglcontextlost', lost);
-      // A headline a stretch was holding back reads again.
+      // A headline a stretch was holding back reads again; the ground's layer and listener let go.
       stretchWorld?.release();
+      homeWorld?.destroy();
       renderer?.destroy();
       if (lenis) {
         lenis.destroy();

@@ -4,6 +4,7 @@ import { buildRoadWorld, codeRoad, roadEdges, roadGateway, ROAD_COLORS, EDGE_LIN
 import { packShapes } from '../src/world/worldRenderer.js';
 import { WORLD_VERTEX_SHADER } from '../src/world/worldShaders.js';
 import { routeFor } from '../src/world/route.js';
+import { worldBudgetFor } from '../src/world/surroundings.js';
 import gate from '../src/content/excerpts/gate.js';
 import ambient from '../src/content/excerpts/ambient.js';
 
@@ -103,7 +104,7 @@ describe('the budget with three-line edges', () => {
       const road = routeFor(door).road;
       if (!road) throw new Error('no road');
       for (const tier of /** @type {const} */ (['low', 'mid', 'high'])) {
-        const parts = buildRoadWorld(tier, { gate: gate.code, road: ambient.code, stops: road.sources }, 1, { stops: road.stops, layout: road.layout });
+        const parts = buildRoadWorld(tier, { gate: gate.code, road: ambient.code, stops: road.sources }, 1, { stops: road.stops, layout: road.layout, budget: worldBudgetFor(door, tier) });
         const sum = (/** @type {string} */ prefix) => parts.filter((p) => p.name.split(':')[0] === prefix).reduce((s, p) => s + p.shape.glyphs.length, 0);
         expect(sum('trunk-road'), `${door} ${tier} trunk`).toBe(BEFORE[door][tier].trunk);
         expect(sum('landmark'), `${door} ${tier} landmarks`).toBeGreaterThanOrEqual(Math.floor(BEFORE[door][tier].landmark * 0.9));
