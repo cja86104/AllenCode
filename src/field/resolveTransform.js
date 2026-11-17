@@ -38,11 +38,12 @@ function textMask(width, height, target, createCanvas) {
   if (!ctx) throw new Error('Could not create a 2D canvas for the landing text.');
   ctx.clearRect(0, 0, width, height);
   ctx.font = target.font;
-  ctx.textAlign = 'center';
+  const left = target.align === 'left';
+  ctx.textAlign = left ? 'left' : 'center';
   ctx.textBaseline = 'middle';
   ctx.fillStyle = '#ffffff';
   const lines = target.text.split('\n');
-  lines.forEach((line, i) => ctx.fillText(line, width / 2, ((i + 0.5) * height) / lines.length));
+  lines.forEach((line, i) => ctx.fillText(line, left ? 0 : width / 2, ((i + 0.5) * height) / lines.length));
   const rgba = ctx.getImageData(0, 0, width, height).data;
   const alpha = new Uint8ClampedArray(width * height);
   for (let i = 0; i < alpha.length; i += 1) alpha[i] = rgba[i * 4 + 3];

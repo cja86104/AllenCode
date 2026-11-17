@@ -99,3 +99,41 @@ describe('resolveTransform', () => {
   });
 });
 
+
+describe('landing text alignment (Code World W5a: an inner page’s headline is left-aligned)', () => {
+  /** A canvas stand-in that records how each line is drawn. */
+  function recordingCanvas() {
+    /** @type {Array<{ align: string, x: number, y: number, text: string }>} */
+    const drawn = [];
+    const make = (/** @type {number} */ width, /** @type {number} */ height) => {
+      const ctx = {
+        font: '',
+        textAlign: '',
+        textBaseline: '',
+        fillStyle: '',
+        clearRect() {},
+        fillText(/** @type {string} */ text, /** @type {number} */ x, /** @type {number} */ y) {
+          drawn.push({ align: ctx.textAlign, x, y, text });
+        },
+        getImageData: () => ({ data: new Uint8ClampedArray(width * height * 4).fill(255) }),
+      };
+      return /** @type {HTMLCanvasElement} */ (/** @type {unknown} */ ({ width, height, getContext: () => ctx }));
+    };
+    return { drawn, make };
+  }
+
+  it('draws each line from the box’s left edge with align left', () => {
+    const { drawn, make } = recordingCanvas();
+    resolveTransform({ ...spec, target: { kind: 'text', text: 'Tell me\nwhat', font: '40px serif', color: [1, 1, 1], align: 'left' } }, { atlas, budget: 50, createCanvas: make });
+    expect(drawn.map((d) => [d.align, d.x, d.text])).toEqual([
+      ['left', 0, 'Tell me'],
+      ['left', 0, 'what'],
+    ]);
+  });
+
+  it('centres each line, as before, without it', () => {
+    const { drawn, make } = recordingCanvas();
+    resolveTransform({ ...spec, target: { kind: 'text', text: 'Hi', font: '40px serif', color: [1, 1, 1] } }, { atlas, budget: 50, createCanvas: make });
+    expect(drawn.map((d) => [d.align, d.x])).toEqual([['center', 100]]);
+  });
+});

@@ -245,7 +245,7 @@ function pathLength(path) {
  * @param {ReadonlyArray<ReadonlyArray<number>>} path
  * @param {number} width
  */
-function scatterCount(density, path, width) {
+export function scatterCount(density, path, width) {
   return Math.floor(density * width * pathLength(path));
 }
 
@@ -513,7 +513,7 @@ const EDGE_SPACING = 0.35;
  * The road's edge characters' spacing by tier: 0.5 on the low tier (2026-11-16: with the services
  * first and two more of them, the business road's long edges are the phone budget's largest fixed cost).
  */
-const EDGE_SPACING_BY_TIER = Object.freeze({ low: 0.5, mid: EDGE_SPACING, high: EDGE_SPACING });
+export const EDGE_SPACING_BY_TIER = Object.freeze({ low: 0.5, mid: EDGE_SPACING, high: EDGE_SPACING });
 
 /** The road's centre lines: the trunk to the fork, then a branch each way. */
 export const ROAD_PATHS = Object.freeze({

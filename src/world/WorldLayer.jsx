@@ -1,6 +1,6 @@
 // @ts-check
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import ScrollEngine from '../scroll/ScrollEngine.jsx';
 import { useDoor } from '../door/DoorProvider.jsx';
 import { fieldBus } from '../field/fieldBus.js';
@@ -11,7 +11,10 @@ import { routeFor } from './route.js';
 import { buildTrack, measureSections } from './worldTrack.js';
 import JourneyRail from './JourneyRail.jsx';
 import { journeyLength, railStops } from './rail.js';
-import { markWorldFailed } from './worldSwitch.js';
+import { markWorldFailed, useWorldPage } from './worldSwitch.js';
+import { useIsomorphicLayoutEffect } from '../ssr/useHydrated.js';
+import { stretchFor } from './stretches.js';
+import { createStretchWorld } from './stretchWorld.js';
 
 /** The field's device tiers, as the world's glyph budgets name them. */
 const TIERS = /** @type {const} */ ({ low: 'low', medium: 'mid', high: 'high' });
@@ -21,9 +24,21 @@ const TIERS = /** @type {const} */ ({ low: 'low', medium: 'mid', high: 'high' })
  * (Code World W1.3). It runs the site's scroll engine, the world along the page's track (the gate,
  * the opening, the road between today's chapters), and, with `?meter=1`, the frame meter. The world
  * draws the chapters' flights as the field would, so they play as they do today (W2 revised, R4).
+ * Mounted for the home page and for every inner page with a stretch (W5a), and kept from page to
+ * page: on an inner page the canvas draws that page's stretch, and the home's track and rail wait.
  */
 export default function WorldLayer() {
   const { door } = useDoor();
+  const page = useWorldPage();
+  const { pathname } = useLocation();
+  const isHome = page === 'home';
+  // What the canvas draws, read by its frame loop: the home's journey, this page's stretch, or nothing.
+  /** @type {'home' | import('./stretches.js').Stretch | null} */
+  const current = isHome ? 'home' : page === 'stretch' ? stretchFor(pathname) : null;
+  const pageRef = useRef(current);
+  useIsomorphicLayoutEffect(() => {
+    pageRef.current = current;
+  }, [current]);
   // The route for the door taken (W2.4): the business road with its stops; built once per door.
   const route = useMemo(() => routeFor(door), [door]);
   // The camera's track, measured from the page (R4): on mount, on resize, whenever the page's size
@@ -34,6 +49,8 @@ export default function WorldLayer() {
   const lengthRef = useRef(1);
   const getRailProgress = useCallback(() => window.scrollY / lengthRef.current, []);
   useEffect(() => {
+    // On an inner page the home's track waits; it is measured again on the way back.
+    if (!isHome) return undefined;
     let version = trackRef.current?.version ?? 0;
     let queued = 0;
     const measure = () => {
@@ -56,8 +73,8 @@ export default function WorldLayer() {
       observer.disconnect();
       window.removeEventListener('resize', soon);
     };
-  }, [route]);
-  const home = useMemo(() => ({ route, getTrack: () => trackRef.current }), [route]);
+  }, [route, isHome]);
+  const home = useMemo(() => ({ route, getTrack: () => trackRef.current, getPage: () => pageRef.current, createStretch: createStretchWorld }), [route]);
   const [tier] = useState(() => TIERS[detectCapabilities(readCapabilityEnv()).tier]);
   const [searchParams] = useSearchParams();
   const showMeter = searchParams.get('meter') === '1';
@@ -75,7 +92,7 @@ export default function WorldLayer() {
     <>
       <ScrollEngine enabled />
       <WorldCanvas tier={tier} home={home} onMeter={showMeter ? setReport : undefined} onFail={markWorldFailed} />
-      {rail.length > 0 && <JourneyRail stops={rail} getProgress={getRailProgress} />}
+      {isHome && rail.length > 0 && <JourneyRail stops={rail} getProgress={getRailProgress} />}
       {showMeter && (
         <p
           data-frame-meter

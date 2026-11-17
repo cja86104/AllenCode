@@ -33,13 +33,20 @@ const SIGN_LABELS = 'business/family/';
  *
  * With `home` (the home page, Code World R4) the frame is the home's world's (`createHomeWorld`): the
  * camera follows the page's track, today's chapters play over it, and their flights land in it. A
- * scrim behind a resting chapter's words is drawn with the canvas. Without it (the lab) it draws the
- * prototype's world along `keys`.
+ * scrim behind a resting chapter's words is drawn with the canvas. On an inner page with a stretch
+ * (`getPage`, Code World W5a) the frame is the stretch's world (`createStretch`, passed in so its code
+ * stays out of this chunk); the canvas and renderer are kept from page to page, and a page with
+ * neither is not drawn. Without `home` (the lab) it draws the prototype's world along `keys`.
  *
  * @param {{
  *   getProgress?: () => number,
  *   tier: 'low' | 'mid' | 'high',
- *   home?: { route: import('./route.js').Route, getTrack: () => import('./homeWorld.js').TrackState | null },
+ *   home?: {
+ *     route: import('./route.js').Route,
+ *     getTrack: () => import('./homeWorld.js').TrackState | null,
+ *     getPage: () => 'home' | import('./stretches.js').Stretch | null,
+ *     createStretch: typeof import('./stretchWorld.js').createStretchWorld,
+ *   },
  *   keys?: ReadonlyArray<CameraKey>,
  *   ownScroll?: boolean,
  *   landmarkResolve?: (progress: number) => number,
@@ -72,6 +79,13 @@ export default function WorldCanvas({ getProgress, tier, home, keys, ownScroll =
     let landmarkRange = null;
     /** @type {ReturnType<typeof createHomeWorld> | null} */
     let homeWorld = null;
+    /** @type {ReturnType<typeof import('./stretchWorld.js').createStretchWorld> | null} */
+    let stretchWorld = null;
+    /** What the last frame drew: the home's world, a stretch, or nothing. */
+    /** @type {'home' | 'stretch' | 'none'} */
+    let drew = 'home';
+    /** @type {{ indexOf: (char: string) => number } | null} */
+    let glyphs = null;
     const meter = createFrameMeter();
     const root = document.documentElement;
     const lenis = ownScroll ? new Lenis() : null;
@@ -94,6 +108,7 @@ export default function WorldCanvas({ getProgress, tier, home, keys, ownScroll =
         const glyphSources = [gate.code, ambient.code, underfire.code, SIGN_LABELS, ...(homed ? [roadGlyphs()] : [])];
         const atlas = createGlyphAtlas(collectGlyphs(glyphSources), { cell: ATLAS_CELL, font: ATLAS_FONT });
         renderer = createWorldRenderer(canvas, atlas);
+        glyphs = atlas;
         if (homed) {
           homeWorld = createHomeWorld({ renderer, atlas, tier, canvas, scrim: scrimRef.current });
         } else {
@@ -111,7 +126,23 @@ export default function WorldCanvas({ getProgress, tier, home, keys, ownScroll =
         lenis?.raf(now);
         const { getProgress: progressOf, home: host, keys: hostKeys, landmarkResolve: resolveOf, onFrame: report } = latest.current;
         if (homeWorld && host) {
-          homeWorld.frame({ route: host.route, state: host.getTrack(), now });
+          const page = host.getPage();
+          if (page && page !== 'home' && glyphs) {
+            stretchWorld ??= host.createStretch({ renderer, atlas: glyphs, tier, canvas, scrim: scrimRef.current });
+            if (drew === 'home') homeWorld.reset();
+            drew = 'stretch';
+            stretchWorld.frame({ stretch: page, now });
+          } else {
+            if (drew === 'stretch') stretchWorld?.release();
+            if (page === 'home') {
+              if (drew === 'none') homeWorld.reset();
+              drew = 'home';
+              homeWorld.frame({ route: host.route, state: host.getTrack(), now });
+            } else {
+              drew = 'none';
+              canvas.style.opacity = '0';
+            }
+          }
         } else {
           const progress = Math.min(1, Math.max(0, progressOf ? progressOf() : 0));
           const camera = frameCamera(cameraAt(progress, hostKeys), window.innerWidth / window.innerHeight);
@@ -138,6 +169,8 @@ export default function WorldCanvas({ getProgress, tier, home, keys, ownScroll =
       window.clearInterval(interval);
       window.removeEventListener('resize', resize);
       canvas.removeEventListener('webglcontextlost', lost);
+      // A headline a stretch was holding back reads again.
+      stretchWorld?.release();
       renderer?.destroy();
       if (lenis) {
         lenis.destroy();

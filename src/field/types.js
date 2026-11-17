@@ -49,6 +49,8 @@
  * @property {string} text `\n` breaks lines.
  * @property {string} font CSS font for the text.
  * @property {[number, number, number]} color 0..1 RGB of the landed characters.
+ * @property {'left' | 'center'} [align] Each line from the box's left edge, or centred in it (the
+ *   default). An inner page's headline is left-aligned (Code World W5a).
  *
  * @typedef {object} ImageTarget Land on a picture, each character tinted by the pixel beneath it.
  * @property {'image'} kind

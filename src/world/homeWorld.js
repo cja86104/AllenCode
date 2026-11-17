@@ -5,16 +5,12 @@ import underfire from '../content/excerpts/product-underfire-ai.js';
 import { fieldBus } from '../field/fieldBus.js';
 import { loadTarget } from '../field/loadTarget.js';
 import { resolveTransform } from '../field/resolveTransform.js';
-import { products } from '../data/products.js';
-import { serviceScreens } from '../data/serviceScreens.js';
-import { templates } from '../data/templates.js';
-import { BUILDER } from '../content/builderStory.js';
-import { loopOf } from '../scenes/ProductChapter.jsx';
 import { buildRoadWorld, buildWorld, inkBefore, slabCaret } from './shapes.js';
 import { TYPED_FROM, TYPED_TO } from './journey.js';
 import { stopForFlight } from './roads.js';
 import { landmarkRect } from './landmark.js';
 import { flightBudgetFor, toWorldFlight } from './worldFlight.js';
+import { readPicture, screenOf } from './screens.js';
 
 /** @typedef {[number, number, number]} Vec3 */
 /** @typedef {import('./route.js').Route} Route */
@@ -32,8 +28,6 @@ const SETTLE_SHARE = 0.15;
 const EDITOR_APPEARS = 0.5;
 /** Where the world's editor (the empty file) stands: the gate's flight lands on its plane. */
 const EDITOR_PLANE = Object.freeze({ point: /** @type {Vec3} */ ([0, 1.6, 0]), normal: /** @type {Vec3} */ ([0, 0, 1]) });
-/** Landmark screens are read this wide for their pictures in characters. */
-const PICTURE_WIDTH = 320;
 
 /** @param {number} a @param {number} b @param {number} x */
 const smoothstep = (a, b, x) => {
@@ -42,52 +36,6 @@ const smoothstep = (a, b, x) => {
 };
 /** @param {number} x */
 const clamp01 = (x) => Math.min(1, Math.max(0, x));
-
-/** Each landmark's screen, read once per visit. @type {Map<string, Promise<Pixels | null>>} */
-const pictures = new Map();
-
-/**
- * Reads a screen's pixels at `PICTURE_WIDTH`, for its landmark's picture in characters.
- * @param {string} src
- * @returns {Promise<Pixels | null>}
- */
-function readPicture(src) {
-  const known = pictures.get(src);
-  if (known) return known;
-  const reading = (async () => {
-    const img = new Image();
-    img.decoding = 'async';
-    img.src = src;
-    await img.decode();
-    const width = PICTURE_WIDTH;
-    const height = Math.max(1, Math.round((PICTURE_WIDTH * img.naturalHeight) / Math.max(1, img.naturalWidth)));
-    const canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
-    const ctx = canvas.getContext('2d', { willReadFrequently: true });
-    if (!ctx) return null;
-    ctx.drawImage(img, 0, 0, width, height);
-    return { data: ctx.getImageData(0, 0, width, height).data, width, height };
-  })().catch(() => null);
-  pictures.set(src, reading);
-  return reading;
-}
-
-/**
- * The screen a road stop resolves into: a product's or a template's loop poster, a service's screen, or
- * (the workshop, W4) Chris's photo.
- * @param {import('./roads.js').RoadStop} stop
- */
-function screenOf(stop) {
-  if (stop.kind === 'product') {
-    const product = products.find((p) => p.slug === stop.id);
-    return product ? (loopOf(product)?.poster ?? null) : null;
-  }
-  if (stop.kind === 'service') return serviceScreens[/** @type {keyof typeof serviceScreens} */ (stop.id)]?.src ?? null;
-  if (stop.kind === 'template') return templates.find((t) => t.id === stop.id)?.poster ?? null;
-  if (stop.kind === 'portrait') return BUILDER.photo.src;
-  return null;
-}
 
 /**
  * The home page's world (Code World R4): today's chapters play over it, and it draws what they ask of
@@ -193,6 +141,20 @@ export function createHomeWorld({ renderer, atlas, tier, canvas, scrim }) {
 
   return {
     /**
+     * Forgets what it built and the flight it placed, so its next frame builds the home's world again
+     * (an inner page's stretch drew over the renderer meanwhile, Code World W5a).
+     */
+    reset() {
+      builtFor = undefined;
+      picturesBuilt = -1;
+      claimed = null;
+      resolved = null;
+      placedFor = -1;
+      flightKey = '';
+      renderer.setFlight(null);
+    },
+
+    /**
      * Draws one frame of the home's world.
      * @param {{ route: Route, state: TrackState | null, now: number }} frame
      */
@@ -274,6 +236,7 @@ export function createHomeWorld({ renderer, atlas, tier, canvas, scrim }) {
       if (shown > 0) renderer.render(camera, now, { fades, cursor, flight, passed });
 
       const data = canvas.dataset;
+      data.page = 'home';
       if (road) data.road = road.door;
       else delete data.road;
       data.section = section ? `${section.kind}${section.stopId ? `:${section.stopId}` : ''}` : 'road';

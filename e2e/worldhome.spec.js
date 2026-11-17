@@ -53,15 +53,17 @@ test('with ?world=1 the home page starts with the gate, then the journey: one wo
   }
 });
 
-test('the switch lasts the session: inner pages keep the code field, and the home page stays the journey', async ({ page }) => {
+test('the switch lasts the session: an inner page opens on its stretch (W5a), a page without one keeps the code field, and the home page stays the journey', async ({ page }) => {
   await page.goto('/?world=1');
   await expect(page.locator('canvas[data-world][data-ready="true"]')).toHaveCount(1);
   await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'About' }).click();
   await expect(page).toHaveURL(/\/about$/);
+  await expect(page.locator('canvas[data-world]')).toHaveAttribute('data-page', 'stretch:about');
+  await page.goto('/checkout-success');
   await expect(page.locator('canvas[data-world]')).toHaveCount(0);
   await expect(page.locator('canvas[data-field="webgl"], [data-field="css"]').first()).toBeAttached();
-  await page.goBack();
-  await expect(page.locator('canvas[data-world][data-ready="true"]')).toHaveCount(1);
+  await page.goto('/');
+  await expect(page.locator('canvas[data-world][data-ready="true"]')).toHaveAttribute('data-page', 'home');
   await page.goto('/?world=0');
   await expect(page.locator('[data-chapter="gate"]')).toHaveCount(1);
   await expect(page.locator('canvas[data-world]')).toHaveCount(0);
