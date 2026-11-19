@@ -17,7 +17,13 @@ describe('FieldLayer: one texture from the first paint to the renderer (Task 9.3
     expect(ambient.approved).not.toBeNull();
     const { container } = render(<FieldLayer />);
     const pre = texture(container)?.querySelector('pre');
-    expect(pre?.textContent).toContain(ambient.code.split('\n')[0]);
+    expect(pre?.getAttribute('data-code')).toContain(ambient.code.split('\n')[0]);
+  });
+
+  it('keeps the code out of the page text, so a reader that skips CSS reads the page first', () => {
+    const { container } = render(<FieldLayer />);
+    expect(texture(container)?.querySelector('pre')?.textContent).toBe('');
+    expect(texture(container)?.textContent).toBe('');
   });
 
   it('keeps the same texture element while the renderer draws (hidden) and after it falls back (shown)', () => {

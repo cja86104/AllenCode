@@ -159,7 +159,7 @@ test('with reduced motion / shows the code beside its result and no canvas', asy
   await expect(page.locator('[data-code-beside] pre')).toContainText('ReactDOM.createRoot');
   await expect(page.locator('[data-code-beside]')).toContainText('Welcome to Allen Code Co.');
   await expect(page.locator('canvas')).toHaveCount(0);
-  await expect(page.locator('[data-field="css"] pre')).toContainText('usePageMeta');
+  await expect(page.locator('[data-field="css"] pre')).toHaveAttribute('data-code', /usePageMeta/);
 });
 
 test('with WebGL2 unavailable the CSS field shows real code and the chapter shows code beside result', async ({ page }) => {
@@ -174,7 +174,7 @@ test('with WebGL2 unavailable the CSS field shows real code and the chapter show
     });
   });
   await page.goto(HOME);
-  await expect(page.locator('[data-field="css"] pre')).toContainText('usePageMeta');
+  await expect(page.locator('[data-field="css"] pre')).toHaveAttribute('data-code', /usePageMeta/);
   await expect(page.locator('[data-code-beside]')).toBeVisible();
 });
 
@@ -182,7 +182,7 @@ test('the texture painted with the page is the same element while the renderer d
   // A new texture element after the renderer loads would be a new, late largest paint (Task 9.3 Step 3).
   await page.goto(HOME, { waitUntil: 'domcontentloaded' });
   const texture = page.locator('[data-field="css"]');
-  await expect(texture.locator('pre')).toContainText('usePageMeta');
+  await expect(texture.locator('pre')).toHaveAttribute('data-code', /usePageMeta/);
   await texture.evaluate((el) => el.setAttribute('data-first-paint', ''));
   await expect(page.locator('canvas[data-field="webgl"][data-ready="true"]')).toHaveCount(1);
   await expect(page.locator('[data-field="css"][data-first-paint]')).toHaveCount(1);
@@ -203,9 +203,10 @@ test('the texture painted with the page is the same element while the renderer d
   await expect(page.locator('[data-field="css"]')).toHaveCount(1);
 });
 
-test('the prebuilt page carries the texture with real code, before any script runs (Task 9.3b)', async ({ request }) => {
+test('the prebuilt page carries the texture with real code, before any script runs, as CSS content and not as page text (Task 9.3b)', async ({ request }) => {
   for (const path of ['/', '/about']) {
     const body = await (await request.get(path)).text();
-    expect(body).toMatch(/data-field="css"[^>]*><pre>[^<]*usePageMeta/);
+    expect(body).toMatch(/data-field="css"[^>]*><pre data-code="[^"]*usePageMeta/);
+    expect(body).not.toMatch(/data-field="css"[^>]*><pre[^>]*>[^<]/);
   }
 });

@@ -136,6 +136,10 @@ html.lenis {
   column-width: 34em;
   column-gap: 4em;
 }
+/* The code is generated content, so it paints but is not text in the page (see CssField.jsx). */
+.css-field pre::before {
+  content: attr(data-code);
+}
 
 /* Gate cursor (src/scenes/Gate.jsx): an orange block that blinks; reduced motion stops it. */
 .gate-cursor {
