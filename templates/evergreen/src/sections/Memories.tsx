@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useMemorial } from '../app/MemorialContext';
 import { PhotoFigure } from '../components/PhotoFigure';
 import type { Memory } from '../content/types';
@@ -76,6 +77,13 @@ export function Memories() {
       ) : (
         <p className="memories__empty">No memories have been shared here yet.</p>
       )}
+      {accepting ? (
+        <p className="memories__share">
+          <Link className="button" to="/share">
+            Share a memory
+          </Link>
+        </p>
+      ) : null}
     </section>
   );
 }

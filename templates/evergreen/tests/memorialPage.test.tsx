@@ -47,8 +47,11 @@ describe('the main memorial', () => {
   it('links every navigation item to a section that exists', () => {
     const { container } = renderMemorial(memorial, { renderedAt: TODAY });
     const nav = screen.getByRole('navigation', { name: 'Main' });
-    const links = within(nav).getAllByRole('link');
+    const links = within(nav)
+      .getAllByRole('link')
+      .filter((link) => (link.getAttribute('href') ?? '').includes('#'));
     expect(links.map((link) => link.textContent)).toEqual(['Her life', 'Photographs', 'Gathering', 'Memories']);
+    expect(within(nav).getByRole('link', { name: 'Share a memory' })).toHaveAttribute('href', '/share');
     for (const link of links) {
       const id = (link.getAttribute('href') ?? '').split('#')[1] ?? '';
       expect(container.querySelector(`#${id}`)).not.toBeNull();

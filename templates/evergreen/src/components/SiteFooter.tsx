@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useMemorial } from '../app/MemorialContext';
 import { CopyLink } from './CopyLink';
 
@@ -11,8 +12,25 @@ export function SiteFooter() {
     <footer className="site-footer">
       <div className="site-footer__inner">
         <ul className="site-footer__links">
+          {memorial.privacy.acceptMemories ? (
+            <li>
+              <Link className="text-link" to="/share">
+                Share a memory
+              </Link>
+            </li>
+          ) : null}
           <li>
             <CopyLink />
+          </li>
+          <li>
+            <Link className="text-link" to="/privacy">
+              Privacy
+            </Link>
+          </li>
+          <li>
+            <Link className="text-link" to="/family">
+              Family access
+            </Link>
           </li>
         </ul>
         {memorial.site.demonstration ? (

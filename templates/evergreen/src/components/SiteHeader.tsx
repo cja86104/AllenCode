@@ -57,6 +57,13 @@ export function SiteHeader() {
                     </Link>
                   </li>
                 ))}
+                {memorial.privacy.acceptMemories ? (
+                  <li className="site-nav__share">
+                    <Link to="/share" className="site-nav__link site-nav__link--share">
+                      Share a memory
+                    </Link>
+                  </li>
+                ) : null}
               </ul>
             </nav>
           </>
