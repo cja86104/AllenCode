@@ -22,8 +22,37 @@ function useScrollToHash() {
   }, [pathname, hash]);
 }
 
+/**
+ * Opens every collapsed story and memory while printing, so a printed copy has all of it, then puts
+ * them back as the reader left them.
+ */
+function useOpenDisclosuresForPrint() {
+  useEffect(() => {
+    let opened: HTMLDetailsElement[] = [];
+    const before = () => {
+      opened = [...document.querySelectorAll<HTMLDetailsElement>('details:not([open])')];
+      opened.forEach((details) => {
+        details.open = true;
+      });
+    };
+    const after = () => {
+      opened.forEach((details) => {
+        details.open = false;
+      });
+      opened = [];
+    };
+    window.addEventListener('beforeprint', before);
+    window.addEventListener('afterprint', after);
+    return () => {
+      window.removeEventListener('beforeprint', before);
+      window.removeEventListener('afterprint', after);
+    };
+  }, []);
+}
+
 export function Layout() {
   useScrollToHash();
+  useOpenDisclosuresForPrint();
   return (
     <>
       <a className="skip-link" href="#main">

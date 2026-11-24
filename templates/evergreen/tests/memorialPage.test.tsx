@@ -195,3 +195,16 @@ describe('content a family has not supplied', () => {
     expect(screen.getAllByRole('article').length).toBeGreaterThan(0);
   });
 });
+
+describe('printing', () => {
+  it('opens every collapsed story while printing and restores them afterwards', () => {
+    renderMemorial(memorial);
+    const closed = [...document.querySelectorAll('details')];
+    expect(closed.length).toBeGreaterThan(0);
+    expect(closed.every((details) => !details.open)).toBe(true);
+    window.dispatchEvent(new Event('beforeprint'));
+    expect(closed.every((details) => details.open)).toBe(true);
+    window.dispatchEvent(new Event('afterprint'));
+    expect(closed.every((details) => !details.open)).toBe(true);
+  });
+});

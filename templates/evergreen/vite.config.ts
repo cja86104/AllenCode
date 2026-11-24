@@ -1,3 +1,5 @@
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { defineConfig, type Plugin } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import { memorial } from './src/content/memorial';
@@ -27,8 +29,39 @@ function evergreenHead(): Plugin {
   };
 }
 
+/**
+ * Makes `npm run preview` answer like the static hosts the template is configured for (vercel.json,
+ * public/_redirects): each prerendered page is served from its own file, the family-area demonstration
+ * from the browser-only shell, and anything else gets the not-found page with a 404 status.
+ */
+function staticHostPreview(): Plugin {
+  return {
+    name: 'evergreen-static-host-preview',
+    configurePreviewServer(server) {
+      const outDir = server.config.build.outDir;
+      server.middlewares.use((request, response, next) => {
+        const url = new URL(request.url ?? '/', 'http://preview.local');
+        const path = decodeURIComponent(url.pathname).replace(/\/$/, '');
+        if (path === '/family/preview') {
+          request.url = '/spa.html';
+        } else if (!/\.[a-z0-9]+$/i.test(path)) {
+          if (existsSync(join(outDir, path, 'index.html'))) {
+            request.url = `${path}/index.html${url.search}`;
+          } else if (existsSync(join(outDir, '404.html'))) {
+            response.statusCode = 404;
+            response.setHeader('Content-Type', 'text/html; charset=utf-8');
+            response.end(readFileSync(join(outDir, '404.html')));
+            return;
+          }
+        }
+        next();
+      });
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [react(), evergreenHead()],
+  plugins: [react(), evergreenHead(), staticHostPreview()],
   test: {
     environment: 'jsdom',
     setupFiles: ['./tests/setup.ts'],

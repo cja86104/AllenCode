@@ -3,3 +3,6 @@ dist/
 coverage/
 *.local
 .env
+dist-ssr/
+test-results/
+playwright-report/

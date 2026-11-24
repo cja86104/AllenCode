@@ -6,7 +6,7 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
 
 export default tseslint.config(
-  { ignores: ['dist/**', 'node_modules/**', 'coverage/**'] },
+  { ignores: ['dist/**', 'dist-ssr/**', 'node_modules/**', 'coverage/**', 'test-results/**', 'playwright-report/**'] },
   {
     // Inline lint directives are not honored; any that appear fail the run.
     linterOptions: { noInlineConfig: true, reportUnusedDisableDirectives: 'error' },
@@ -18,7 +18,7 @@ export default tseslint.config(
     languageOptions: { globals: { ...globals.browser } },
   },
   {
-    files: ['eslint.config.js', 'vite.config.ts'],
+    files: ['eslint.config.js', 'vite.config.ts', 'playwright.config.ts', 'scripts/**/*.mjs', 'e2e/**/*.ts'],
     languageOptions: { globals: { ...globals.node } },
   },
   {
