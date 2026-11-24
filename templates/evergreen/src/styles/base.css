@@ -1,0 +1,320 @@
+/*
+ * Base: reset, type, links, focus, and shared utilities.
+ * Colour comes only from the preset custom properties (src/theme/presets.ts); the defaults below are
+ * Paper and Pine, used if the build-time preset rule is ever missing.
+ */
+
+:root {
+  --paper: #f5f1e9;
+  --surface: #ece6da;
+  --ink: #282d28;
+  --accent: #33483f;
+  --muted: #61645b;
+  --rule: #d9d4c9;
+  --warm: #92533b;
+  --focus: #33483f;
+  --on-accent: #f5f1e9;
+
+  --serif: 'Newsreader Variable', 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+  --sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  --page-max: 80rem;
+  --gutter: clamp(1.25rem, 4.5vw, 3.5rem);
+  --measure: 33em;
+  --section-space: clamp(4.5rem, 3rem + 7vw, 9.5rem);
+
+  --text-sm: 0.8125rem;
+  --text-ui: 0.9375rem;
+  --text-base: 1rem;
+  --text-prose: clamp(1.125rem, 1.08rem + 0.2vw, 1.25rem);
+  --text-lead: clamp(1.3125rem, 1.2rem + 0.5vw, 1.5625rem);
+  --text-h3: clamp(1.5rem, 1.35rem + 0.6vw, 1.875rem);
+  --text-h2: clamp(2.125rem, 1.6rem + 2.2vw, 3.5rem);
+
+  color-scheme: light;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-padding-top: 1.5rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: var(--text-base);
+  line-height: 1.55;
+  font-optical-sizing: auto;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+h4,
+p,
+figure,
+blockquote,
+dl,
+dd,
+ul,
+ol {
+  margin: 0;
+}
+
+ul,
+ol {
+  padding: 0;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+img {
+  height: auto;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+cite {
+  font-style: normal;
+}
+
+a {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+main:focus,
+[tabindex='-1']:focus {
+  outline: none;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  left: var(--gutter);
+  top: 0.75rem;
+  z-index: 10;
+  padding: 0.75rem 1rem;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: var(--text-ui);
+  font-weight: 550;
+  text-decoration: none;
+  transform: translateY(-200%);
+}
+
+.skip-link:focus {
+  transform: none;
+}
+
+/* Prose: the reading voice of the memorial. */
+.prose {
+  font-family: var(--serif);
+  font-size: var(--text-prose);
+  line-height: 1.62;
+  max-width: var(--measure);
+  hanging-punctuation: first;
+}
+
+.prose > * + * {
+  margin-top: 1em;
+}
+
+.prose--lead {
+  font-size: var(--text-lead);
+  line-height: 1.5;
+}
+
+.attribution {
+  font-family: var(--sans);
+  font-size: var(--text-sm);
+  color: var(--muted);
+  letter-spacing: 0.005em;
+}
+
+.annotation {
+  font-family: var(--serif);
+  font-style: italic;
+  color: var(--warm);
+}
+
+/* Actions */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.875rem;
+  padding: 0.7rem 1.35rem;
+  border: 1px solid var(--accent);
+  border-radius: 2px;
+  background: transparent;
+  color: var(--accent);
+  font-family: var(--sans);
+  font-size: var(--text-ui);
+  font-weight: 520;
+  letter-spacing: 0.005em;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.button:hover {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.button--solid {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.button--solid:hover {
+  background: var(--ink);
+  border-color: var(--ink);
+}
+
+.button:disabled {
+  cursor: progress;
+  opacity: 0.75;
+}
+
+.text-link,
+.text-button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: var(--text-ui);
+  text-decoration: underline;
+  text-decoration-color: var(--warm);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.28em;
+  cursor: pointer;
+}
+
+.text-link:hover,
+.text-button:hover {
+  color: var(--accent);
+  text-decoration-color: currentColor;
+}
+
+/* Native disclosures: work without JavaScript, open in place, never on hover. */
+.disclosure__summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 2.75rem;
+  list-style: none;
+  cursor: pointer;
+  font-family: var(--sans);
+  font-size: var(--text-ui);
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--rule);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.3em;
+}
+
+.disclosure__summary::-webkit-details-marker {
+  display: none;
+}
+
+.disclosure__summary::before {
+  content: '';
+  flex: none;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-right: 1.5px solid var(--accent);
+  border-bottom: 1.5px solid var(--accent);
+  transform: translateY(-0.15rem) rotate(45deg);
+}
+
+.disclosure[open] > .disclosure__summary::before {
+  transform: translateY(0.15rem) rotate(225deg);
+}
+
+.disclosure__summary:hover {
+  text-decoration-color: var(--warm);
+}
+
+.disclosure__body {
+  padding-top: 0.75rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .disclosure__summary::before {
+    transition: transform 160ms ease;
+  }
+
+  .disclosure[open] > .disclosure__body {
+    animation: disclosure-in 200ms ease;
+  }
+
+  .button,
+  .text-link,
+  .text-button {
+    transition:
+      background-color 140ms ease,
+      color 140ms ease,
+      text-decoration-color 140ms ease;
+  }
+}
+
+@keyframes disclosure-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

@@ -16,6 +16,8 @@ export default [
       'test-results/**',
       'playwright-report/**',
       'tools/previews/out/**',
+      // Each template under templates/ is its own product with its own toolchain and gate.
+      'templates/**',
       // Serverless routes are out of scope for the redesign (spec section 2) and stay untouched.
       'api/**',
     ],

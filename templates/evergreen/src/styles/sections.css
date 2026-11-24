@@ -1,0 +1,815 @@
+/* The memorial's sections, in reading order. */
+
+/* ---------- Photographs and captions ---------- */
+
+.photo-wrap {
+  display: block;
+  position: relative;
+}
+
+/* Album photo-corners on placeholders, drawn in CSS so they stay put however the image is cropped. */
+.photo-wrap--placeholder::after {
+  --corner: clamp(0.9rem, 4%, 1.6rem);
+  content: '';
+  position: absolute;
+  inset: 4%;
+  pointer-events: none;
+  border: 1px solid var(--rule);
+  background:
+    linear-gradient(135deg, var(--rule) 50%, transparent 50%) top left / var(--corner) var(--corner) no-repeat,
+    linear-gradient(225deg, var(--rule) 50%, transparent 50%) top right / var(--corner) var(--corner) no-repeat,
+    linear-gradient(45deg, var(--rule) 50%, transparent 50%) bottom left / var(--corner) var(--corner) no-repeat,
+    linear-gradient(315deg, var(--rule) 50%, transparent 50%) bottom right / var(--corner) var(--corner) no-repeat;
+}
+
+.photo {
+  width: 100%;
+  object-fit: cover;
+  background: var(--surface);
+}
+
+.plate__frame {
+  background: var(--surface);
+}
+
+.plate__caption {
+  display: grid;
+  gap: 0.2rem;
+  margin-top: 0.75rem;
+  max-width: 34rem;
+  font-size: var(--text-ui);
+  line-height: 1.45;
+}
+
+.plate__text {
+  color: var(--ink);
+}
+
+.photo-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 1.1em;
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+/* ---------- Opening spread ---------- */
+
+.opening {
+  display: grid;
+  gap: 2rem;
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: clamp(2.5rem, 2rem + 4vw, 6rem) var(--gutter) var(--section-space);
+  position: relative;
+}
+
+.opening__eyebrow {
+  margin-bottom: 1rem;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 1.25rem;
+  color: var(--muted);
+}
+
+.opening__name {
+  font-family: var(--serif);
+  font-size: clamp(2.75rem, 1.5rem + 5.6vw, 6rem);
+  font-weight: 380;
+  line-height: 0.98;
+  letter-spacing: -0.022em;
+  color: var(--accent);
+  overflow-wrap: break-word;
+  hyphens: manual;
+}
+
+.opening__line {
+  display: block;
+  text-wrap: balance;
+}
+
+.opening__dates {
+  margin-top: 1.5rem;
+  font-family: var(--sans);
+  font-size: 1.0625rem;
+  font-variant-numeric: lining-nums;
+  color: var(--ink);
+}
+
+.opening__place {
+  margin-top: 0.25rem;
+  font-size: 1.0625rem;
+  color: var(--muted);
+}
+
+.opening__portrait {
+  margin: 0 calc(-1 * var(--gutter) / 2);
+}
+
+.opening__portrait .plate__caption {
+  padding: 0 calc(var(--gutter) / 2);
+}
+
+.opening__lede {
+  max-width: 26rem;
+  font-family: var(--serif);
+  font-size: var(--text-lead);
+  line-height: 1.45;
+}
+
+.opening__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.75rem;
+  margin-top: 2rem;
+}
+
+@media (min-width: 40em) {
+  .opening__portrait {
+    width: 82%;
+    margin: 0;
+  }
+
+  .opening__portrait .plate__caption {
+    padding: 0;
+  }
+}
+
+@media (min-width: 64em) {
+  .opening {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    grid-template-rows: auto 1fr;
+    column-gap: clamp(1.5rem, 2.5vw, 2.5rem);
+    row-gap: 0;
+    padding-top: clamp(3rem, 6vw, 6.5rem);
+  }
+
+  .opening__portrait {
+    grid-column: 1 / span 6;
+    grid-row: 1 / span 2;
+    width: auto;
+    margin-left: calc(-0.5 * var(--gutter));
+  }
+
+  .opening__title {
+    grid-column: 8 / -1;
+    grid-row: 1;
+    align-self: end;
+    padding-top: 3rem;
+  }
+
+  .opening__intro {
+    grid-column: 8 / span 4;
+    grid-row: 2;
+    align-self: start;
+    margin-top: 2.75rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--rule);
+  }
+
+  .opening--no-portrait .opening__title {
+    grid-column: 2 / span 9;
+    padding-top: 2rem;
+  }
+
+  .opening--no-portrait .opening__intro {
+    grid-column: 2 / span 5;
+  }
+}
+
+/* ---------- The things we remember ---------- */
+
+.things__list {
+  display: grid;
+  gap: 3rem;
+  list-style: none;
+}
+
+.thing {
+  display: grid;
+  align-content: start;
+  gap: 0.6rem;
+}
+
+.thing__number {
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+.thing__art {
+  width: 6.5rem;
+  margin: 0.75rem 0 0.5rem;
+  color: var(--accent);
+}
+
+.thing__art:empty {
+  display: none;
+}
+
+.thing__name {
+  font-family: var(--serif);
+  font-size: var(--text-h3);
+  font-weight: 420;
+  line-height: 1.15;
+  color: var(--ink);
+}
+
+.thing__summary {
+  max-width: 24rem;
+  color: var(--muted);
+}
+
+.thing__story .disclosure__body {
+  font-size: 1.0625rem;
+}
+
+@media (min-width: 48em) {
+  .things__list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0;
+  }
+
+  .thing {
+    padding: 0 clamp(1.25rem, 2.5vw, 2.5rem);
+    border-left: 1px solid var(--rule);
+  }
+
+  .thing:first-child {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .thing:last-child {
+    padding-right: 0;
+  }
+}
+
+/* ---------- Life, in chapters ---------- */
+
+.life__intro {
+  margin-bottom: clamp(3.5rem, 3rem + 4vw, 7rem);
+}
+
+.chapters {
+  display: grid;
+  gap: clamp(4rem, 3rem + 5vw, 8rem);
+  list-style: none;
+}
+
+.chapter > article {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.chapter__head {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.chapter__number {
+  font-family: var(--serif);
+  font-size: 1.125rem;
+  font-variant-numeric: lining-nums;
+  color: var(--warm);
+}
+
+.chapter__title {
+  font-family: var(--serif);
+  font-size: clamp(1.875rem, 1.5rem + 1.4vw, 2.625rem);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -0.012em;
+  color: var(--accent);
+}
+
+.chapter__years {
+  font-size: var(--text-ui);
+  font-variant-numeric: lining-nums;
+  color: var(--muted);
+}
+
+.chapter__aside {
+  font-style: italic;
+  font-size: 1.25em;
+  line-height: 1.35;
+  color: var(--accent);
+  padding-left: 1.25rem;
+  border-left: 1px solid var(--warm);
+}
+
+.life__end {
+  display: grid;
+  justify-items: start;
+  gap: 1.5rem;
+  margin-top: clamp(3rem, 2rem + 3vw, 5rem);
+  max-width: var(--measure);
+}
+
+@media (min-width: 64em) {
+  .chapter > article {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    /* The photograph spans all three rows; the last row takes its extra height, not the heading. */
+    grid-template-rows: auto auto 1fr;
+    column-gap: clamp(1.5rem, 2.5vw, 2.5rem);
+    row-gap: 1.75rem;
+    align-items: start;
+  }
+
+  .chapter > article > .chapter__head,
+  .chapter > article > .chapter__text {
+    grid-column: 2 / span 6;
+  }
+
+  .chapter--with-photo .chapter__photo {
+    grid-column: 9 / -1;
+    grid-row: 1 / span 3;
+    margin-top: 4.5rem;
+    margin-right: calc(-0.5 * var(--gutter));
+  }
+
+  .chapter--reverse > article > .chapter__head,
+  .chapter--reverse > article > .chapter__text {
+    grid-column: 7 / span 6;
+  }
+
+  .chapter--reverse.chapter--with-photo .chapter__photo {
+    grid-column: 1 / span 5;
+    margin-right: 0;
+    margin-left: calc(-0.5 * var(--gutter));
+  }
+
+  .chapter > article > .chapter__head {
+    grid-row: 1;
+  }
+
+  .chapter > article > .chapter__text {
+    grid-row: 2;
+  }
+}
+
+/* ---------- Photo moments ---------- */
+
+.moments__grid {
+  display: grid;
+  gap: 3rem;
+  list-style: none;
+}
+
+.moments__item:nth-child(even) {
+  margin-left: 12%;
+}
+
+.moments__count {
+  margin-top: 3rem;
+  font-size: var(--text-ui);
+  color: var(--muted);
+}
+
+@media (min-width: 40em) and (max-width: 63.99em) {
+  .moments__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 2rem;
+  }
+
+  .moments__item:nth-child(even) {
+    margin-left: 0;
+    margin-top: 4rem;
+  }
+
+  .moments__item--wide {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 64em) {
+  .moments__grid {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: clamp(1.5rem, 2.5vw, 2.5rem);
+    row-gap: 4.5rem;
+    align-items: start;
+  }
+
+  .moments__item:nth-child(even) {
+    margin-left: 0;
+  }
+
+  .moments__item:nth-child(6n + 1) {
+    grid-column: 1 / span 7;
+    margin-left: calc(-0.5 * var(--gutter));
+  }
+
+  .moments__item:nth-child(6n + 2) {
+    grid-column: 9 / span 4;
+    margin-top: 7rem;
+  }
+
+  .moments__item:nth-child(6n + 3) {
+    grid-column: 2 / span 4;
+  }
+
+  .moments__item:nth-child(6n + 4) {
+    grid-column: 7 / span 6;
+    margin-top: 3.5rem;
+  }
+
+  .moments__item:nth-child(6n + 5) {
+    grid-column: 1 / span 4;
+    margin-top: 2rem;
+  }
+
+  .moments__item:nth-child(6n) {
+    grid-column: 6 / span 7;
+    margin-top: 6rem;
+    margin-right: calc(-0.5 * var(--gutter));
+  }
+}
+
+/* ---------- Gathering ---------- */
+
+.gathering__body {
+  display: grid;
+  gap: 2.5rem;
+  max-width: 52rem;
+}
+
+.gathering__status {
+  margin-bottom: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 560;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.gathering__title {
+  font-family: var(--serif);
+  font-size: var(--text-h3);
+  font-weight: 420;
+  color: var(--ink);
+}
+
+.gathering__note {
+  margin-top: 0.75rem;
+  max-width: 34rem;
+  font-family: var(--serif);
+  font-size: var(--text-prose);
+  line-height: 1.55;
+}
+
+.gathering__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.75rem;
+  margin-top: 1.75rem;
+}
+
+.details {
+  margin-top: 1.5rem;
+  border-top: 1px solid var(--rule);
+}
+
+.details__row {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.9rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.details dt {
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+.details dd {
+  font-size: 1.0625rem;
+  line-height: 1.5;
+}
+
+@media (min-width: 40em) {
+  .details__row {
+    grid-template-columns: 11rem 1fr;
+    gap: 1.5rem;
+  }
+
+  .details dt {
+    padding-top: 0.15rem;
+  }
+}
+
+/* ---------- Memories ---------- */
+
+.memories__list {
+  display: grid;
+  gap: 0;
+  list-style: none;
+  border-top: 1px solid var(--rule);
+}
+
+.memories__item {
+  border-bottom: 1px solid var(--rule);
+}
+
+.memories__item:last-child {
+  border-bottom: 0;
+}
+
+.memory {
+  display: grid;
+  gap: 1rem;
+  padding: 2rem 0;
+}
+
+.memory__pin {
+  font-size: 0.75rem;
+  font-weight: 560;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--warm);
+}
+
+.memory__text {
+  max-width: var(--measure);
+}
+
+.memory__text--short {
+  font-family: var(--serif);
+  font-size: clamp(1.3125rem, 1.2rem + 0.5vw, 1.5rem);
+  line-height: 1.4;
+}
+
+.memory__text--short p::before {
+  content: '“';
+}
+
+.memory__text--short p::after {
+  content: '”';
+}
+
+.memory__text .disclosure {
+  margin-top: 0.5rem;
+}
+
+.memory__text .disclosure__body > * + * {
+  margin-top: 1em;
+}
+
+.memory__byline {
+  font-size: var(--text-ui);
+}
+
+.memory__author {
+  font-weight: 560;
+}
+
+.memory__relationship {
+  color: var(--muted);
+}
+
+.memories__empty {
+  max-width: var(--measure);
+  font-family: var(--serif);
+  font-size: var(--text-prose);
+  color: var(--muted);
+}
+
+@media (min-width: 56em) {
+  .memories__list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: clamp(2rem, 4vw, 4rem);
+    border-top: 0;
+  }
+
+  .memories__item {
+    border-top: 1px solid var(--rule);
+    border-bottom: 0;
+  }
+
+  .memories__item:has(.memory--pinned) {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ---------- Recipe ---------- */
+
+.recipe__spread {
+  display: grid;
+  gap: 3rem;
+  align-items: start;
+}
+
+.recipe-card {
+  --line: 2rem;
+  position: relative;
+  max-width: 30rem;
+  padding: var(--line) 1.75rem var(--line) 2.5rem;
+  background-color: var(--surface);
+  /* One ruled line under every line of writing: each line of text fills one band of the pattern. */
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent calc(var(--line) - 1px),
+    color-mix(in srgb, var(--accent) 16%, transparent) calc(var(--line) - 1px),
+    color-mix(in srgb, var(--accent) 16%, transparent) var(--line)
+  );
+  background-origin: content-box;
+  background-clip: border-box;
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--ink) 12%, transparent);
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 1.125rem;
+  line-height: var(--line);
+  transform: rotate(-0.8deg);
+}
+
+/* The coloured rule under an index card's top line. */
+.recipe-card::before {
+  content: '';
+  position: absolute;
+  top: calc(2 * var(--line) - 1px);
+  left: 0;
+  right: 0;
+  border-top: 1px solid color-mix(in srgb, var(--warm) 60%, transparent);
+}
+
+.recipe-card__title,
+.recipe-card__line {
+  position: relative;
+  white-space: pre-wrap;
+}
+
+.recipe-card__title {
+  font-weight: 520;
+}
+
+.recipe__card-figure .plate__caption {
+  margin-top: 1.25rem;
+}
+
+.recipe__subhead {
+  margin-bottom: 0.9rem;
+  font-size: 0.75rem;
+  font-weight: 560;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.recipe__ingredients,
+.recipe__steps {
+  max-width: 34rem;
+  font-size: 1.0625rem;
+  line-height: 1.55;
+}
+
+.recipe__ingredients {
+  list-style: none;
+  margin-bottom: 2.25rem;
+  border-top: 1px solid var(--rule);
+}
+
+.recipe__ingredients li {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.recipe__steps {
+  display: grid;
+  gap: 0.9rem;
+  padding-left: 1.4rem;
+}
+
+.recipe__steps li::marker {
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+.recipe__notes {
+  margin-top: 2rem;
+  font-size: 1.125rem;
+}
+
+@media (min-width: 56em) {
+  .recipe__spread {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    gap: clamp(3rem, 6vw, 6rem);
+  }
+}
+
+/* ---------- Optional modules ---------- */
+
+.module--compact {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.module__date {
+  font-family: var(--serif);
+  font-size: var(--text-lead);
+}
+
+.module__text {
+  max-width: var(--measure);
+}
+
+.module__meta {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.reading-list {
+  display: grid;
+  max-width: 44rem;
+  list-style: none;
+  border-top: 1px solid var(--rule);
+}
+
+.reading-list__item {
+  display: grid;
+  gap: 0.15rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.reading-list__title {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 1.25rem;
+}
+
+.reading-list__author,
+.reading-list__note {
+  color: var(--muted);
+}
+
+.audio {
+  display: grid;
+  gap: 2rem;
+  max-width: 44rem;
+}
+
+.audio__player {
+  width: 100%;
+}
+
+.letter__signature {
+  font-style: italic;
+}
+
+/* ---------- Closing ---------- */
+
+.closing {
+  padding-bottom: var(--section-space);
+}
+
+.closing__photo {
+  max-width: 90rem;
+  margin: 0 auto;
+}
+
+.closing__caption {
+  padding: 0 var(--gutter);
+}
+
+.closing__note {
+  display: grid;
+  justify-items: center;
+  gap: 1.25rem;
+  max-width: 54rem;
+  margin: clamp(3rem, 2rem + 4vw, 6rem) auto 0;
+  padding: 0 var(--gutter);
+  text-align: center;
+}
+
+.closing__sprig {
+  width: 7rem;
+  color: var(--muted);
+}
+
+.closing__sentence {
+  display: block;
+}
+
+.closing__text {
+  font-family: var(--serif);
+  font-size: clamp(1.625rem, 1.35rem + 1.1vw, 2.25rem);
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: var(--accent);
+  text-wrap: balance;
+}
+
+.closing__signature {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 1.1875rem;
+  color: var(--muted);
+}
+
+@media (min-width: 64em) {
+  .closing__caption {
+    padding: 0 max(var(--gutter), calc((100% - var(--page-max)) / 2 + var(--gutter)));
+  }
+}

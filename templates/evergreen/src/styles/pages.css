@@ -1,0 +1,429 @@
+/* Pages beyond the main memorial: the full story, the photograph collection and its lightbox. */
+
+/* ---------- Full story ---------- */
+
+.reading-progress {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 5;
+  height: 2px;
+  pointer-events: none;
+}
+
+.reading-progress__bar {
+  height: 100%;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+.story__back,
+.photographs__back,
+.photo-story__back {
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: 1.5rem var(--gutter) 0;
+}
+
+.photographs__back,
+.photo-story__back {
+  margin: 0;
+  padding: 0 0 1.5rem;
+}
+
+.story__article {
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: clamp(2.5rem, 2rem + 4vw, 5.5rem) var(--gutter) var(--section-space);
+}
+
+.story__head {
+  max-width: 44rem;
+  margin-bottom: clamp(3.5rem, 3rem + 4vw, 7rem);
+}
+
+.story__title {
+  font-family: var(--serif);
+  font-size: clamp(2.5rem, 1.6rem + 3.6vw, 4.75rem);
+  font-weight: 380;
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  color: var(--accent);
+  text-wrap: balance;
+}
+
+.story__subject {
+  margin-top: 1rem;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 1.25rem;
+  color: var(--muted);
+}
+
+.story__intro {
+  margin-top: 2.5rem;
+}
+
+.story__attribution {
+  margin-top: 1.75rem;
+}
+
+.story__layout {
+  display: grid;
+  gap: 3rem;
+}
+
+.story__toc {
+  padding: 1.25rem 0;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+
+.story__toc-label {
+  margin-bottom: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 560;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.story__toc-list {
+  list-style: none;
+}
+
+.story__toc-link {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  min-height: 2.75rem;
+  padding: 0.55rem 0;
+  font-size: var(--text-ui);
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.story__toc-link:hover {
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-color: var(--warm);
+  text-underline-offset: 0.28em;
+}
+
+.story__toc-number {
+  font-family: var(--serif);
+  font-variant-numeric: lining-nums;
+  color: var(--warm);
+}
+
+.story__toc-link[aria-current='location'] {
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.story__chapters {
+  display: grid;
+  gap: clamp(4rem, 3rem + 4vw, 7rem);
+}
+
+.story-chapter {
+  display: grid;
+  gap: 1.75rem;
+  scroll-margin-top: 1.5rem;
+}
+
+.story-chapter__photo {
+  max-width: 44rem;
+  margin: 1rem 0;
+}
+
+.story__end {
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: 0 var(--gutter) var(--section-space);
+}
+
+@media (min-width: 64em) {
+  .story__layout {
+    grid-template-columns: minmax(12rem, 3fr) minmax(0, 9fr);
+    column-gap: clamp(2rem, 5vw, 5rem);
+    align-items: start;
+  }
+
+  .story__toc {
+    position: sticky;
+    top: 2rem;
+  }
+
+  .story-chapter__photo {
+    margin-right: calc(-1 * clamp(0rem, 6vw, 6rem));
+  }
+}
+
+/* ---------- Photograph collection ---------- */
+
+.filters {
+  margin-bottom: 1.5rem;
+}
+
+.filters__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  list-style: none;
+}
+
+.filters__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0.45rem 1rem;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  font-size: var(--text-ui);
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.filters__link:hover {
+  border-color: var(--accent);
+}
+
+.filters__link[aria-current='page'] {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.photographs__count {
+  margin-bottom: 2.5rem;
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+.collection {
+  display: grid;
+  gap: 3rem 2rem;
+  list-style: none;
+}
+
+.collection__link {
+  display: block;
+  text-decoration: none;
+}
+
+.collection__link .photo {
+  transition: opacity 160ms ease;
+}
+
+.collection__link:hover .photo {
+  opacity: 0.9;
+}
+
+@media (min-width: 40em) {
+  .collection {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-flow: row dense;
+    align-items: start;
+  }
+
+  .collection__item--landscape {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Three columns: a landscape spans two, so any mix of shapes packs without holes. */
+@media (min-width: 64em) {
+  .collection {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4rem clamp(1.5rem, 2.5vw, 2.5rem);
+  }
+
+  .collection__item--landscape {
+    grid-column: span 2;
+  }
+}
+
+/* ---------- Lightbox ---------- */
+
+.lightbox {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.lightbox[open] {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+}
+
+.lightbox::backdrop {
+  background: var(--paper);
+}
+
+.lightbox__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem var(--gutter);
+  border-bottom: 1px solid var(--rule);
+}
+
+.lightbox__position {
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+.lightbox__close {
+  min-height: 2.75rem;
+  min-width: 5rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--accent);
+  border-radius: 2px;
+  background: transparent;
+  color: var(--accent);
+  font-size: var(--text-ui);
+  font-weight: 520;
+  cursor: pointer;
+}
+
+.lightbox__close:hover {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.lightbox__stage {
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  padding: 1.5rem var(--gutter) 0;
+}
+
+.lightbox__stage .photo-wrap {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.lightbox__image {
+  width: auto;
+  max-width: 100%;
+  max-height: min(62vh, 100%);
+  object-fit: contain;
+}
+
+.lightbox__text {
+  max-width: 44rem;
+  max-height: 30vh;
+  overflow-y: auto;
+  padding: 1.25rem var(--gutter) 0;
+}
+
+.lightbox__caption {
+  font-family: var(--serif);
+  font-size: clamp(1.25rem, 1.1rem + 0.6vw, 1.625rem);
+  font-weight: 420;
+  line-height: 1.3;
+}
+
+.lightbox__text .photo-details {
+  margin-top: 0.4rem;
+}
+
+.lightbox__story {
+  margin-top: 1rem;
+  font-size: 1.0625rem;
+}
+
+.lightbox__nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem var(--gutter) 1rem;
+}
+
+@media (min-width: 64em) {
+  .lightbox[open] {
+    grid-template-columns: minmax(0, 1fr) 24rem;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+  }
+
+  .lightbox__bar {
+    grid-column: 1 / -1;
+  }
+
+  .lightbox__stage {
+    grid-row: 2 / span 2;
+    padding-bottom: 2rem;
+  }
+
+  .lightbox__image {
+    max-height: calc(100vh - 9rem);
+  }
+
+  .lightbox__text {
+    max-height: none;
+    padding-top: 3rem;
+    padding-left: 0;
+  }
+
+  .lightbox__nav {
+    grid-column: 2;
+    padding-left: 0;
+    justify-content: flex-start;
+    gap: 2rem;
+  }
+}
+
+/* ---------- One photograph ---------- */
+
+.photo-story__layout {
+  display: grid;
+  gap: 2.5rem;
+}
+
+.photo-story__caption {
+  font-family: var(--serif);
+  font-size: clamp(1.75rem, 1.4rem + 1.4vw, 2.5rem);
+  font-weight: 400;
+  line-height: 1.15;
+  color: var(--accent);
+  text-wrap: balance;
+}
+
+.photo-story__story {
+  margin-top: 1.75rem;
+}
+
+.photo-story__nav {
+  display: grid;
+  gap: 0.25rem;
+  margin-top: 2.5rem;
+}
+
+@media (min-width: 64em) {
+  .photo-story__layout {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    gap: clamp(2rem, 5vw, 5rem);
+    align-items: start;
+  }
+}
+
+/* ---------- Not found ---------- */
+
+.not-found__action {
+  margin-top: 2rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .collection__link .photo {
+    transition: none;
+  }
+}

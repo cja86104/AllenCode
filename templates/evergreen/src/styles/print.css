@@ -1,0 +1,89 @@
+/*
+ * Print: the memorial as a clean document. Navigation, actions and decorative drawings are left out,
+ * colour falls back to black on white, and link destinations are printed after external links.
+ */
+@media print {
+  :root {
+    --paper: #fff;
+    --surface: #fff;
+    --ink: #000;
+    --accent: #000;
+    --muted: #333;
+    --rule: #999;
+    --warm: #333;
+  }
+
+  @page {
+    margin: 18mm 16mm;
+  }
+
+  body {
+    font-size: 10.5pt;
+  }
+
+  .skip-link,
+  .site-header__toggle,
+  .site-nav,
+  .site-footer__links,
+  .opening__actions,
+  .gathering__actions,
+  .disclosure__summary,
+  .drawing,
+  .copy-link,
+  .reading-progress,
+  .story__toc,
+  .story__back,
+  .story__end,
+  .filters,
+  .photo-story__nav,
+  .photo-story__back {
+    display: none !important;
+  }
+
+  .site-header,
+  .site-footer {
+    border: 0;
+  }
+
+  .section,
+  .opening {
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem;
+  }
+
+  .section--band {
+    background: none;
+  }
+
+  .story-chapter__photo,
+  .chapter,
+  .memory,
+  .plate,
+  .recipe-card,
+  .details__row {
+    break-inside: avoid;
+  }
+
+  .section-head__title,
+  .chapter__title {
+    break-after: avoid;
+  }
+
+  .recipe-card {
+    transform: none;
+    box-shadow: none;
+    border: 1px solid #999;
+  }
+
+  .photo {
+    max-height: 9cm;
+    width: auto;
+  }
+
+  a[href^='http']::after {
+    content: ' (' attr(href) ')';
+    font-size: 0.85em;
+    color: #333;
+    word-break: break-all;
+  }
+}

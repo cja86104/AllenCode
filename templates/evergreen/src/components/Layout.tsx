@@ -1,0 +1,39 @@
+import { useEffect } from 'react';
+import { Outlet, useLocation } from 'react-router-dom';
+import { SiteFooter } from './SiteFooter';
+import { SiteHeader } from './SiteHeader';
+
+/**
+ * Brings the requested section into view after navigation, and moves focus to it so keyboard and
+ * screen-reader users arrive where they asked to go. Without a hash, a new page starts at the top.
+ */
+function useScrollToHash() {
+  const { pathname, hash } = useLocation();
+  useEffect(() => {
+    if (!hash) {
+      window.scrollTo(0, 0);
+      return;
+    }
+    const target = document.getElementById(decodeURIComponent(hash.slice(1)));
+    if (!target) return;
+    target.scrollIntoView();
+    if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
+    target.focus({ preventScroll: true });
+  }, [pathname, hash]);
+}
+
+export function Layout() {
+  useScrollToHash();
+  return (
+    <>
+      <a className="skip-link" href="#main">
+        Skip to content
+      </a>
+      <SiteHeader />
+      <main id="main" tabIndex={-1}>
+        <Outlet />
+      </main>
+      <SiteFooter />
+    </>
+  );
+}
