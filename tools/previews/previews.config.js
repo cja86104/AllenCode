@@ -1,7 +1,8 @@
 // @ts-check
 // Content for the template concept previews (spec section 7.6). Every name, date and place here is
 // invented for a concept preview; build.mjs renders each entry with one of five shared layouts and
-// labels every page "Concept preview". No prices, no reviews, no testimonials.
+// labels every page "Concept preview". No prices, no reviews, no testimonials. A template that has been
+// built (templates/<id>, status `ready`) leaves this list and is filmed by record-template.mjs instead.
 
 /**
  * @typedef {{ bg: string, fg: string, muted: string, accent: string, card: string, line: string, display: 'serif' | 'sans' | 'mono' }} Theme
@@ -191,30 +192,6 @@ export const PREVIEWS = {
     ],
     noteTitle: 'Coming up',
     note: "Grandma's 80th birthday party, Saturday, September 12. Everyone is invited.",
-  },
-  evergreen: {
-    layout: 'family',
-    theme: { bg: '#f4f6f2', fg: '#1f2a24', muted: '#66756b', accent: '#3f6b52', card: '#e7ede6', line: '#d4ddd3', display: 'serif' },
-    title: 'Margaret Ellis',
-    tagline: '1941 to 2024. A life of gardens, music and open doors.',
-    hue: 140,
-    storyTitle: 'Her story',
-    entries: [
-      { date: '1941', title: 'Born in Lancaster', text: 'The youngest of four, and the first to the piano every morning.' },
-      { date: '1968', title: 'The house on Elm Street', text: 'Where the door was always open and the kettle always on.' },
-      { date: '1995', title: 'Forty years of teaching', text: 'Music lessons for three generations of the neighborhood.' },
-    ],
-    galleryTitle: 'Moments',
-    gallery: [
-      { caption: 'The garden in June', hue: 120 },
-      { caption: 'Sunday at the piano', hue: 35 },
-      { caption: 'Elm Street porch', hue: 200 },
-      { caption: 'Roses she planted', hue: 350 },
-      { caption: 'Christmas morning', hue: 10 },
-      { caption: 'Her favorite view', hue: 160 },
-    ],
-    noteTitle: 'Celebration of life',
-    note: 'Saturday, March 8, at 2 pm, at the Elm Street community hall. All are welcome.',
   },
   keepsake: {
     layout: 'family',

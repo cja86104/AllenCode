@@ -1,7 +1,7 @@
 // @ts-check
-// Template catalog (spec section 7.6). Every entry is a concept until Chris builds the real template:
-// its loop and poster are filmed from tools/previews. `price` stays in the data so prices can return,
-// but no page renders it.
+// Template catalog (spec section 7.6). An entry is a `concept` until Chris builds the real template; its
+// loop and poster are then filmed from that template (tools/previews/record-template.mjs) and its status
+// becomes `ready`. `price` stays in the data so prices can return, but no page renders it.
 export const templateCategories = [
   'SaaS Landing',
   'Dev Portfolio',
@@ -124,7 +124,7 @@ export const templates = [
     name: 'Evergreen — Memorial and Tribute',
     category: 'Family and Memories',
     tags: ['Life story', 'Photo moments', 'Service details'],
-    status: 'concept',
+    status: 'ready',
     previewVideo: '/media/templates/evergreen.mp4',
     poster: '/media/templates/evergreen.jpg',
     excerpt: 'template-evergreen',

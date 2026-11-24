@@ -1,40 +1,41 @@
 // @ts-check
 
 /**
- * Source for the Evergreen template: the top of its concept preview page, which its loop films.
+ * Source for the Evergreen template: the opening spread of the real template (templates/evergreen), the
+ * name, dates and place its loop opens on.
  * @type {import('./index.js').Excerpt}
  */
 const templateEvergreen = {
   id: 'template-evergreen',
-  file: 'evergreen.html',
+  file: 'Opening.tsx',
   repo: 'cja86104/AllenCode',
-  path: 'tools/previews/src/evergreen.html',
-  lines: [45, 64],
-  commit: 'ebbc6f89bc5d4812f51131e216583d83ba064197',
+  path: 'templates/evergreen/src/sections/Opening.tsx',
+  lines: [26, 45],
+  commit: '73ce3ef825dd860dc3ced71f551e9ee471868b51',
   code: [
-    "  <header class=\"top wrap\">",
-    "    <a class=\"brand\" href=\"#\">Margaret Ellis</a>",
-    "    <nav><a href=\"#\">Her story</a><a href=\"#\">Moments</a><a href=\"#\">Celebration of life</a></nav>",
-    "  </header>",
-    "  <section class=\"hero wrap\">",
-    "    <h1>Margaret Ellis</h1>",
-    "    <p class=\"lede\">1941 to 2024. A life of gardens, music and open doors.</p>",
-    "    <svg class=\"art\" viewBox=\"0 0 400 260\" role=\"img\" aria-label=\"A drawn landscape for Margaret Ellis\">",
-    "      <defs>",
-    "        <linearGradient id=\"sky-140\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\">",
-    "          <stop offset=\"0\" stop-color=\"hsl(140 70% 82%)\"/>",
-    "          <stop offset=\"1\" stop-color=\"hsl(170 60% 66%)\"/>",
-    "        </linearGradient>",
-    "      </defs>",
-    "      <rect width=\"400\" height=\"260\" fill=\"url(#sky-140)\"/>",
-    "      <circle cx=\"300\" cy=\"86\" r=\"34\" fill=\"hsl(190 90% 92%)\"/>",
-    "      <path d=\"M0 190 Q100 120 210 176 T400 160 V260 H0Z\" fill=\"hsl(140 35% 42%)\"/>",
-    "      <path d=\"M0 220 Q140 170 260 214 T400 206 V260 H0Z\" fill=\"hsl(140 40% 30%)\"/>",
-    "    </svg>",
-    "  </section>",
+    "      <div className=\"opening__title\">",
+    "        <p className=\"opening__eyebrow\">{opening.eyebrow}</p>",
+    "        <h1 id=\"opening-name\" className=\"opening__name\">",
+    "          {lines.map((line, index) => (",
+    "            <span key={line} className=\"opening__line\">",
+    "              {index > 0 ? ' ' : ''}",
+    "              {line}",
+    "            </span>",
+    "          ))}",
+    "        </h1>",
+    "        {born || died ? (",
+    "          <p className=\"opening__dates\">",
+    "            {born ? <time dateTime={partialDateTimeValue(person.born)}>{born}</time> : null}",
+    "            {born && died ? <span aria-hidden=\"true\"> — </span> : null}",
+    "            {born && died ? <span className=\"visually-hidden\"> to </span> : null}",
+    "            {died ? <time dateTime={partialDateTimeValue(person.died)}>{died}</time> : null}",
+    "          </p>",
+    "        ) : null}",
+    "        {person.place ? <p className=\"opening__place\">{person.place}</p> : null}",
+    "      </div>",
   ].join('\n'),
-  becomes: 'the Evergreen — Memorial and Tribute concept preview',
-  approved: { by: 'Chris', on: '2026-11-09' },
+  becomes: 'the opening of the Evergreen — Memorial and Tribute template',
+  approved: { by: 'Chris', on: '2026-11-24' },
 };
 
 export default templateEvergreen;

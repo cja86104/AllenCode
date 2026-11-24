@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowUpRight } from 'lucide-react';
 import { templates, templateCategories } from '../data/templates.js';
+import { templateLoopAlt, templateStatusLabel } from '../data/templateStatus.js';
 import Reveal from '../components/Reveal';
 import MediaLoop from '../components/MediaLoop.jsx';
 import PageHeader, { DISPLAY, PANEL_HOVER } from '../components/PageHeader.jsx';
@@ -16,17 +17,18 @@ import usePageMeta from '../hooks/usePageMeta.js';
  * @param {{ template: (typeof templates)[number] }} props
  */
 function TemplateCard({ template }) {
-  const title = template.name.split(' — ')[0];
+  // Where the template lives: its concept preview page, or its own folder once it is built.
+  const file = template.status === 'ready' ? `${template.id}/` : `${template.id}.html`;
   return (
     <article data-template={template.id} className={`group flex h-full flex-col overflow-hidden ${PANEL_HOVER}`}>
       <p aria-hidden="true" className="mono flex items-center justify-between border-b border-white/10 px-5 py-2.5 text-[11px] tracking-widest text-white/55">
-        <span>{template.id}.html</span>
+        <span>{file}</span>
         <span className="h-1.5 w-1.5 rounded-full bg-white/25 transition-colors group-hover:bg-ember" />
       </p>
       <MediaLoop
         src={template.previewVideo}
         poster={template.poster}
-        alt={`${title}, a concept preview of the ${template.category.toLowerCase()} template`}
+        alt={templateLoopAlt(template)}
         className="aspect-[16/10] border-b border-white/10 bg-black"
       />
       <div className="flex flex-1 flex-col p-6">
@@ -39,8 +41,8 @@ function TemplateCard({ template }) {
             </span>
           ))}
         </div>
-        {template.status === 'concept' && (
-          <p className="mono mt-5 text-[10px] uppercase tracking-[0.2em] text-white/50">Concept preview, coming soon</p>
+        {templateStatusLabel(template) && (
+          <p className="mono mt-5 text-[10px] uppercase tracking-[0.2em] text-white/50">{templateStatusLabel(template)}</p>
         )}
         <div className="mt-auto pt-6">
           <Link

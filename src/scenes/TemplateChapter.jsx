@@ -2,6 +2,7 @@
 import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { templates } from '../data/templates.js';
+import { templateLoopAlt, templateStatusLabel } from '../data/templateStatus.js';
 import { getExcerpt } from '../content/excerpts/index.js';
 import { TEMPLATE_CHAPTER, TEMPLATE_STORIES } from '../content/doorB.js';
 import { useField } from '../field/fieldBus.js';
@@ -39,8 +40,7 @@ export function segmentTimeline(local) {
 
 /** @param {Template} template */
 function loopOf(template) {
-  const title = template.name.split(' — ')[0];
-  return { src: template.previewVideo, poster: template.poster, alt: `${title}, a concept preview of the ${template.category.toLowerCase()} template` };
+  return { src: template.previewVideo, poster: template.poster, alt: templateLoopAlt(template) };
 }
 
 /**
@@ -55,8 +55,8 @@ function TemplateText({ template, compact = false }) {
       <h3 className={`mt-3 ${CHAPTER_TITLE}`}>{title}</h3>
       <p className={`mt-2 tracking-[0.2em] text-white/60 ${CHAPTER_LABEL}`}>{kind}</p>
       {!compact && <p className={`mt-4 max-w-md lg:max-w-none ${CHAPTER_BODY}`}>{TEMPLATE_STORIES[template.id]}</p>}
-      {template.status === 'concept' && !compact && (
-        <p className={`mt-4 tracking-[0.2em] text-white/60 ${CHAPTER_LABEL}`}>Concept preview, coming soon</p>
+      {templateStatusLabel(template) && !compact && (
+        <p className={`mt-4 tracking-[0.2em] text-white/60 ${CHAPTER_LABEL}`}>{templateStatusLabel(template)}</p>
       )}
       <Link
         to={`/contact?template=${template.id}`}

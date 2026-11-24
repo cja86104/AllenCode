@@ -6,7 +6,9 @@ import { templateCategories, templates } from '../src/data/templates.js';
 import { excerpts, getExcerpt, validateExcerpt } from '../src/content/excerpts/index.js';
 
 const EXISTING_PRICES = { ignite: 89, launchpad: 99, monoline: 59, terminal: 69, gridview: 129, 'control-panel': 149, studio: 89, atelier: 95 };
-const FAMILY_CONCEPTS = ['hearth', 'evergreen', 'keepsake', 'vow', 'gather', 'folio'];
+const FAMILY_TEMPLATES = ['hearth', 'evergreen', 'keepsake', 'vow', 'gather', 'folio'];
+/** Templates Chris has built: each lives in templates/<id> and is filmed from its own build. */
+const READY = ['evergreen'];
 const MAX_POSTER_BYTES = 150 * 1024;
 const MAX_LOOP_BYTES = 2 * 1024 * 1024;
 
@@ -18,11 +20,10 @@ describe('template data', () => {
     for (const [id, price] of Object.entries(EXISTING_PRICES)) expect(byId(id)?.price, id).toBe(price);
   });
 
-  it('hearth, evergreen, keepsake, vow, gather and folio exist with status concept and no price', () => {
-    for (const id of FAMILY_CONCEPTS) {
+  it('hearth, evergreen, keepsake, vow, gather and folio exist with no price', () => {
+    for (const id of FAMILY_TEMPLATES) {
       const template = byId(id);
       expect(template, id).toBeDefined();
-      expect(template?.status, id).toBe('concept');
       expect(template, id).not.toHaveProperty('price');
     }
   });
@@ -37,8 +38,17 @@ describe('template data', () => {
     for (const template of templates) expect(template, template.id).not.toHaveProperty('slot');
   });
 
-  it('every template is a concept until Chris builds it', () => {
-    for (const template of templates) expect(template.status, template.id).toBe('concept');
+  it('every template is a concept until Chris builds it, and a built one is ready', () => {
+    for (const template of templates) {
+      expect(template.status, template.id).toBe(READY.includes(template.id) ? 'ready' : 'concept');
+    }
+  });
+
+  it('a ready template is a real project in templates/<id>, and its concept preview page is gone', () => {
+    for (const id of READY) {
+      expect(existsSync(`templates/${id}/package.json`), id).toBe(true);
+      expect(existsSync(`tools/previews/src/${id}.html`), id).toBe(false);
+    }
   });
 
   it('categories include Family and Memories, Events, and Personal and Creative, and every category is used', () => {
@@ -47,13 +57,19 @@ describe('template data', () => {
     for (const category of templateCategories) expect(templates.some((t) => t.category === category), category).toBe(true);
   });
 
-  it("every template's excerpt is real code from its own preview page, valid and approved", () => {
+  it("every template's excerpt is real code from its own preview page or, once built, its own source; valid and approved", () => {
     for (const template of templates) {
       const excerpt = excerpts[template.excerpt];
       expect(excerpt, template.id).toBeDefined();
       expect(excerpt.repo, template.id).toBe('cja86104/AllenCode');
-      expect(excerpt.path, template.id).toBe(`tools/previews/src/${template.id}.html`);
-      expect(excerpt.approved, template.id).toEqual({ by: 'Chris', on: '2026-11-09' });
+      if (template.status === 'ready') {
+        expect(excerpt.path.startsWith(`templates/${template.id}/`), template.id).toBe(true);
+        expect(existsSync(excerpt.path), excerpt.path).toBe(true);
+        expect(excerpt.approved?.by, template.id).toBe('Chris');
+      } else {
+        expect(excerpt.path, template.id).toBe(`tools/previews/src/${template.id}.html`);
+        expect(excerpt.approved, template.id).toEqual({ by: 'Chris', on: '2026-11-09' });
+      }
       expect(validateExcerpt(excerpt), template.id).toEqual([]);
       expect(getExcerpt(template.excerpt)?.id, template.id).toBe(template.excerpt);
     }

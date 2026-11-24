@@ -52,6 +52,15 @@ describe('Templates page', () => {
     }
   });
 
+  it('a built template says Ready to build, names its own folder, and is not called a concept', () => {
+    renderTemplates();
+    const card = /** @type {HTMLElement} */ (document.querySelector('[data-template="evergreen"]'));
+    expect(within(card).getByText('Ready to build')).toBeInTheDocument();
+    expect(within(card).queryByText('Concept preview, coming soon')).toBeNull();
+    expect(within(card).getByText('evergreen/')).toBeInTheDocument();
+    expect(within(card).getByRole('img', { name: 'Evergreen, a preview of the family and memories template' })).toBeInTheDocument();
+  });
+
   it('each card shows its poster with alt text and a muted loop, and no slot attribute remains', () => {
     const { container } = renderTemplates();
     for (const template of templates) {
