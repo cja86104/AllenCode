@@ -1,0 +1,188 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+
+  body {
+    @apply bg-navy font-sans text-cream antialiased;
+  }
+
+  ::selection {
+    @apply bg-brass text-navy;
+  }
+
+  :focus-visible {
+    outline: 2px solid theme('colors.brass.DEFAULT');
+    outline-offset: 3px;
+  }
+
+  /* On the cream grounds the focus ring uses the deeper brass so it stays visible. */
+  .bg-cream :focus-visible,
+  .bg-cream-deep :focus-visible {
+    outline-color: theme('colors.brass.ink');
+  }
+
+  [tabindex='-1']:focus {
+    outline: none;
+  }
+}
+
+@layer components {
+  /* Small screens: the menu collapses behind its button, but only once JavaScript can open it again. */
+  @media (max-width: 1279.98px) {
+    .js .site-menu-toggle {
+      display: inline-flex;
+    }
+
+    .js .site-nav[data-open='false'] {
+      display: none;
+    }
+  }
+
+  /* Scroll-in reveal: prepared only once JavaScript has started, never for reduced motion, and shown
+     after two seconds no matter what, so content can never stay hidden. */
+  @media (prefers-reduced-motion: no-preference) {
+    .js .reveal {
+      opacity: 0;
+      transform: translateY(1.25rem);
+      transition:
+        opacity 0.6s ease,
+        transform 0.6s ease;
+      animation: reveal-failsafe 0s linear 2s forwards;
+    }
+
+    .js .reveal.is-revealed {
+      opacity: 1;
+      transform: none;
+      animation: none;
+    }
+  }
+
+  @keyframes reveal-failsafe {
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* The hero's entrance on first load. */
+  @media (prefers-reduced-motion: no-preference) {
+    .hero-enter {
+      animation: hero-enter 0.8s ease both;
+    }
+  }
+
+  @keyframes hero-enter {
+    from {
+      opacity: 0;
+      transform: translateY(1rem);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* The harbor's clipped corners, from the brewery's signage. */
+  .clip-btn {
+    clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+  }
+
+  .clip-card {
+    clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+  }
+
+  /* A brass-ruled stamp, set at a slight angle. */
+  .stamp-label {
+    transform: rotate(-6deg);
+    border: 3px solid theme('colors.brass.DEFAULT');
+    box-shadow: 4px 4px 0 rgb(192 138 62 / 0.35);
+  }
+
+  /* The brass rule that cuts from navy into cream; `--to-navy` cuts from cream back into navy. */
+  .diagonal-divider {
+    position: relative;
+    height: 80px;
+    overflow: hidden;
+  }
+
+  .diagonal-divider::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to bottom right,
+      transparent 49.5%,
+      theme('colors.brass.DEFAULT') 49.5%,
+      theme('colors.brass.DEFAULT') 51%,
+      theme('colors.cream.DEFAULT') 51%
+    );
+    transform: skewY(-3deg) scaleX(1.05);
+  }
+
+  .diagonal-divider--to-navy::before {
+    background: linear-gradient(
+      to bottom right,
+      transparent 49.5%,
+      theme('colors.brass.DEFAULT') 49.5%,
+      theme('colors.brass.DEFAULT') 51%,
+      theme('colors.navy.DEFAULT') 51%
+    );
+  }
+
+  /* An event as a ticket stub: half-round notches cut from each side. */
+  .ticket-stub {
+    background:
+      radial-gradient(circle at 0 50%, transparent 12px, theme('colors.cream.deep') 12.5px),
+      radial-gradient(circle at 100% 50%, transparent 12px, theme('colors.cream.deep') 12.5px);
+    background-position:
+      left center,
+      right center;
+    background-size: 50% 100%;
+    background-repeat: no-repeat;
+  }
+
+  /* Controls that only work with JavaScript, such as the shop search, stay out of the page without it. */
+  .js-only {
+    display: none;
+  }
+
+  .js .js-only {
+    display: block;
+  }
+
+  .tap-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: theme('colors.brass.DEFAULT') theme('colors.navy.DEFAULT');
+  }
+
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@media print {
+  header,
+  .no-print {
+    display: none !important;
+  }
+
+  main {
+    padding-top: 0 !important;
+  }
+}
