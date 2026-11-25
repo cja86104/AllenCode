@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { memorial } from '../src/content/memorial';
 import type { Memorial } from '../src/content/types';
@@ -26,17 +27,23 @@ describe('the demonstration content', () => {
     expect(text.split('room for one more').length - 1).toBeLessThanOrEqual(2);
   });
 
-  it('ships every demonstration photograph as a sized stock photograph, cropped to its own shape', () => {
+  it('ships every demonstration photograph sized, as a stock photograph cropped to its shape or a file in public/', () => {
     for (const photo of memorial.photos.items) {
       expect(photo.placeholder, photo.id).toBeUndefined();
-      const url = new URL(photo.src);
-      expect(url.hostname, photo.id).toBe('images.unsplash.com');
-      expect(Number(url.searchParams.get('w')), photo.id).toBe(photo.width);
-      expect(Number(url.searchParams.get('h')), photo.id).toBe(photo.height);
       expect(
         photo.sources?.map((source) => source.width),
         photo.id,
       ).toEqual([Math.round(photo.width / 2), photo.width]);
+      if (photo.src.startsWith('/')) {
+        for (const source of [photo.src, ...(photo.sources ?? []).map((item) => item.src)]) {
+          expect(existsSync(`public${source}`), source).toBe(true);
+        }
+        continue;
+      }
+      const url = new URL(photo.src);
+      expect(url.hostname, photo.id).toBe('images.unsplash.com');
+      expect(Number(url.searchParams.get('w')), photo.id).toBe(photo.width);
+      expect(Number(url.searchParams.get('h')), photo.id).toBe(photo.height);
     }
   });
 

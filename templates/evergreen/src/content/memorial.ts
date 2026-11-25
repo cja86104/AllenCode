@@ -197,13 +197,19 @@ export const memorial: Memorial = {
       },
       {
         id: 'haywood-road-1952',
-        ...stockPhoto('1560810511-01c8139ab16e', 1200, 1500, { x: 65, y: 55 }),
-        alt: 'A girl of about six in a cotton dress standing on a dirt road, looking back over her shoulder. Black and white.',
+        src: '/photos/haywood-road-1952.jpg',
+        width: 1126,
+        height: 1408,
+        sources: [
+          { src: '/photos/haywood-road-1952-563.jpg', width: 563 },
+          { src: '/photos/haywood-road-1952.jpg', width: 1126 },
+        ],
+        alt: 'Nell in a blue gingham dress and belt, a burlap sack over her shoulder, on a dirt road outside a wooden feed store with an old truck parked in front.',
         caption: 'Nell on the dirt road out to the feed store on Haywood Road.',
         date: { year: 1952, approximate: true },
         location: 'West Asheville',
         contributor: 'June, her sister',
-        focalPoint: { x: 50, y: 45 },
+        focalPoint: { x: 50, y: 30 },
         collections: ['early-years'],
       },
       {
