@@ -1,7 +1,7 @@
 import { StrictMode } from 'react';
 import { renderToString } from 'react-dom/server';
-import { StaticRouter } from 'react-router-dom/server';
-import { App, ROUTER_FUTURE } from './App';
+import { StaticRouter } from 'react-router';
+import { App } from './App';
 import { RestaurantProvider } from './app/RestaurantContext';
 import { restaurant } from './content/restaurant';
 import { prerenderRoutes } from './lib/routes';
@@ -10,7 +10,7 @@ import { prerenderRoutes } from './lib/routes';
 export function render(path: string): string {
   return renderToString(
     <StrictMode>
-      <StaticRouter location={path} future={ROUTER_FUTURE}>
+      <StaticRouter location={path}>
         <RestaurantProvider restaurant={restaurant}>
           <App />
         </RestaurantProvider>

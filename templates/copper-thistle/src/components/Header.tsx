@@ -1,5 +1,5 @@
 import { useEffect, useId, useState } from 'react';
-import { Link, NavLink, useLocation } from 'react-router-dom';
+import { Link, NavLink, useLocation } from 'react-router';
 import { Menu as MenuIcon, X } from 'lucide-react';
 import { useRestaurant } from '../app/RestaurantContext';
 import { NAV_ITEMS } from '../lib/navigation';

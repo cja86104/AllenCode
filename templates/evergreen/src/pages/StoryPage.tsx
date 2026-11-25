@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type RefObject } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { useMemorial } from '../app/MemorialContext';
 import { usePageTitle } from '../app/usePageTitle';
 import { PhotoFigure } from '../components/PhotoFigure';

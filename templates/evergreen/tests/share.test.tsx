@@ -1,8 +1,7 @@
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ROUTER_FUTURE } from '../src/App';
 import { MemorialProvider } from '../src/app/MemorialContext';
 import { memorial } from '../src/content/memorial';
 import type { Memorial } from '../src/content/types';
@@ -22,7 +21,7 @@ const clone = (): Memorial => structuredClone(memorial);
 
 function renderShare(adapter: SubmissionAdapter, content: Memorial = memorial) {
   return render(
-    <MemoryRouter initialEntries={['/share']} future={ROUTER_FUTURE}>
+    <MemoryRouter initialEntries={['/share']}>
       <MemorialProvider memorial={content}>
         <SharePage adapter={adapter} />
       </MemorialProvider>

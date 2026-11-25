@@ -1,5 +1,5 @@
 import { ArrowRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { useRestaurant } from '../../app/RestaurantContext';
 import { Photo } from '../../components/Photo';
 import { Reveal } from '../../components/Reveal';

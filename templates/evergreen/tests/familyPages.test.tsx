@@ -6,15 +6,14 @@ import type { Memorial } from '../src/content/types';
 import { FamilyPreviewPage } from '../src/pages/FamilyPreviewPage';
 import { renderMemorial } from './render';
 import { render } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
-import { ROUTER_FUTURE } from '../src/App';
+import { MemoryRouter } from 'react-router';
 import { MemorialProvider } from '../src/app/MemorialContext';
 
 const clone = (): Memorial => structuredClone(memorial);
 
 function renderPreview(content: Memorial = memorial) {
   return render(
-    <MemoryRouter future={ROUTER_FUTURE}>
+    <MemoryRouter>
       <MemorialProvider memorial={content} renderedAt={Date.parse('2026-11-24T17:00:00Z')}>
         <FamilyPreviewPage />
       </MemorialProvider>
@@ -23,17 +22,16 @@ function renderPreview(content: Memorial = memorial) {
 }
 
 describe('links to the new pages', () => {
-  it('offers share, copy link, privacy and family access in the footer, and a quiet share link in the header', () => {
+  it('offers share, copy link, privacy and family access in the footer, and share and family access in the header', () => {
     renderMemorial(memorial);
     const footer = screen.getByRole('contentinfo');
     expect(within(footer).getByRole('link', { name: 'Share a memory' })).toHaveAttribute('href', '/share');
     expect(within(footer).getByRole('button', { name: 'Copy memorial link' })).toBeInTheDocument();
     expect(within(footer).getByRole('link', { name: 'Privacy' })).toHaveAttribute('href', '/privacy');
     expect(within(footer).getByRole('link', { name: 'Family access' })).toHaveAttribute('href', '/family');
-    expect(within(screen.getByRole('navigation', { name: 'Main' })).getByRole('link', { name: 'Share a memory' })).toHaveAttribute(
-      'href',
-      '/share',
-    );
+    const header = within(screen.getByRole('navigation', { name: 'Main' }));
+    expect(header.getByRole('link', { name: 'Share a memory' })).toHaveAttribute('href', '/share');
+    expect(header.getByRole('link', { name: 'Family access' })).toHaveAttribute('href', '/family');
   });
 });
 

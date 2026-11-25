@@ -4,8 +4,8 @@ import '@fontsource-variable/inter/wght.css';
 import './index.css';
 import { StrictMode } from 'react';
 import { createRoot, hydrateRoot } from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
-import { App, ROUTER_FUTURE } from './App';
+import { BrowserRouter } from 'react-router';
+import { App } from './App';
 import { RestaurantProvider } from './app/RestaurantContext';
 import { restaurant } from './content/restaurant';
 
@@ -14,7 +14,7 @@ if (!root) throw new Error('Copper Thistle: the #root element is missing from in
 
 const app = (
   <StrictMode>
-    <BrowserRouter future={ROUTER_FUTURE}>
+    <BrowserRouter>
       <RestaurantProvider restaurant={restaurant}>
         <App />
       </RestaurantProvider>

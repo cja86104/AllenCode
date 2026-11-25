@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { Facebook, Instagram, Mail, MapPin, Phone } from 'lucide-react';
 import { useRestaurant } from '../app/RestaurantContext';
 import { mapUrl } from '../lib/content';

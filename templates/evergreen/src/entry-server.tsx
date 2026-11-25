@@ -1,7 +1,7 @@
 import { StrictMode } from 'react';
 import { renderToString } from 'react-dom/server';
-import { StaticRouter } from 'react-router-dom/server';
-import { App, ROUTER_FUTURE } from './App';
+import { StaticRouter } from 'react-router';
+import { App } from './App';
 import { MemorialProvider } from './app/MemorialContext';
 import { memorial } from './content/memorial';
 import { prerenderRoutes } from './lib/routes';
@@ -10,7 +10,7 @@ import { prerenderRoutes } from './lib/routes';
 export function render(path: string, renderedAt: number): string {
   return renderToString(
     <StrictMode>
-      <StaticRouter location={path} future={ROUTER_FUTURE}>
+      <StaticRouter location={path}>
         <MemorialProvider memorial={memorial} renderedAt={renderedAt}>
           <App />
         </MemorialProvider>

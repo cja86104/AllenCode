@@ -1,4 +1,4 @@
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes } from 'react-router';
 import { Layout } from './components/Layout';
 import { AboutPage } from './pages/AboutPage';
 import { ContactPage } from './pages/ContactPage';
@@ -7,9 +7,6 @@ import { HomePage } from './pages/HomePage';
 import { MenuPage } from './pages/MenuPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { ReservationsPage } from './pages/ReservationsPage';
-
-/** Opts in to React Router 7 behaviour now, so upgrading later changes nothing. */
-export const ROUTER_FUTURE = { v7_startTransition: true, v7_relativeSplatPath: true } as const;
 
 export function App() {
   return (

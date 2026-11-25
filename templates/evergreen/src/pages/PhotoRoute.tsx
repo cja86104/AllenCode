@@ -1,4 +1,4 @@
-import { useLocation, useParams, useSearchParams } from 'react-router-dom';
+import { useLocation, useParams, useSearchParams } from 'react-router';
 import { useMemorial } from '../app/MemorialContext';
 import { findPhoto } from '../lib/content';
 import { COLLECTION_PARAM, filterPhotos, parseCollection } from '../lib/photos';

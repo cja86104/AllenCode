@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes } from 'react-router';
 import { Layout } from './components/Layout';
 import { MemorialPage } from './pages/MemorialPage';
 import { NotFoundPage } from './pages/NotFoundPage';
@@ -12,9 +12,6 @@ import { StoryPage } from './pages/StoryPage';
 
 // The family-area demonstration (and its unpublished demonstration memories) loads only when visited.
 const FamilyPreviewPage = lazy(() => import('./pages/FamilyPreviewPage').then((module) => ({ default: module.FamilyPreviewPage })));
-
-/** Opts in to React Router 7 behaviour now, so upgrading later changes nothing. */
-export const ROUTER_FUTURE = { v7_startTransition: true, v7_relativeSplatPath: true } as const;
 
 export function App() {
   return (

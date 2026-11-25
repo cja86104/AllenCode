@@ -1,5 +1,5 @@
 import { useId, useState, type CSSProperties, type ReactNode } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { useMemorial, useNow } from '../app/MemorialContext';
 import { usePageTitle } from '../app/usePageTitle';
 import { Photo } from '../components/Photo';

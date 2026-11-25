@@ -2,7 +2,7 @@
 
 A memorial website template by Allen Code Co.: a family archive, thoughtfully kept.
 
-Vite 5, React 18, React Router 6 and TypeScript (strict). Every page is prerendered to static HTML, so the
+Vite 5, React 18, React Router 7 and TypeScript (strict). Every page is prerendered to static HTML, so the
 memorial reads in full without JavaScript. No analytics, no third-party embeds, no backend required for the
 public memorial.
 

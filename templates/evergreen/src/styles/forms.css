@@ -8,8 +8,9 @@
   text-underline-offset: 0.28em;
 }
 
+/* Share a memory and Family access sit apart from the section links, after a thin rule. */
 @media (min-width: 48em) {
-  .site-nav__share {
+  .site-nav__utility:not(.site-nav__utility + .site-nav__utility) {
     padding-left: 1.75rem;
     border-left: 1px solid var(--rule);
   }

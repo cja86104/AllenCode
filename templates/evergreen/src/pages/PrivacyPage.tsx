@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { useMemorial } from '../app/MemorialContext';
 import { usePageTitle } from '../app/usePageTitle';
 import { PRIVACY_MODES } from '../lib/privacy';

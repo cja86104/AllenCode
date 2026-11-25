@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 
 /** The small spaced capitals above a heading. `tone` picks a colour that stays readable on its ground. */
 export function Eyebrow({

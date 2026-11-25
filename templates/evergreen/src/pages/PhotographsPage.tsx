@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router';
 import { useMemorial } from '../app/MemorialContext';
 import { usePageTitle } from '../app/usePageTitle';
 import { Lightbox } from '../components/Lightbox';

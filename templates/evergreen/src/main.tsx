@@ -4,8 +4,8 @@ import '@fontsource-variable/inter/wght.css';
 import './styles/index.css';
 import { StrictMode } from 'react';
 import { createRoot, hydrateRoot } from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
-import { App, ROUTER_FUTURE } from './App';
+import { BrowserRouter } from 'react-router';
+import { App } from './App';
 import { MemorialProvider } from './app/MemorialContext';
 import { memorial } from './content/memorial';
 
@@ -21,7 +21,7 @@ const renderedAt = Number(root.dataset.renderedAt);
 
 const app = (
   <StrictMode>
-    <BrowserRouter future={ROUTER_FUTURE}>
+    <BrowserRouter>
       <MemorialProvider memorial={memorial} renderedAt={Number.isFinite(renderedAt) ? renderedAt : undefined}>
         <App />
       </MemorialProvider>

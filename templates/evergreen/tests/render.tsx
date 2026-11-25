@@ -1,6 +1,6 @@
 import { render } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
-import { App, ROUTER_FUTURE } from '../src/App';
+import { MemoryRouter } from 'react-router';
+import { App } from '../src/App';
 import { MemorialProvider } from '../src/app/MemorialContext';
 import type { Memorial } from '../src/content/types';
 import type { ServiceState } from '../src/lib/service';
@@ -13,7 +13,7 @@ interface Options {
 
 export function renderMemorial(memorial: Memorial, options: Options = {}) {
   return render(
-    <MemoryRouter initialEntries={[options.path ?? '/']} future={ROUTER_FUTURE}>
+    <MemoryRouter initialEntries={[options.path ?? '/']}>
       <MemorialProvider memorial={memorial} renderedAt={options.renderedAt} servicePreview={options.servicePreview}>
         <App />
       </MemorialProvider>

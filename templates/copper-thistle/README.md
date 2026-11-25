@@ -2,7 +2,7 @@
 
 A restaurant website template by Allen Code Co.
 
-Vite 5, React 18, React Router 6, TypeScript (strict) and Tailwind CSS. Every page is prerendered to static
+Vite 5, React 18, React Router 7, TypeScript (strict) and Tailwind CSS. Every page is prerendered to static
 HTML, so the site reads in full without JavaScript and needs no server to show the menu, hours or story. No
 analytics and no third-party scripts. Fonts are bundled with the site.
 

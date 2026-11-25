@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { useMemorial } from '../app/MemorialContext';
 import { PhotoFigure } from '../components/PhotoFigure';
 import { findPhoto } from '../lib/content';
