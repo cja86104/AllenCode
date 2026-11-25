@@ -5,10 +5,11 @@ import { describe, expect, it } from 'vitest';
 import { templateCategories, templates } from '../src/data/templates.js';
 import { excerpts, getExcerpt, validateExcerpt } from '../src/content/excerpts/index.js';
 
-const EXISTING_PRICES = { ignite: 89, launchpad: 99, monoline: 59, terminal: 69, gridview: 129, 'control-panel': 149, studio: 89, atelier: 95 };
+/** Launchpad's slot went to Copper Thistle (2026-11-25), which has no price, like every built template. */
+const EXISTING_PRICES = { ignite: 89, monoline: 59, terminal: 69, gridview: 129, 'control-panel': 149, studio: 89, atelier: 95 };
 const FAMILY_TEMPLATES = ['hearth', 'evergreen', 'keepsake', 'vow', 'gather', 'folio'];
 /** Templates Chris has built: each lives in templates/<id> and is filmed from its own build. */
-const READY = ['evergreen'];
+const READY = ['evergreen', 'copper-thistle'];
 const MAX_POSTER_BYTES = 150 * 1024;
 const MAX_LOOP_BYTES = 2 * 1024 * 1024;
 
@@ -16,7 +17,7 @@ const MAX_LOOP_BYTES = 2 * 1024 * 1024;
 const byId = (id) => templates.find((t) => t.id === id);
 
 describe('template data', () => {
-  it('the eight existing templates keep their prices in the data', () => {
+  it('the seven remaining priced templates keep their prices in the data', () => {
     for (const [id, price] of Object.entries(EXISTING_PRICES)) expect(byId(id)?.price, id).toBe(price);
   });
 
@@ -49,6 +50,16 @@ describe('template data', () => {
       expect(existsSync(`templates/${id}/package.json`), id).toBe(true);
       expect(existsSync(`tools/previews/src/${id}.html`), id).toBe(false);
     }
+  });
+
+  it('a demo is only on a ready template, and is a secure URL', () => {
+    for (const template of templates) {
+      if (!('demo' in template)) continue;
+      expect(template.status, template.id).toBe('ready');
+      expect(new URL(String(template.demo)).protocol, template.id).toBe('https:');
+    }
+    expect(byId('copper-thistle')).toMatchObject({ category: 'Restaurant', status: 'ready', demo: 'https://copper-thistle.vercel.app/' });
+    expect(byId('copper-thistle')).not.toHaveProperty('price');
   });
 
   it('categories include Family and Memories, Events, and Personal and Creative, and every category is used', () => {

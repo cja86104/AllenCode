@@ -34,23 +34,6 @@ export const PREVIEWS = {
     steps: ['Connect your calendars', 'Invite your team', 'Plan the week together'],
     closing: 'Ready when your team is.',
   },
-  launchpad: {
-    layout: 'landing',
-    theme: { bg: '#f7f7fb', fg: '#14142b', muted: '#5f6080', accent: '#4f46e5', card: '#ffffff', line: '#e3e3ef', display: 'sans' },
-    brand: 'Quillstack',
-    nav: ['Features', 'Teams', 'Sign in'],
-    eyebrow: 'Writing tools for teams',
-    headline: 'Draft, review and publish without the email chain.',
-    sub: 'One place for every draft, every comment and every final version.',
-    cta: 'Try Quillstack',
-    features: [
-      { title: 'Live drafts', text: 'Everyone edits the same version.' },
-      { title: 'Clear reviews', text: 'Comments that resolve, not pile up.' },
-      { title: 'One-click publish', text: 'From approved to live in a click.' },
-    ],
-    steps: ['Start a draft', 'Ask for a review', 'Publish when it is ready'],
-    closing: 'Your next piece starts here.',
-  },
   monoline: {
     layout: 'portfolio',
     theme: { bg: '#fafaf9', fg: '#111111', muted: '#6b6b6b', accent: '#111111', card: '#efefec', line: '#dcdcd8', display: 'sans' },

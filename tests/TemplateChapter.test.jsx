@@ -8,6 +8,7 @@ import DoorBIntro from '../src/scenes/DoorBIntro.jsx';
 import TemplateChapter, { DOOR_B_TEMPLATES, segmentTimeline, TemplateChapterFor } from '../src/scenes/TemplateChapter.jsx';
 import WorldRoadChapters from '../src/scenes/WorldRoadChapters.jsx';
 import { excerpts, getExcerpt } from '../src/content/excerpts/index.js';
+import { TEMPLATE_STORIES } from '../src/content/doorB.js';
 import { fieldBus } from '../src/field/fieldBus.js';
 import { familyRoadStops, MEETING_STOPS } from '../src/world/roads.js';
 
@@ -58,8 +59,8 @@ describe('Door B', () => {
     expect(segmentTimeline(1)).toEqual({ flight: 1, handoff: 1 });
   });
 
-  it('the Door B templates are the family, event and personal concepts other than Hearth', () => {
-    expect(DOOR_B_TEMPLATES.map((t) => t.id)).toEqual(['evergreen', 'keepsake', 'vow', 'gather', 'folio']);
+  it('the Door B templates are the family, event and personal ones other than Hearth, then the restaurant', () => {
+    expect(DOOR_B_TEMPLATES.map((t) => t.id)).toEqual(['evergreen', 'keepsake', 'vow', 'gather', 'folio', 'copper-thistle']);
   });
 
   it("the intro shows Hearth's real code beside the Hearth poster", () => {
@@ -86,7 +87,16 @@ describe('Door B', () => {
       expect(within(item).getByRole('img', { name: new RegExp(template.name.split(' — ')[0]) })).toHaveAttribute('src', template.poster);
       expect(item.querySelector('video'), template.id).toHaveAttribute('src', template.previewVideo);
       expect(within(item).getByRole('link', { name: /Ask about/ })).toHaveAttribute('href', `/contact?template=${template.id}`);
+      const demo = within(item).queryByRole('link', { name: 'See the live demo (opens in a new tab)' });
+      if (template.demo) {
+        expect(demo, template.id).toHaveAttribute('href', template.demo);
+        expect(demo, template.id).toHaveAttribute('target', '_blank');
+        expect(demo, template.id).toHaveAttribute('rel', 'noopener noreferrer');
+      } else {
+        expect(demo, template.id).toBeNull();
+      }
     }
+    expect(within(/** @type {HTMLElement} */ (document.querySelector('[data-door-b-template="copper-thistle"]'))).getByText(TEMPLATE_STORIES['copper-thistle'])).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /See every template/ })).toHaveAttribute('href', '/templates');
   });
 

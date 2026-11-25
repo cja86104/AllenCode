@@ -27,11 +27,12 @@ export const WINDOW_RADIUS = FOG_FAR + RECUT_AFTER;
  * 885 by tier) and the opening full. On a phone both are built larger again (2026-11-17: "the mobile
  * needs more code on the road itself"), by as much as keeps the landmarks' glyphs while the road between
  * stops runs at the desktop's share of the opening's density; the busiest cut still holds about 7,200
- * of the phone's 12,000.
+ * of the phone's 12,000. With Copper Thistle as a seventh house on the family road (2026-11-25), the
+ * family road is built larger again by as much as keeps those landmark glyphs.
  */
 export const WORLD_SCALE = Object.freeze({
   a: Object.freeze({ low: 1.985, mid: 1.7, high: 1.75 }),
-  b: Object.freeze({ low: 1.442, mid: 1.275, high: 1.31 }),
+  b: Object.freeze({ low: 1.58, mid: 1.39, high: 1.43 }),
 });
 
 /**

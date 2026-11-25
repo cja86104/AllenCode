@@ -44,7 +44,7 @@ function TemplateCard({ template }) {
         {templateStatusLabel(template) && (
           <p className="mono mt-5 text-[10px] uppercase tracking-[0.2em] text-white/50">{templateStatusLabel(template)}</p>
         )}
-        <div className="mt-auto pt-6">
+        <div className="mt-auto flex flex-wrap gap-2 pt-6">
           <Link
             to={`/contact?template=${template.id}`}
             viewTransition
@@ -52,6 +52,19 @@ function TemplateCard({ template }) {
           >
             Ask about this template <ArrowUpRight size={13} aria-hidden="true" />
           </Link>
+          {template.demo && (
+            <a
+              href={template.demo}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mono inline-flex items-center gap-2 rounded-full border border-white/25 px-4 py-2 text-[11px] uppercase tracking-widest text-white/80 transition-colors hover:border-ember hover:text-ember"
+            >
+              <span>
+                See the live demo <span className="sr-only">(opens in a new tab)</span>
+              </span>
+              <ArrowUpRight size={13} aria-hidden="true" />
+            </a>
+          )}
         </div>
       </div>
     </article>
@@ -77,7 +90,7 @@ export default function Templates() {
           path="templates"
           eyebrow="Templates"
           title="Start from a design. I'll make it yours."
-          lede="Pick a starting point and I'll build it out with your words, your photos and your dates. Every template here is a concept preview: ask about one and we'll start your project from it."
+          lede="Pick a starting point and I'll build it out with your words, your photos and your dates. Some are built and ready, with a live demo where one exists; the rest are concept previews. Ask about one and we'll start your project from it."
         />
 
         <div role="group" aria-label="Filter templates" className="flex flex-wrap items-center gap-2">

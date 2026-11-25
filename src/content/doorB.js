@@ -20,6 +20,7 @@ export const TEMPLATE_CHAPTER = Object.freeze({
   eyebrow: 'Start from a design',
   title: 'Pick one. I make it yours.',
   allLink: 'See every template',
+  demoLink: 'See the live demo',
 });
 
 /** One plain sentence per template shown on Door B. */
@@ -30,6 +31,7 @@ export const TEMPLATE_STORIES = Object.freeze(
     vow: 'Your day, your schedule, where everyone can stay, and an easy way to say yes.',
     gather: 'Reunions and parties: who is coming, where to sleep and what to bring.',
     folio: 'Show your work, tell your story, and take commissions or bookings.',
+    'copper-thistle': 'Your menu, your hours and your reservations, as fresh as what comes out of the kitchen.',
   }),
 );
 

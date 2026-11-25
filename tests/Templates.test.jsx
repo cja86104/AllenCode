@@ -61,6 +61,24 @@ describe('Templates page', () => {
     expect(within(card).getByRole('img', { name: 'Evergreen, a preview of the family and memories template' })).toBeInTheDocument();
   });
 
+  it('Copper Thistle is ready, under Restaurant, with a live demo link that opens in a new tab', () => {
+    renderTemplates();
+    const card = /** @type {HTMLElement} */ (document.querySelector('[data-template="copper-thistle"]'));
+    expect(within(card).getByText('Restaurant')).toBeInTheDocument();
+    expect(within(card).getByText('Ready to build')).toBeInTheDocument();
+    expect(within(card).getByText('copper-thistle/')).toBeInTheDocument();
+    const demo = within(card).getByRole('link', { name: 'See the live demo (opens in a new tab)' });
+    expect(demo).toHaveAttribute('href', 'https://copper-thistle.vercel.app/');
+    expect(demo).toHaveAttribute('target', '_blank');
+    expect(demo).toHaveAttribute('rel', 'noopener noreferrer');
+  });
+
+  it('only a template with a hosted demo offers one, and Launchpad is gone', () => {
+    renderTemplates();
+    expect(screen.getAllByRole('link', { name: /See the live demo/ })).toHaveLength(1);
+    expect(document.querySelector('[data-template="launchpad"]')).toBeNull();
+  });
+
   it('each card shows its poster with alt text and a muted loop, and no slot attribute remains', () => {
     const { container } = renderTemplates();
     for (const template of templates) {

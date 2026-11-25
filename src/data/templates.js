@@ -1,7 +1,8 @@
 // @ts-check
 // Template catalog (spec section 7.6). An entry is a `concept` until Chris builds the real template; its
 // loop and poster are then filmed from that template (tools/previews/record-template.mjs) and its status
-// becomes `ready`. `price` stays in the data so prices can return, but no page renders it.
+// becomes `ready`. A ready template whose demo is hosted carries its `demo` URL. `price` stays in the data so
+// prices can return, but no page renders it.
 export const templateCategories = [
   'SaaS Landing',
   'Dev Portfolio',
@@ -10,6 +11,7 @@ export const templateCategories = [
   'Family and Memories',
   'Events',
   'Personal and Creative',
+  'Restaurant',
 ];
 
 export const templates = [
@@ -26,16 +28,15 @@ export const templates = [
     excerpt: 'template-ignite',
   },
   {
-    id: 'launchpad',
-    name: 'Launchpad — SaaS Landing',
-    category: 'SaaS Landing',
-    price: 99,
-    tags: ['Next.js', 'Tailwind', 'Stripe'],
-    image: '/images/templates/template-launchpad.svg',
-    status: 'concept',
-    previewVideo: '/media/templates/launchpad.mp4',
-    poster: '/media/templates/launchpad.jpg',
-    excerpt: 'template-launchpad',
+    id: 'copper-thistle',
+    name: 'Copper Thistle — Restaurant',
+    category: 'Restaurant',
+    tags: ['Seasonal menu', 'Reservations', 'Private events'],
+    status: 'ready',
+    demo: 'https://copper-thistle.vercel.app/',
+    previewVideo: '/media/templates/copper-thistle.mp4',
+    poster: '/media/templates/copper-thistle.jpg',
+    excerpt: 'template-copper-thistle',
   },
   {
     id: 'monoline',

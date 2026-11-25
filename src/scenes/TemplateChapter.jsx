@@ -17,8 +17,14 @@ import { CHAPTER_BODY, CHAPTER_GRID, CHAPTER_LABEL, CHAPTER_TITLE } from './chap
 
 const DOOR_B_CATEGORIES = ['Family and Memories', 'Events', 'Personal and Creative'];
 
-/** Door B's templates after Hearth, which the intro already shows, in catalog order. */
-export const DOOR_B_TEMPLATES = Object.freeze(templates.filter((t) => DOOR_B_CATEGORIES.includes(t.category) && t.id !== 'hearth'));
+/**
+ * Door B's templates after Hearth, which the intro already shows: the family, event and personal ones in
+ * catalog order, then the restaurant (Chris, 2026-11-25: the last house, after Folio).
+ */
+export const DOOR_B_TEMPLATES = Object.freeze([
+  ...templates.filter((t) => DOOR_B_CATEGORIES.includes(t.category) && t.id !== 'hearth'),
+  ...templates.filter((t) => t.category === 'Restaurant'),
+]);
 
 /** The template loops are 1280 x 800. */
 const LOOP_SIZE = { width: 1280, height: 800 };
@@ -58,12 +64,27 @@ function TemplateText({ template, compact = false }) {
       {templateStatusLabel(template) && !compact && (
         <p className={`mt-4 tracking-[0.2em] text-white/60 ${CHAPTER_LABEL}`}>{templateStatusLabel(template)}</p>
       )}
-      <Link
-        to={`/contact?template=${template.id}`}
-        className={`mt-5 inline-flex items-center gap-2 rounded-full border border-ember/60 px-4 py-2 tracking-widest text-ember hover:bg-ember hover:text-black lg:px-5 lg:py-2.5 ${CHAPTER_LABEL}`}
-      >
-        Ask about this template<span aria-hidden="true"> ↗</span>
-      </Link>
+      <div className="mt-5 flex flex-wrap gap-3">
+        <Link
+          to={`/contact?template=${template.id}`}
+          className={`inline-flex items-center gap-2 rounded-full border border-ember/60 px-4 py-2 tracking-widest text-ember hover:bg-ember hover:text-black lg:px-5 lg:py-2.5 ${CHAPTER_LABEL}`}
+        >
+          Ask about this template<span aria-hidden="true"> ↗</span>
+        </Link>
+        {template.demo && (
+          <a
+            href={template.demo}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`inline-flex items-center gap-2 rounded-full border border-white/25 px-4 py-2 tracking-widest text-white/80 hover:border-ember hover:text-ember lg:px-5 lg:py-2.5 ${CHAPTER_LABEL}`}
+          >
+            <span>
+              {TEMPLATE_CHAPTER.demoLink} <span className="sr-only">(opens in a new tab)</span>
+            </span>
+            <span aria-hidden="true"> ↗</span>
+          </a>
+        )}
+      </div>
     </div>
   );
 }

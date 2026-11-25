@@ -25,7 +25,7 @@ describe('routeFor: one journey per door, shared by the canvas and the page (Cod
     expect(routeFor('b')).toBe(route);
     expect(routeFor(null).road).toBeNull();
     expect(routeFor(null).journey.screens).toBeCloseTo(4.4, 9);
-    expect(route.journey.landmarks).toHaveLength(6 + MEETING_STOPS.length);
+    expect(route.journey.landmarks).toHaveLength(7 + MEETING_STOPS.length);
     const glyphs = roadGlyphs();
     for (const code of Object.values(route.road?.sources ?? {})) for (const c of code) if (c.trim()) expect(glyphs).toContain(c);
   });

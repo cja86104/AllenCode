@@ -56,8 +56,8 @@ test('choosing door b then scrolling reaches the family-site transformation', as
 test('the template chapter compiles each template in turn, then plays its loop', async ({ page }) => {
   await openDoorB(page);
   const chapter = page.locator('[data-template-chapter]');
-  const ids = ['evergreen', 'keepsake', 'vow', 'gather', 'folio'];
-  for (const [index, id] of [[0, 'evergreen'], [2, 'vow']].map(([i, slug]) => /** @type {[number, string]} */ ([i, slug]))) {
+  const ids = ['evergreen', 'keepsake', 'vow', 'gather', 'folio', 'copper-thistle'];
+  for (const [index, id] of [[0, 'evergreen'], [2, 'vow'], [5, 'copper-thistle']].map(([i, slug]) => /** @type {[number, string]} */ ([i, slug]))) {
     const start = index / ids.length;
     const segment = chapter.locator(`[data-door-b-template="${id}"]`);
     await scrollSection(page, chapter, start + 0.05 / ids.length);
@@ -72,6 +72,9 @@ test('the template chapter compiles each template in turn, then plays its loop',
     await scrollSection(page, chapter, start + 0.95 / ids.length);
     await expect.poll(() => playing(segment.locator('video'))).toBe(true);
     await expect(segment.getByRole('link', { name: /Ask about/ })).toHaveAttribute('href', `/contact?template=${id}`);
+    const demo = segment.getByRole('link', { name: /See the live demo/ });
+    if (id === 'copper-thistle') await expect(demo).toHaveAttribute('href', 'https://copper-thistle.vercel.app/');
+    else await expect(demo).toHaveCount(0);
   }
   await expect(chapter.getByRole('link', { name: /See every template/ })).toHaveAttribute('href', '/templates');
 });
@@ -81,7 +84,7 @@ test('with reduced motion door b shows each template’s code beside its poster 
   await openWithDoor(page, 'b');
   await expect(page.locator('canvas')).toHaveCount(0);
   const items = page.locator('[data-door-b-template]');
-  await expect(items).toHaveCount(5);
+  await expect(items).toHaveCount(6);
   const vow = page.locator('[data-door-b-template="vow"]');
   await vow.scrollIntoViewIfNeeded();
   await expect(vow.locator('pre')).toBeVisible();

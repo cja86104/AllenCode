@@ -9,7 +9,7 @@ import { canvas, inChapter, near, open, restRect, takeFamily } from './world.js'
  * at its landmark while its code flies into its picture.
  */
 
-const ROAD = ['hearth', 'evergreen', 'keepsake', 'vow', 'gather', 'folio', 'done-for-you'];
+const ROAD = ['hearth', 'evergreen', 'keepsake', 'vow', 'gather', 'folio', 'copper-thistle', 'done-for-you'];
 
 /**
  * Checks a chapter's flight lands on its landmark and its loop takes over there and plays.
@@ -34,7 +34,7 @@ async function landsAndPlays(page, id, flight) {
     .toBe(true);
 }
 
-test('taking family/ lays door B along the road: Hearth, the five templates, done for you, then the builder', async ({ page }) => {
+test('taking family/ lays door B along the road: Hearth, the six templates, done for you, then the builder', async ({ page }) => {
   await open(page);
   await takeFamily(page);
   const ids = await page.locator('[data-world-stop]').evaluateAll((els) => els.map((el) => /** @type {HTMLElement} */ (el).dataset.worldStop));
@@ -55,13 +55,13 @@ test('Hearth types, flies into its landmark in the world, then its loop takes ov
   await landsAndPlays(page, 'hearth', 'door-b-intro');
 });
 
-test('each template types, flies into its landmark, then its loop takes over, numbered n / 5', async ({ page }) => {
+test('each template types, flies into its landmark, then its loop takes over, numbered n / 6', async ({ page }) => {
   test.setTimeout(120000);
   await open(page);
   await takeFamily(page);
-  for (const [n, id] of ['evergreen', 'keepsake', 'vow', 'gather', 'folio'].entries()) {
+  for (const [n, id] of ['evergreen', 'keepsake', 'vow', 'gather', 'folio', 'copper-thistle'].entries()) {
     await landsAndPlays(page, id, `template-${id}`);
-    await expect(page.locator(`[data-world-stop="${id}"]`)).toContainText(`${n + 1} / 5`);
+    await expect(page.locator(`[data-world-stop="${id}"]`)).toContainText(`${n + 1} / 6`);
   }
 });
 

@@ -13,6 +13,7 @@ import productFoundersHelm from './product-founders-helm.js';
 import productCrewAdvisors from './product-crew-advisors.js';
 import templateAtelier from './template-atelier.js';
 import templateControlPanel from './template-control-panel.js';
+import templateCopperThistle from './template-copper-thistle.js';
 import templateEvergreen from './template-evergreen.js';
 import templateFolio from './template-folio.js';
 import templateGather from './template-gather.js';
@@ -20,7 +21,6 @@ import templateGridview from './template-gridview.js';
 import templateHearth from './template-hearth.js';
 import templateIgnite from './template-ignite.js';
 import templateKeepsake from './template-keepsake.js';
-import templateLaunchpad from './template-launchpad.js';
 import templateMonoline from './template-monoline.js';
 import templateStudio from './template-studio.js';
 import templateTerminal from './template-terminal.js';
@@ -71,6 +71,7 @@ export const excerpts = Object.freeze({
   [productCrewAdvisors.id]: productCrewAdvisors,
   [templateAtelier.id]: templateAtelier,
   [templateControlPanel.id]: templateControlPanel,
+  [templateCopperThistle.id]: templateCopperThistle,
   [templateEvergreen.id]: templateEvergreen,
   [templateFolio.id]: templateFolio,
   [templateGather.id]: templateGather,
@@ -78,7 +79,6 @@ export const excerpts = Object.freeze({
   [templateHearth.id]: templateHearth,
   [templateIgnite.id]: templateIgnite,
   [templateKeepsake.id]: templateKeepsake,
-  [templateLaunchpad.id]: templateLaunchpad,
   [templateMonoline.id]: templateMonoline,
   [templateStudio.id]: templateStudio,
   [templateTerminal.id]: templateTerminal,
