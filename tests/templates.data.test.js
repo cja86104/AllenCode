@@ -60,6 +60,7 @@ describe('template data', () => {
     }
     expect(byId('copper-thistle')).toMatchObject({ category: 'Restaurant', status: 'ready', demo: 'https://copper-thistle.vercel.app/' });
     expect(byId('copper-thistle')).not.toHaveProperty('price');
+    expect(byId('evergreen')).toMatchObject({ status: 'ready', demo: 'https://evergreen-bay-eight.vercel.app/' });
   });
 
   it('categories include Family and Memories, Events, and Personal and Creative, and every category is used', () => {

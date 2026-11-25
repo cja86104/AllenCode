@@ -126,6 +126,7 @@ export const templates = [
     category: 'Family and Memories',
     tags: ['Life story', 'Photo moments', 'Service details'],
     status: 'ready',
+    demo: 'https://evergreen-bay-eight.vercel.app/',
     previewVideo: '/media/templates/evergreen.mp4',
     poster: '/media/templates/evergreen.jpg',
     excerpt: 'template-evergreen',

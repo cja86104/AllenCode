@@ -53,6 +53,9 @@ test('choosing door b then scrolling reaches the family-site transformation', as
   expect(await video.evaluate((el) => /** @type {HTMLVideoElement} */ (el).muted)).toBe(true);
 });
 
+/** The built templates with a hosted demo, and where their demo button goes. */
+const DEMOS = Object.freeze({ evergreen: 'https://evergreen-bay-eight.vercel.app/', 'copper-thistle': 'https://copper-thistle.vercel.app/' });
+
 test('the template chapter compiles each template in turn, then plays its loop', async ({ page }) => {
   await openDoorB(page);
   const chapter = page.locator('[data-template-chapter]');
@@ -73,7 +76,7 @@ test('the template chapter compiles each template in turn, then plays its loop',
     await expect.poll(() => playing(segment.locator('video'))).toBe(true);
     await expect(segment.getByRole('link', { name: /Ask about/ })).toHaveAttribute('href', `/contact?template=${id}`);
     const demo = segment.getByRole('link', { name: /See the live demo/ });
-    if (id === 'copper-thistle') await expect(demo).toHaveAttribute('href', 'https://copper-thistle.vercel.app/');
+    if (id in DEMOS) await expect(demo).toHaveAttribute('href', DEMOS[/** @type {keyof typeof DEMOS} */ (id)]);
     else await expect(demo).toHaveCount(0);
   }
   await expect(chapter.getByRole('link', { name: /See every template/ })).toHaveAttribute('href', '/templates');

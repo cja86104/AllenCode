@@ -75,7 +75,10 @@ describe('Templates page', () => {
 
   it('only a template with a hosted demo offers one, and Launchpad is gone', () => {
     renderTemplates();
-    expect(screen.getAllByRole('link', { name: /See the live demo/ })).toHaveLength(1);
+    expect(screen.getAllByRole('link', { name: /See the live demo/ }).map((link) => link.getAttribute('href'))).toEqual([
+      'https://copper-thistle.vercel.app/',
+      'https://evergreen-bay-eight.vercel.app/',
+    ]);
     expect(document.querySelector('[data-template="launchpad"]')).toBeNull();
   });
 
