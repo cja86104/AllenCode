@@ -1,0 +1,150 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+
+  body {
+    @apply bg-cream font-sans text-charcoal antialiased;
+  }
+
+  ::selection {
+    @apply bg-gold text-charcoal;
+  }
+
+  :focus-visible {
+    outline: 2px solid theme('colors.gold.DEFAULT');
+    outline-offset: 3px;
+  }
+
+  /* On the light grounds the focus ring uses the deeper gold so it stays visible. */
+  .bg-cream :focus-visible,
+  .bg-paper :focus-visible {
+    outline-color: theme('colors.gold.ink');
+  }
+
+  [tabindex='-1']:focus {
+    outline: none;
+  }
+}
+
+@layer components {
+  /* Small screens: the menu collapses behind its button, but only once JavaScript can open it again. */
+  @media (max-width: 1023.98px) {
+    .js .site-menu-toggle {
+      display: inline-flex;
+    }
+
+    .js .site-nav[data-open='false'] {
+      display: none;
+    }
+  }
+
+  /* Scroll-in reveal: prepared only once JavaScript has started, never for reduced motion, and shown
+     after two seconds no matter what, so content can never stay hidden. */
+  @media (prefers-reduced-motion: no-preference) {
+    .js .reveal {
+      opacity: 0;
+      transform: translateY(1.25rem);
+      transition:
+        opacity 0.6s ease,
+        transform 0.6s ease;
+      animation: reveal-failsafe 0s linear 2s forwards;
+    }
+
+    .js .reveal.is-revealed {
+      opacity: 1;
+      transform: none;
+      animation: none;
+    }
+  }
+
+  @keyframes reveal-failsafe {
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* The hero's entrance on first load. */
+  @media (prefers-reduced-motion: no-preference) {
+    .hero-enter {
+      animation: hero-enter 0.8s ease both;
+    }
+  }
+
+  @keyframes hero-enter {
+    from {
+      opacity: 0;
+      transform: translateY(1rem);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@media print {
+  header,
+  .no-print {
+    display: none !important;
+  }
+
+  main {
+    padding-top: 0 !important;
+  }
+}
+
+/* The menu: tabs show one category once JavaScript is running; otherwise, and in print, all of them. */
+.menu-tabs {
+  display: none;
+}
+
+.js .menu-tabs {
+  display: flex;
+}
+
+.js .menu-panel[data-active='false'] {
+  display: none;
+}
+
+.js .menu-panel__title {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media print {
+  .js .menu-panel[data-active='false'] {
+    display: block;
+  }
+
+  .js .menu-panel__title {
+    position: static;
+    width: auto;
+    height: auto;
+    clip: auto;
+  }
+}
