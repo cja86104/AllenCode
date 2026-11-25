@@ -9,6 +9,9 @@ const STAND_IN_PHOTO =
   '<svg xmlns="http://www.w3.org/2000/svg" width="4" height="3" viewBox="0 0 4 3"><rect width="4" height="3" fill="#3c0f18"/></svg>';
 
 test.beforeEach(async ({ page }) => {
+  // Vercel serves its analytics script from the site's own /_vercel/insights/ on deployment only; a local
+  // build has none, so the tests stand in an empty script instead of logging a missing file.
+  await page.route('**/_vercel/insights/**', (route) => route.fulfill({ status: 200, contentType: 'text/javascript', body: '' }));
   await page.route(`https://${STOCK_HOST}/**`, (route) =>
     route.fulfill({ status: 200, contentType: 'image/svg+xml', body: STAND_IN_PHOTO }),
   );

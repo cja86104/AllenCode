@@ -39,8 +39,19 @@ describe('the privacy page', () => {
   it('describes an unlisted memorial honestly', () => {
     renderMemorial(memorial, { path: '/privacy' });
     expect(screen.getByText(/It is not private: anyone who has the link can read everything here\./)).toBeInTheDocument();
-    expect(screen.getByText(/no analytics, no advertising and no tracking cookies/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/no advertising and no tracking cookies\. It counts page views with Vercel Web Analytics, which uses no cookies/),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Some photographs load from images\.unsplash\.com\./)).toBeInTheDocument();
     expect(screen.getByText(/Your email address is never shown on the memorial/)).toBeInTheDocument();
+  });
+
+  it('names no other photo site once every photograph is the family’s own', () => {
+    const content = clone();
+    for (const photo of content.photos.items) photo.src = `/photos/${photo.id}.jpg`;
+    renderMemorial(content, { path: '/privacy' });
+    expect(screen.getByText(/It counts page views with Vercel Web Analytics/)).toBeInTheDocument();
+    expect(screen.queryByText(/Some photographs load from/)).toBeNull();
   });
 
   it('describes the public mode and a published contact address', () => {

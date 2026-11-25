@@ -9,6 +9,10 @@ export function PrivacyPage() {
   const { privacy, contact, person, site } = memorial;
   usePageTitle('Privacy and sharing');
   const mode = PRIVACY_MODES[privacy.mode];
+  // Photographs linked from another site (the demonstration's stock photographs) load from its servers.
+  const photoHosts = [
+    ...new Set(memorial.photos.items.filter((photo) => /^https?:\/\//.test(photo.src)).map((photo) => new URL(photo.src).hostname)),
+  ];
 
   return (
     <div className="section info-page">
@@ -47,11 +51,12 @@ export function PrivacyPage() {
           </>
         )}
 
-        <h2>What this site doesn’t do</h2>
+        <h2>What this site does and doesn’t collect</h2>
         <p>
-          This memorial has no analytics, no advertising and no tracking cookies, and it loads nothing from other companies’ servers. If you
-          start writing a memory, your unsent words are kept in your own browser so they aren’t lost; they don’t leave your device until you
-          send them.
+          This memorial has no advertising and no tracking cookies. It counts page views with Vercel Web Analytics, which uses no cookies
+          and stores only anonymized data.
+          {photoHosts.length > 0 ? ` Some photographs load from ${photoHosts.join(' and ')}.` : ''} If you start writing a memory, your
+          unsent words are kept in your own browser so they aren’t lost; they don’t leave your device until you send them.
         </p>
 
         <h2>Changes and removal</h2>

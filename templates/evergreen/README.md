@@ -3,8 +3,10 @@
 A memorial website template by Allen Code Co.: a family archive, thoughtfully kept.
 
 Vite 5, React 18, React Router 7 and TypeScript (strict). Every page is prerendered to static HTML, so the
-memorial reads in full without JavaScript. No analytics, no third-party embeds, no backend required for the
-public memorial.
+memorial reads in full without JavaScript. No third-party embeds and no backend required for the public memorial.
+Page views are counted with Vercel Web Analytics, which uses no cookies; the privacy page says so. To remove it,
+delete `<Analytics />` from `src/components/Layout.tsx` and update “What this site does and doesn’t collect” in
+`src/pages/PrivacyPage.tsx`.
 
 ## Run it
 

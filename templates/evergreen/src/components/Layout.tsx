@@ -1,3 +1,4 @@
+import { Analytics } from '@vercel/analytics/react';
 import { useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router';
 import { SiteFooter } from './SiteFooter';
@@ -63,6 +64,8 @@ export function Layout() {
         <Outlet />
       </main>
       <SiteFooter />
+      {/* Vercel Web Analytics: counts page views without cookies. See the privacy page. */}
+      <Analytics />
     </>
   );
 }
