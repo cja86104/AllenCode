@@ -1,5 +1,6 @@
 // @ts-check
 import { cameraAt } from './camera.js';
+import { ROAD_NAMES } from './roadNames.js';
 import { COMMIT_GAP, distanceAlongRoad, EYE_HEIGHT, LOOK_BELOW, layoutRoad, roadAt, roadStepFor, ROAD_STEP } from './roadLayout.js';
 
 /** @typedef {[number, number, number]} Vec3 */
@@ -53,7 +54,7 @@ const BRANCH = Object.freeze([
 ]);
 
 /** The words for each road once taken: the signposts' own labels. */
-const BRANCH_NAMES = Object.freeze({ a: 'business/', b: 'family/' });
+const BRANCH_NAMES = ROAD_NAMES;
 
 /** Where each stop begins and ends, in screens of scroll; the fork's ends where the road is taken. */
 const OPENING_STOPS = Object.freeze([

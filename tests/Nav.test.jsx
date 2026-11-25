@@ -30,7 +30,7 @@ describe('Nav', () => {
     renderNav();
     const primary = within(screen.getByRole('navigation', { name: 'Primary' }));
     expect(primary.getByRole('link', { name: 'Start a Project' })).toHaveAttribute('href', '/contact');
-    fireEvent.click(primary.getByRole('button', { name: 'Family' }));
+    fireEvent.click(primary.getByRole('button', { name: 'Templates/Custom' }));
     expect(primary.getByRole('link', { name: 'Browse templates' })).toHaveAttribute('href', '/templates');
     expect(window.sessionStorage.getItem(DOOR_STORAGE_KEY)).toBe('b');
   });
@@ -39,7 +39,8 @@ describe('Nav', () => {
     window.sessionStorage.setItem(DOOR_STORAGE_KEY, 'b');
     renderNav();
     const switcher = within(screen.getByRole('group', { name: 'Show the site for' }));
-    expect(switcher.getByRole('button', { name: 'Family' })).toHaveAttribute('aria-pressed', 'true');
+    expect(switcher.getByRole('button', { name: 'Templates/Custom' })).toHaveAttribute('aria-pressed', 'true');
+    expect(switcher.queryByRole('button', { name: 'Family' })).toBeNull();
     fireEvent.click(switcher.getByRole('button', { name: 'Business' }));
     expect(switcher.getByRole('button', { name: 'Business' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByRole('link', { name: 'Start a Project' })).toBeInTheDocument();

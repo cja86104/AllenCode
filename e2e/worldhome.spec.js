@@ -101,7 +101,7 @@ test.describe('taking a road at the split (Code World W1.4)', () => {
     await atTheFork(page);
     await expect(page.locator('[data-chapter="mvp-sprints"], [data-door-b-intro], [data-world-stop]')).toHaveCount(0);
     await expect(page.getByRole('button', { name: /business\// })).toBeVisible();
-    await expect(page.getByRole('button', { name: /family\// })).toBeVisible();
+    await expect(page.getByRole('button', { name: /templates\/custom\// })).toBeVisible();
   });
 
   test('clicking the business/ signpost takes the business road and the journey runs down it', async ({ page }) => {
@@ -149,7 +149,7 @@ test.describe('taking a road at the split (Code World W1.4)', () => {
     });
     await expect(page.locator('[data-active-stop]')).toHaveAttribute('data-active-stop', 'The fork');
     await expect(page.getByRole('button', { name: /business\// })).toHaveAttribute('aria-pressed', 'true');
-    await page.getByRole('button', { name: /family\// }).click();
+    await page.getByRole('button', { name: /templates\/custom\// }).click();
     await expect(page.locator('[data-door-b-intro]')).toBeAttached();
   });
 

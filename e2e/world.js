@@ -61,12 +61,12 @@ export function near(/** @type {{ x: number, y: number, width: number, height: n
   return Math.abs(box.x - rect.left) <= dx && Math.abs(box.y - rect.top) <= dy && Math.abs(box.width - rect.width) <= dx && Math.abs(box.height - rect.height) <= dy;
 }
 
-/** Takes family/ at the fork and waits for the glide to end. @param {import('@playwright/test').Page} page */
+/** Takes templates/custom/ (door B's road) at the fork and waits for the glide to end. @param {import('@playwright/test').Page} page */
 export async function takeFamily(page) {
   const journey = await spanOf(page, '[data-world-journey]');
   await scrollTo(page, journey.to);
   await expect(page.locator('[data-active-stop]')).toHaveAttribute('data-active-stop', 'The fork');
-  await page.getByRole('button', { name: /family\// }).click();
+  await page.getByRole('button', { name: /templates\/custom\// }).click();
   await expect(canvas(page)).toHaveAttribute('data-road', 'b');
   await page.waitForFunction(() => !document.documentElement.classList.contains('lenis-smooth'), undefined, { timeout: 8000 });
 }

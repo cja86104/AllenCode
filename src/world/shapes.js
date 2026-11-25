@@ -1,5 +1,6 @@
 // @ts-check
 import { LANDMARK } from './landmark.js';
+import { ROAD_NAMES } from './roadNames.js';
 import { landedShape } from './worldFlight.js';
 import { roadAt, roadBetween, roadHeadingAt, roadLength } from './roadPath.js';
 
@@ -463,7 +464,9 @@ export function forkSigns(labels, { at }, seed) {
   labels.forEach((label, n) => {
     const ink = inkOf(label);
     const side = n === 0 ? -1 : 1;
-    const x0 = at[0] + side * 3.2;
+    // Each board starts 2.0 out from the road's middle, clear of the trunk, so a longer label stands
+    // further out (templates/custom/, 2026-11-25); business/ keeps its place at 3.2.
+    const x0 = at[0] + side * Math.max(3.2, 2.0 + ((ink.length - 1) * 0.3) / 2);
     const z0 = at[2] - 1;
     ink.forEach((char, j) => {
       // White, so the words read against the dark (Chris, 2026-11-10: ember letters "get washed out").
@@ -589,7 +592,7 @@ export const ROAD_PATHS = Object.freeze({
 export function buildWorld(tier, sources, seed) {
   const edgeSpacing = EDGE_SPACING_BY_TIER[tier];
   const editor = editorSlab(sources.gate, seed);
-  const signs = forkSigns(['business/', 'family/'], { at: [0, 0, -40] }, seed + 1);
+  const signs = forkSigns([ROAD_NAMES.a, ROAD_NAMES.b], { at: [0, 0, -40] }, seed + 1);
   const edges = {
     trunk: roadEdges(sources.road, { path: ROAD_PATHS.trunk, width: 4, spacing: edgeSpacing }, seed + 6),
     business: roadEdges(sources.road, { path: ROAD_PATHS.business, width: 3.2, spacing: edgeSpacing }, seed + 7),
@@ -673,7 +676,7 @@ export function buildRoadWorld(tier, sources, seed, road, landed = {}) {
   const branchEnd = ROAD_PATHS.business.length;
   const onward = /** @type {Point2[]} */ (layout.path.slice(branchEnd - 1));
   const editor = editorSlab(sources.gate, seed);
-  const signs = forkSigns(['business/', 'family/'], { at: [0, 0, -40] }, seed + 1);
+  const signs = forkSigns([ROAD_NAMES.a, ROAD_NAMES.b], { at: [0, 0, -40] }, seed + 1);
   const edges = {
     trunk: roadEdges(sources.road, { path: ROAD_PATHS.trunk, width: 4, spacing: edgeSpacing }, seed + 6),
     business: roadEdges(sources.road, { path: ROAD_PATHS.business, width: 3.2, spacing: edgeSpacing }, seed + 7),

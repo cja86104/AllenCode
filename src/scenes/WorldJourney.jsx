@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDoor } from '../door/DoorProvider.jsx';
 import { DOORS } from '../door/Fork.jsx';
+import { ROAD_NAMES } from '../world/roadNames.js';
 import { branchForGesture, buildJourney } from '../world/journey.js';
 import { glideTo } from '../scroll/glide.js';
 import { journeyProgress } from '../world/journeyProgress.js';
@@ -10,7 +11,7 @@ import { journeyProgress } from '../world/journeyProgress.js';
 const STOP_LINES = Object.freeze({
   'into-the-code': 'Step through the file. Its characters become the world.',
   'the-road': 'A road made of this site’s code, running into the dark.',
-  'the-fork': 'Two roads from here: business/ for a product or a company, family/ for a site of your own.',
+  'the-fork': `Two roads from here: ${ROAD_NAMES.a} for a product or a company, ${ROAD_NAMES.b} for a site of your own.`,
 });
 
 /**
@@ -204,7 +205,7 @@ export default function WorldJourney() {
                             onClick={() => take(option.door)}
                             className="mono rounded-full border border-white/25 bg-night/70 px-5 py-3 text-left text-xs uppercase tracking-widest text-white hover:border-ember hover:text-ember focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember aria-pressed:border-ember aria-pressed:text-ember"
                           >
-                            {option.file}
+                            {ROAD_NAMES[option.door]}
                             <span className="sr-only"> {option.label}</span>
                           </button>
                         ))}

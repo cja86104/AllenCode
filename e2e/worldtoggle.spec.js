@@ -5,7 +5,7 @@ import { expect, test } from '@playwright/test';
 /**
  * Code World W6 (Chris, 2026-11-17: "Small toggle in footer"): a "Plain view" switch in the footer and
  * the phone menu turns the world off and on at once, kept for the visit; it is there only where the
- * world can run.
+ * world can run. Since 2026-11-25 it is in the top bar as well (desktop, from 1280px).
  */
 
 /** @param {import('@playwright/test').Page} page */
@@ -37,6 +37,21 @@ test.describe('the plain-view toggle', () => {
     await footerToggle(page).click();
     await expect(page.locator('canvas[data-world]')).toHaveCount(0);
     await expect(page).not.toHaveURL(/world=1/);
+  });
+
+  test('is in the top bar too, and stays in step with the footer', async ({ page }) => {
+    await page.goto('/about');
+    await expect(page.locator('canvas[data-world][data-ready="true"]')).toHaveCount(1);
+    const top = page.getByRole('navigation', { name: 'Primary' }).getByRole('button', { name: 'Plain view' });
+    await expect(top).toBeVisible();
+    await expect(top).toHaveAttribute('aria-pressed', 'false');
+    await top.click();
+    await expect(page.locator('canvas[data-world]')).toHaveCount(0);
+    await expect(top).toHaveAttribute('aria-pressed', 'true');
+    await expect(footerToggle(page)).toHaveAttribute('aria-pressed', 'true');
+    await footerToggle(page).click();
+    await expect(top).toHaveAttribute('aria-pressed', 'false');
+    await expect(page.locator('canvas[data-world][data-ready="true"]')).toHaveCount(1);
   });
 
   test('is in the phone menu too', async ({ browser }) => {

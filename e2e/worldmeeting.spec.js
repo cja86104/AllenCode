@@ -98,7 +98,7 @@ test('switching door at the workshop puts the meeting on the other side', async 
   await open(page);
   await takeBusiness(page);
   await inChapter(page, 'workshop', 0.5);
-  await page.getByRole('group', { name: 'Show the site for' }).first().getByRole('button', { name: 'Family' }).click();
+  await page.getByRole('group', { name: 'Show the site for' }).first().getByRole('button', { name: 'Templates/Custom' }).click();
   await expect(canvas(page)).toHaveAttribute('data-road', 'b');
   await expect(page.locator('[data-world-stop="workshop"]')).toBeAttached();
   await inChapter(page, 'workshop', 0.5);

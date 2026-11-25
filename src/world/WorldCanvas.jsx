@@ -9,12 +9,13 @@ import { createHomeWorld } from './homeWorld.js';
 import { createWorldRenderer } from './worldRenderer.js';
 import { createFrameMeter } from './frameMeter.js';
 import { useIsomorphicLayoutEffect } from '../ssr/useHydrated.js';
+import { ROAD_NAMES } from './roadNames.js';
 
 /** @typedef {{ frames: number, medianMs: number, p95Ms: number }} MeterReport */
 
 /** The world is built only from approved code (spec section 5). */
 export const WORLD_SOURCES_APPROVED = Boolean(gate.approved && ambient.approved && underfire.approved);
-const SIGN_LABELS = 'business/family/';
+const SIGN_LABELS = `${ROAD_NAMES.a}${ROAD_NAMES.b}`;
 
 /**
  * The world's canvas and frame loop (Code World W1.2), hosted by the world layer: the renderer and its

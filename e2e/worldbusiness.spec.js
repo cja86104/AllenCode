@@ -158,7 +158,7 @@ test.describe('each chapter plays at its landmark (Code World R4)', () => {
     await open(page);
     await takeBusiness(page);
     await inChapter(page, 'underfire-ai', 0.5);
-    await page.getByRole('group', { name: 'Show the site for' }).first().getByRole('button', { name: 'Family' }).click();
+    await page.getByRole('group', { name: 'Show the site for' }).first().getByRole('button', { name: 'Templates/Custom' }).click();
     // The family road has its own stops since W3; none of the business road's is left.
     await expect(page.locator('[data-world-stop="underfire-ai"]')).toHaveCount(0);
     await expect(page.locator('[data-world-stop="hearth"]')).toBeAttached();

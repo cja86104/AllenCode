@@ -48,7 +48,7 @@ describe('buildJourney (Code World W1.1)', () => {
     expect(end(business).target[0]).toBeLessThan(-3);
     expect(end(family).target[0]).toBeGreaterThan(3);
     expect(business.stops.map((s) => s.name)).toEqual(['Empty file', 'Into the code', 'The road', 'The fork', 'business/']);
-    expect(family.stops.map((s) => s.name)).toEqual(['Empty file', 'Into the code', 'The road', 'The fork', 'family/']);
+    expect(family.stops.map((s) => s.name)).toEqual(['Empty file', 'Into the code', 'The road', 'The fork', 'templates/custom/']);
   });
 
   it('moves smoothly on every road: no jump over 0.5 units between progress steps of 0.001', () => {

@@ -18,7 +18,7 @@ const LINKS = Object.freeze([
 /** @type {ReadonlyArray<{ door: import('../door/doorStorage.js').Door, label: string }>} */
 const DOOR_OPTIONS = Object.freeze([
   { door: 'a', label: 'Business' },
-  { door: 'b', label: 'Family' },
+  { door: 'b', label: 'Templates/Custom' },
 ]);
 
 /**
@@ -57,7 +57,9 @@ function DoorSwitcher({ className = '' }) {
 }
 
 /**
- * Site navigation. On regular routes it is sticky and takes its own space at the top of the page.
+ * Site navigation. The full bar (links, road switch, plain view, primary action) needs about 1,160px,
+ * so it shows from the xl breakpoint (1280px); narrower screens use the menu, which holds all of it
+ * (2026-11-25: the plain-view switch joined the bar and the bar no longer fit at 1024px). On regular routes it is sticky and takes its own space at the top of the page.
  * With `overlay` (field routes) it is fixed over the page instead, so pinned scenes start at the very
  * top and their full height is on screen when the page opens.
  *
@@ -73,11 +75,11 @@ export default function Nav({ overlay = false }) {
       className={`${overlay ? 'fixed inset-x-0' : 'sticky'} top-0 z-50 border-b border-white/10 bg-[#0a0a0a]/80 backdrop-blur-md`}
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-10">
-        <Link to="/" viewTransition onClick={() => setOpen(false)} className="mono text-sm font-bold uppercase tracking-[0.2em] text-white">
+        <Link to="/" viewTransition onClick={() => setOpen(false)} className="mono shrink-0 whitespace-nowrap text-sm font-bold uppercase tracking-[0.2em] text-white">
           Allen<span className="text-orange-500">Code</span> Co.
         </Link>
 
-        <nav className="hidden items-center gap-8 lg:flex" aria-label="Primary">
+        <nav className="hidden items-center gap-6 xl:flex" aria-label="Primary">
           {LINKS.map((l) => (
             <NavLink
               key={l.to}
@@ -91,6 +93,7 @@ export default function Nav({ overlay = false }) {
             </NavLink>
           ))}
           <DoorSwitcher />
+          <PlainViewToggle className="whitespace-nowrap" />
           <Magnetic>
             <Link
               to={action.to}
@@ -108,7 +111,7 @@ export default function Nav({ overlay = false }) {
           aria-label="Toggle menu"
           aria-expanded={open}
           onClick={() => setOpen((o) => !o)}
-          className="text-white lg:hidden"
+          className="text-white xl:hidden"
         >
           {open ? <X size={24} /> : <Menu size={24} />}
         </button>
@@ -120,7 +123,7 @@ export default function Nav({ overlay = false }) {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden border-t border-white/10 lg:hidden"
+            className="overflow-hidden border-t border-white/10 xl:hidden"
             aria-label="Mobile"
           >
             <div className="flex flex-col gap-1 px-6 py-4">
