@@ -54,7 +54,12 @@ Put files under `public/` (for example `public/photos/porch.jpg`), then list eac
 - optional `focalPoint` (`{ x, y }` in percent from the top-left) to keep faces in frame when cropped;
 - optional `sources` for extra resolutions: `[{ src: '/photos/porch-800.jpg', width: 800 }, ...]`.
 
-Remove `placeholder: true` once a real photograph is in place. `photos.featured` picks the six shown on the
+The demonstration's photographs are stock photography from Unsplash, linked from Unsplash's servers through the
+`stockPhoto` helper at the top of `src/content/memorial.ts`, which crops each one to its slot. Replace every one
+with the family's own photographs before launch, and rewrite each `alt` to describe the new picture.
+
+Until a photograph is ready, `placeholder: true` marks a stand-in image: the page and screen readers say it is a
+placeholder, and it is never offered as the social preview image. Remove it once the real photograph is in place. `photos.featured` picks the six shown on the
 main page. A social preview image is offered only for a real photograph and only once `site.url` is set.
 
 ### The gathering
@@ -150,5 +155,5 @@ audio, and reduced motion respected. Nothing is available only on hover.
 ## Demonstration content
 
 The shipped content remembers a fictional person, Eleanor “Nell” Whitaker. Her family, the venue and the
-gathering are invented, and every photograph is a labelled placeholder. Only the footer's template-preview note
+gathering are invented, and the photographs are stock photography from Unsplash. Only the footer's template-preview note
 says so; set `site.demonstration` to `false` for a real memorial.

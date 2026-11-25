@@ -26,8 +26,18 @@ describe('the demonstration content', () => {
     expect(text.split('room for one more').length - 1).toBeLessThanOrEqual(2);
   });
 
-  it('marks every demonstration photograph as a placeholder', () => {
-    expect(memorial.photos.items.every((photo) => photo.placeholder === true)).toBe(true);
+  it('ships every demonstration photograph as a sized stock photograph, cropped to its own shape', () => {
+    for (const photo of memorial.photos.items) {
+      expect(photo.placeholder, photo.id).toBeUndefined();
+      const url = new URL(photo.src);
+      expect(url.hostname, photo.id).toBe('images.unsplash.com');
+      expect(Number(url.searchParams.get('w')), photo.id).toBe(photo.width);
+      expect(Number(url.searchParams.get('h')), photo.id).toBe(photo.height);
+      expect(
+        photo.sources?.map((source) => source.width),
+        photo.id,
+      ).toEqual([Math.round(photo.width / 2), photo.width]);
+    }
   });
 
   it('features six photographs on the main memorial', () => {
@@ -117,6 +127,9 @@ describe('page head', () => {
     const content = clone();
     content.site.url = 'https://example.org/nell';
     content.site.description = 'A "quoted" <b>description</b>';
+    const portrait = content.photos.items.find((item) => item.id === content.site.socialImageId);
+    if (!portrait) throw new Error('fixture');
+    portrait.placeholder = true;
     const tags = headTags(content);
     expect(tags).not.toContain('og:image');
     expect(tags).toContain('A &quot;quoted&quot; &lt;b&gt;description&lt;/b&gt;');
@@ -125,5 +138,13 @@ describe('page head', () => {
     photo.placeholder = false;
     photo.src = '/photos/porch.jpg';
     expect(headTags(content)).toContain('<meta property="og:image" content="https://example.org/photos/porch.jpg" />');
+  });
+
+  it('offers the shipped stock portrait, already absolute, as the social image once a URL is set', () => {
+    const content = clone();
+    content.site.url = 'https://example.org/nell';
+    const portrait = content.photos.items.find((item) => item.id === content.site.socialImageId);
+    if (!portrait) throw new Error('fixture');
+    expect(headTags(content)).toContain(`<meta property="og:image" content="${portrait.src.replace(/&/g, '&amp;')}" />`);
   });
 });

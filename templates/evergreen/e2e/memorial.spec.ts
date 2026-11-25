@@ -1,6 +1,17 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 
+/** The demonstration's stock photographs live on Unsplash; the tests never depend on reaching it. */
+const STOCK_HOST = 'images.unsplash.com';
+const STAND_IN_PHOTO =
+  '<svg xmlns="http://www.w3.org/2000/svg" width="4" height="3" viewBox="0 0 4 3"><rect width="4" height="3" fill="#6b7a5e"/></svg>';
+
+test.beforeEach(async ({ page }) => {
+  await page.route(`https://${STOCK_HOST}/**`, (route) =>
+    route.fulfill({ status: 200, contentType: 'image/svg+xml', body: STAND_IN_PHOTO }),
+  );
+});
+
 const PAGES = [
   '/',
   '/story',
@@ -102,7 +113,7 @@ test.describe('without JavaScript', () => {
 
     await page.goto('/photographs');
     await page.locator('[data-photo-link]').first().click();
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Nell on the steps of the feed store on Haywood Road.');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Nell on the dirt road out to the feed store on Haywood Road.');
   });
 });
 
@@ -126,11 +137,16 @@ test.describe('hosting and search engines', () => {
     expect(await response.text()).toContain('This page isn’t here.');
   });
 
-  test('ships no analytics or third-party requests', async ({ page }) => {
-    const hosts = new Set<string>();
-    page.on('request', (request) => hosts.add(new URL(request.url()).host));
-    await page.goto('/', { waitUntil: 'networkidle' });
-    expect([...hosts]).toEqual(['localhost:4174']);
+  test('ships no analytics or third-party requests; only the demonstration photographs come from Unsplash', async ({ page }) => {
+    const outside: string[] = [];
+    page.on('request', (request) => {
+      const { host } = new URL(request.url());
+      if (host === 'localhost:4174') return;
+      if (host === STOCK_HOST && request.resourceType() === 'image') return;
+      outside.push(`${request.resourceType()} ${request.url()}`);
+    });
+    for (const path of PAGES) await page.goto(path, { waitUntil: 'networkidle' });
+    expect(outside).toEqual([]);
   });
 });
 

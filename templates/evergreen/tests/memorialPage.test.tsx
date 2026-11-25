@@ -29,19 +29,30 @@ describe('the main memorial', () => {
     expect(screen.getByRole('link', { name: 'Explore her life' })).toHaveAttribute('href', '#life');
   });
 
-  it('prioritises the portrait and lazy-loads the rest, and says the photographs are placeholders', () => {
+  it('prioritises the portrait and lazy-loads the rest, with responsive sources and true alt text', () => {
     renderMemorial(memorial, { renderedAt: TODAY });
     const images = screen.getAllByRole('img').filter((element) => element.tagName === 'IMG');
     const [portrait, ...rest] = images;
     expect(portrait).toHaveAttribute('loading', 'eager');
     expect(portrait).toHaveAttribute('fetchpriority', 'high');
-    expect(portrait?.getAttribute('alt')).toMatch(/^Photo placeholder\. The family’s photograph will show: Nell sitting/);
+    expect(portrait?.getAttribute('alt')).toMatch(/^Nell in a brown sweater sitting out on the porch/);
+    expect(portrait?.getAttribute('srcset')).toMatch(/ 600w, .* 1200w$/);
     expect(rest.length).toBeGreaterThan(0);
     for (const image of rest) {
       expect(image).toHaveAttribute('loading', 'lazy');
       expect(image).toHaveAttribute('width');
       expect(image).toHaveAttribute('height');
     }
+  });
+
+  it('says so when a photograph is still a placeholder', () => {
+    const content = structuredClone(memorial);
+    const portrait = content.photos.items.find((item) => item.id === content.opening.portraitId);
+    if (!portrait) throw new Error('fixture');
+    portrait.placeholder = true;
+    renderMemorial(content, { renderedAt: TODAY });
+    const [image] = screen.getAllByRole('img').filter((element) => element.tagName === 'IMG');
+    expect(image?.getAttribute('alt')).toMatch(/^Photo placeholder\. The family’s photograph will show: Nell in a brown sweater/);
   });
 
   it('links every navigation item to a section that exists', () => {

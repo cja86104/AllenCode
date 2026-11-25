@@ -36,7 +36,7 @@ export function SiteFooter() {
         {memorial.site.demonstration ? (
           <p className="site-footer__demo">
             Template preview. {memorial.person.shortName ?? memorial.person.fullName}, {memorial.person.pronouns.possessive} family, the
-            venue and the gathering shown here are fictional, and the photographs are placeholders.
+            venue and the gathering shown here are fictional, and the photographs are stock photography.
           </p>
         ) : null}
         <p className="site-footer__credit">

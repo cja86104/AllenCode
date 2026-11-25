@@ -69,10 +69,10 @@ describe('the photograph collection', () => {
   it('opens a photograph in the lightbox, moves with the arrow keys, and closes with Escape back to the photograph', async () => {
     const user = userEvent.setup();
     renderMemorial(memorial, { path: '/photographs?show=early-years' });
-    const link = screen.getByRole('link', { name: 'Nell on the steps of the feed store on Haywood Road.' });
+    const link = screen.getByRole('link', { name: 'Nell on the dirt road out to the feed store on Haywood Road.' });
     await user.click(link);
 
-    const dialog = screen.getByRole('dialog', { name: 'Nell on the steps of the feed store on Haywood Road.' });
+    const dialog = screen.getByRole('dialog', { name: 'Nell on the dirt road out to the feed store on Haywood Road.' });
     expect(dialog).toHaveAttribute('open');
     expect(within(dialog).getByRole('button', { name: 'Close' })).toHaveFocus();
     expect(within(dialog).getByText('1 of 3')).toBeInTheDocument();
@@ -81,7 +81,9 @@ describe('the photograph collection', () => {
     act(() => {
       fireEvent.keyDown(dialog, { key: 'ArrowRight' });
     });
-    expect(screen.getByRole('dialog', { name: 'Graduation day in Boone. The wind won.' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('dialog', { name: 'Graduation day in Boone, cap held high before the wind could take it.' }),
+    ).toBeInTheDocument();
 
     await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Next photograph' }));
     expect(screen.getByRole('dialog')).toHaveTextContent('3 of 3');
@@ -92,7 +94,7 @@ describe('the photograph collection', () => {
       screen.getByRole('dialog').dispatchEvent(new Event('cancel', { cancelable: true }));
     });
     expect(screen.queryByRole('dialog')).toBeNull();
-    expect(screen.getByRole('link', { name: 'Nell and Hal outside the courthouse, the day they married.' })).toHaveFocus();
+    expect(screen.getByRole('link', { name: 'Nell and Hal waiting their turn at the courthouse, the day they married.' })).toHaveFocus();
   });
 
   it('gives a shared photograph link its own page', () => {
