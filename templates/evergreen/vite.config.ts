@@ -62,6 +62,10 @@ function staticHostPreview(): Plugin {
 
 export default defineConfig({
   plugins: [react(), evergreenHead(), staticHostPreview()],
+  // The template uses no PostCSS plugins. Declaring that here stops Vite searching parent folders for a
+  // PostCSS config, which would pick up the config of any project the template sits inside (and fail
+  // when that project's plugins are not installed, as on a host that installs only this template).
+  css: { postcss: {} },
   test: {
     environment: 'jsdom',
     setupFiles: ['./tests/setup.ts'],
