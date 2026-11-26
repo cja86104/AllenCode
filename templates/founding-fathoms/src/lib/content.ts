@@ -15,13 +15,15 @@ function isAddress(value: string): boolean {
 
 /** Every photograph the content places on a page. */
 export function allPhotos(brewery: Brewery): Photo[] {
-  const { home, story, findUs, contactPage } = brewery;
+  const { home, story, findUs, contactPage, taproom } = brewery;
   return [
     home.hero.photo,
     home.canClub.photo,
     home.regulars.photo,
     ...home.floor.photos,
+    ...taproom.photos,
     story.brewer.photo,
+    ...story.process.steps.map((step) => step.photo),
     findUs.photo,
     contactPage.photo,
   ];
@@ -53,6 +55,8 @@ export function validateBrewery(brewery: Brewery): string[] {
     if (photo.alt.trim() === '') problems.push(`A photo at ${photo.src} needs alt text describing what it shows.`);
   }
   if (brewery.home.floor.photos.length !== 3) problems.push('The “On the floor” section needs exactly three photos.');
+  if (brewery.taproom.photos.length === 0) problems.push('The taproom gallery needs at least one photo.');
+  if (brewery.story.process.steps.length === 0) problems.push('The process strip needs at least one step.');
   if (brewery.home.hero.lines.length === 0) problems.push('The home page heading needs at least one line.');
 
   const groups = new Set(brewery.beer.groups);

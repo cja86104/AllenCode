@@ -3,7 +3,7 @@ import { render, routes } from '../src/entry-server';
 
 describe('prerendering', () => {
   it('writes every page and a not-found page', () => {
-    expect(routes.map((route) => route.path)).toEqual(['/', '/beer', '/taproom', '/story', '/find-us', '/contact', '/404']);
+    expect(routes.map((route) => route.path)).toEqual(['/', '/beer', '/taproom', '/story', '/find-us', '/shop', '/contact', '/404']);
     expect(routes[0]?.title).toBe('Founding Fathoms Brewing · Brewing · Harbor');
   });
 
@@ -20,6 +20,10 @@ describe('prerendering', () => {
     expect(render('/story')).toContain('Warehouse 4 on the east pier');
     expect(render('/find-us')).toContain('Railcar Craft Cellar');
     expect(render('/contact')).toContain('Write us');
+    expect(render('/contact')).toContain('Join the Can Club');
+    const shop = render('/shop');
+    expect(shop).toContain('Enamel Camp Mug');
+    expect(shop).toContain('Ordering ahead needs JavaScript');
   });
 
   it('renders the not-found page for an unknown address', () => {

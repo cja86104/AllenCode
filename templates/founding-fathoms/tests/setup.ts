@@ -50,3 +50,14 @@ afterEach(() => {
   window.localStorage.clear();
   window.sessionStorage.clear();
 });
+
+// jsdom does not implement modal dialogs; this stand-in follows the open/close behaviour the cart relies on.
+if (typeof HTMLDialogElement.prototype.showModal !== 'function') {
+  HTMLDialogElement.prototype.showModal = function showModal(this: HTMLDialogElement) {
+    this.setAttribute('open', '');
+  };
+  HTMLDialogElement.prototype.close = function close(this: HTMLDialogElement) {
+    this.removeAttribute('open');
+    this.dispatchEvent(new Event('close'));
+  };
+}

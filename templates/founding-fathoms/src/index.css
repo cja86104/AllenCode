@@ -154,12 +154,29 @@
   }
 
   /* Controls that only work with JavaScript, such as the shop search, stay out of the page without it. */
-  .js-only {
+  html:not(.js) .js-only {
     display: none;
   }
 
-  .js .js-only {
-    display: block;
+  .js .no-js-only {
+    display: none;
+  }
+
+  /* The cart slides in from the right over a dimmed page. */
+  .cart-drawer::backdrop {
+    background: rgb(0 0 0 / 0.6);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .cart-drawer[open] {
+      animation: cart-in 0.3s ease-out;
+    }
+  }
+
+  @keyframes cart-in {
+    from {
+      transform: translateX(100%);
+    }
   }
 
   .tap-scroll {

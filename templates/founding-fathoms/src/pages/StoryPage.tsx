@@ -1,9 +1,9 @@
 import { usePageTitle, useBrewery } from '../app/BreweryContext';
 import { Photo } from '../components/Photo';
 import { Reveal } from '../components/Reveal';
-import { PageHeading } from '../components/ui';
+import { Eyebrow, PageHeading } from '../components/ui';
 
-/** How the brewery started: the head brewer, the story in her words, and a few numbers from the pier. */
+/** How the brewery started: the head brewer, the story in her words, how the beer is made, and a few numbers. */
 export function StoryPage() {
   const { story } = useBrewery();
   usePageTitle('Our Story');
@@ -31,6 +31,30 @@ export function StoryPage() {
           </div>
         </div>
       </div>
+
+      <section aria-labelledby="process-title" className="mx-auto max-w-7xl px-4 pt-20 md:px-6">
+        <div className="mb-8 flex flex-col justify-between gap-3 md:flex-row md:items-end">
+          <div>
+            <Eyebrow>{story.process.eyebrow}</Eyebrow>
+            <h2 id="process-title" className="font-display text-5xl tracking-wide">
+              {story.process.heading}
+            </h2>
+          </div>
+          <p className="max-w-xs text-sm text-mist md:text-right">{story.process.note}</p>
+        </div>
+        <ol className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
+          {story.process.steps.map((step, index) => (
+            <li key={step.label}>
+              <figure>
+                <Photo photo={step.photo} className="clip-card aspect-[3/4] w-full border border-cream/10" />
+                <figcaption className="mt-2 text-xs uppercase tracking-[0.2em] text-mist">
+                  <span className="font-display text-base text-brass">{String(index + 1).padStart(2, '0')}</span> {step.label}
+                </figcaption>
+              </figure>
+            </li>
+          ))}
+        </ol>
+      </section>
 
       <section aria-label="The brewery in numbers" className="mx-auto max-w-7xl px-4 py-16 md:px-6">
         <ul className="grid gap-6 md:grid-cols-3">

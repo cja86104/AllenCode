@@ -1,6 +1,7 @@
 import { Analytics } from '@vercel/analytics/react';
 import { useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router';
+import { CartDrawer } from './CartDrawer';
 import { Footer } from './Footer';
 import { Header } from './Header';
 
@@ -35,6 +36,7 @@ export function Layout() {
         <Outlet />
       </main>
       <Footer />
+      <CartDrawer />
       {/* Vercel Web Analytics: cookieless page-view counts. Its script loads from the site's own /_vercel/insights address, which exists only on Vercel. */}
       <Analytics />
     </div>

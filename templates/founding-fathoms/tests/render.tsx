@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { MemoryRouter } from 'react-router';
 import { App } from '../src/App';
 import { BreweryProvider } from '../src/app/BreweryContext';
+import { CartProvider } from '../src/app/CartContext';
 import { brewery } from '../src/content/brewery';
 import type { Brewery } from '../src/content/types';
 
@@ -21,7 +22,9 @@ export function renderSite(path = '/', content: Brewery = brewery) {
 export function renderWith(node: ReactNode, content: Brewery = brewery) {
   return render(
     <MemoryRouter>
-      <BreweryProvider brewery={content}>{node}</BreweryProvider>
+      <BreweryProvider brewery={content}>
+        <CartProvider>{node}</CartProvider>
+      </BreweryProvider>
     </MemoryRouter>,
   );
 }

@@ -46,8 +46,8 @@ export const brewery: Brewery = {
       lines: ['Founding', 'Fathoms', 'Brewing'],
       intro: 'Craft beer on a working harbor. Process first. Pours without pretense.',
       photo: {
-        src: stock('1559526324-593bc073d938', 1920),
-        alt: 'Stainless steel brewing tanks in a dim industrial brewhouse',
+        src: stock('1758978911880-5e50cf2c9988', 1920),
+        alt: 'Rows of stainless steel fermenters down a long, dim brewhouse aisle',
       },
     },
     pouring: {
@@ -62,8 +62,8 @@ export const brewery: Brewery = {
       points: ['A monthly drop, picked up on the pier', 'Skip or pause any month', 'Member pricing on extra four-packs'],
       stamp: 'FF Cans',
       photo: {
-        src: stock('1608270586620-248524c67de9'),
-        alt: 'A row of craft beer cans on a packaging table beside a canning line',
+        src: stock('1743732345166-cd434e5dada2'),
+        alt: 'Four open cans lined up on a steel rail',
       },
     },
     regulars: {
@@ -88,7 +88,7 @@ export const brewery: Brewery = {
       ],
       photo: {
         src: stock('1514933651103-005eec06c04b', 1920),
-        alt: 'A dimly lit taproom at dusk with tap handles along the bar',
+        alt: 'A dim taproom with tap handles along the bar',
       },
     },
     floor: {
@@ -96,9 +96,9 @@ export const brewery: Brewery = {
       heading: 'Brewed where the boats tie up',
       body: 'Tours on select Saturdays. The taproom doors open onto the working water: grain in, cans out, and nothing between you and the tanks.',
       photos: [
-        { src: stock('1574323347407-f5e1ad6d020b'), alt: 'Pale malted grain in the brewhouse' },
-        { src: stock('1584225064536-d1399fcdb7ea'), alt: 'Tall cylindrical fermenters along a brewery aisle' },
-        { src: stock('1566633806327-68e152aaf26d'), alt: 'A brewer at work on the brewhouse floor' },
+        { src: stock('1574323347407-f5e1ad6d020b'), alt: 'Malted grain, close up' },
+        { src: stock('1792955104636-be03d0fb1756'), alt: 'Stainless steel fermenters with red hoses on a wet concrete floor' },
+        { src: stock('1532634740-6837b2a21d39'), alt: 'A brewer moving kegs across a wet brewhouse floor' },
       ],
       batch: { label: 'Batch on deck', number: '1847', detail: 'Harbor Lights IPA · 6.8% ABV' },
     },
@@ -298,6 +298,14 @@ export const brewery: Brewery = {
     ],
     eventsNote: 'Just show up. No tickets needed.',
     roomNote: 'Steel, grain dust and good light at last call.',
+    photos: [
+      { src: stock('1763626343502-b0b1f26b43d4'), alt: 'A long row of beer taps along the bar' },
+      { src: stock('1779591211763-7a54431e16ab'), alt: 'Taproom tables beside the brewhouse, with steel tanks behind' },
+      { src: stock('1784521817377-412b7e53975b'), alt: 'Sailboats on the harbor through a tall warehouse window' },
+      { src: stock('1630265412337-226d546f2436'), alt: 'Wooden tables and chairs under industrial beams' },
+      { src: stock('1572442933721-91dec35cdcc5'), alt: 'A wall of glass-door coolers stocked with bottled beer' },
+      { src: stock('1767552989991-0fac1fe88491'), alt: 'A steel door with heavy hinges set in a brick wall' },
+    ],
   },
 
   story: {
@@ -312,12 +320,19 @@ export const brewery: Brewery = {
     brewer: {
       name: 'Mara Quinn',
       role: 'Head brewer',
-      photo: { src: stock('1543418219-44e30b057fea'), alt: 'A brewer standing beside the brewing tanks' },
+      photo: { src: stock('1551837818-f52fc6991b70'), alt: 'A brewer crouched at work beside the fermenters' },
     },
     process: {
       eyebrow: 'Process',
       heading: 'How it leaves the floor',
       note: 'Grain in before dawn. Cans out before the afternoon tide turns.',
+      steps: [
+        { label: 'Brew kettle', photo: { src: stock('1719752486418-202cd730147c'), alt: 'A copper brew kettle, close up' } },
+        { label: 'Quality lab', photo: { src: stock('1748261347807-4e54ec728ecc'), alt: 'A pipette adding a sample to a glass bottle' } },
+        { label: 'Hops', photo: { src: stock('1600956306204-d6a5c6aab472'), alt: 'Fresh hop cones on a wooden table' } },
+        { label: 'Canning line', photo: { src: stock('1727373203579-7b8984cb8120'), alt: 'Empty cans moving along a conveyor belt' } },
+        { label: 'Barrel room', photo: { src: stock('1534655882117-f9eff36a1574'), alt: 'Oak barrels stacked in low light' } },
+      ],
     },
     stats: [
       { value: '2', label: 'Open fermenters on day one' },
@@ -366,7 +381,10 @@ export const brewery: Brewery = {
       heading: 'Distributor inquiries',
       body: 'We work with one distributor per territory. If you’d like Founding Fathoms on your trucks, tell us your territory, how many accounts you serve, and how you keep beer cold.',
     },
-    photo: { src: stock('1601584115197-04ecc0da31d7'), alt: 'A delivery truck backed up to a loading dock' },
+    photo: {
+      src: stock('1769477145932-edd5a9d7567c'),
+      alt: 'A driver unloading cases from a delivery truck onto a hand truck',
+    },
   },
 
   shop: {
@@ -466,7 +484,7 @@ export const brewery: Brewery = {
       { id: 'private', label: 'Private hire' },
       { id: 'press', label: 'Press' },
     ],
-    photo: { src: stock('1497366216548-37526070297c'), alt: 'A small front office with a counter' },
+    photo: { src: stock('1640130541949-aa5d40f9635d'), alt: 'An old roll-top desk and chair in a wood-panelled office' },
   },
 
   canClub: {

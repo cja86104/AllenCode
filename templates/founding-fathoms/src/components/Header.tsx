@@ -1,7 +1,8 @@
 import { useEffect, useId, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router';
-import { Anchor, Menu as MenuIcon, X } from 'lucide-react';
+import { Anchor, Menu as MenuIcon, ShoppingBag, X } from 'lucide-react';
 import { useBrewery } from '../app/BreweryContext';
+import { useCart } from '../app/CartContext';
 import { CAN_CLUB_PATH, NAV_ITEMS } from '../lib/navigation';
 
 /**
@@ -10,6 +11,7 @@ import { CAN_CLUB_PATH, NAV_ITEMS } from '../lib/navigation';
  */
 export function Header() {
   const brewery = useBrewery();
+  const cart = useCart();
   const { pathname } = useLocation();
   const [open, setOpen] = useState(false);
   const [lastPath, setLastPath] = useState(pathname);
@@ -46,6 +48,27 @@ export function Header() {
         </Link>
 
         <div className="flex items-center gap-2 xl:order-last">
+          {/* The cart needs JavaScript, so its button appears once the saved cart has been read. */}
+          {cart.ready ? (
+            <button
+              type="button"
+              onClick={cart.openDrawer}
+              className="relative inline-flex min-h-[2.75rem] min-w-[2.75rem] items-center justify-center text-cream transition-colors hover:text-brass"
+            >
+              <ShoppingBag size={22} aria-hidden="true" />
+              <span className="sr-only">
+                Cart, {cart.count} {cart.count === 1 ? 'item' : 'items'}
+              </span>
+              {cart.count > 0 ? (
+                <span
+                  aria-hidden="true"
+                  className="absolute right-0.5 top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-brass px-1 text-[11px] font-bold text-navy"
+                >
+                  {cart.count}
+                </span>
+              ) : null}
+            </button>
+          ) : null}
           <Link
             to={CAN_CLUB_PATH}
             className="clip-btn hidden min-h-[2.75rem] items-center bg-brass px-4 text-xs font-bold uppercase tracking-wider text-navy transition-colors hover:bg-brass-bright sm:inline-flex"

@@ -13,6 +13,21 @@ Everything the pages say lives in one file: `src/content/brewery.ts`. Its shape 
 The demonstration is a fictional brewery. Its people, beers, prices, shops and quotes are invented; the
 photographs are stock photography from Unsplash. The footer says so while `site.demonstration` is true.
 
+## Forms, the shop and the Can Club
+
+The contact form, the Can Club sign-up and the pickup checkout each post JSON to an address set at build
+time (see `.env.example`):
+
+| Setting                  | Form                                                                            |
+| ------------------------ | ------------------------------------------------------------------------------- |
+| `VITE_CONTACT_ENDPOINT`  | Contact page, “Write us”                                                        |
+| `VITE_CAN_CLUB_ENDPOINT` | Contact page, Can Club sign-up (name, email, plan, age confirmation)            |
+| `VITE_ORDER_ENDPOINT`    | Shop checkout (who's collecting, pickup option, items, total, age confirmation) |
+
+Until one is set, that form checks what was typed and then says plainly that nothing was sent. No payment
+is taken online: orders are paid at pickup, and anyone collecting beer confirms they're 21 or older and
+brings photo ID. There are no accounts or passwords. The cart is kept in the visitor's own browser.
+
 ## Analytics
 
 `src/components/Layout.tsx` includes Vercel Web Analytics (`@vercel/analytics/react`). It counts page views

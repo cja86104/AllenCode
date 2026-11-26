@@ -6,11 +6,14 @@
  * demonstration: it validates, then says plainly that nothing was sent, and keeps what the visitor typed.
  */
 
+/** What a form may post: plain JSON values. */
+export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
+
 export type SendResult = { kind: 'sent' } | { kind: 'demonstration' } | { kind: 'failed'; message: string };
 
 export interface FormSender {
   mode: 'demonstration' | 'live';
-  send(payload: Record<string, string | number>): Promise<SendResult>;
+  send(payload: Record<string, JsonValue>): Promise<SendResult>;
 }
 
 export const demonstrationSender: FormSender = {

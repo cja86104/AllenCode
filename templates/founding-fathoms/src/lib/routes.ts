@@ -16,6 +16,7 @@ export function prerenderRoutes(brewery: Brewery): PrerenderRoute[] {
     page('/taproom', 'Taproom'),
     page('/story', 'Our Story'),
     page('/find-us', 'Find Us'),
+    page('/shop', 'Shop'),
     page('/contact', 'Contact'),
     page('/404', 'Page not found'),
   ];

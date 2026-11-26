@@ -162,6 +162,8 @@ export interface Brewery {
     events: TaproomEvent[];
     eventsNote: string;
     roomNote: string;
+    /** Six photographs of the room, shown as a gallery. */
+    photos: Photo[];
   };
 
   story: {
@@ -169,7 +171,7 @@ export interface Brewery {
     quote: string;
     paragraphs: string[];
     brewer: { name: string; role: string; photo: Photo };
-    process: { eyebrow: string; heading: string; note: string };
+    process: { eyebrow: string; heading: string; note: string; steps: { label: string; photo: Photo }[] };
     stats: Stat[];
   };
 

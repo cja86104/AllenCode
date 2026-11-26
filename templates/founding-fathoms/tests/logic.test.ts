@@ -51,6 +51,24 @@ describe('content', () => {
     ]);
   });
 
+  it('checks every photograph the pages use, the gallery and process strip included', () => {
+    const content = clone();
+    const [room] = content.taproom.photos;
+    const [step] = content.story.process.steps;
+    if (!room || !step) throw new Error('The demonstration needs a room photo and a process step.');
+    room.alt = ' ';
+    step.photo.src = 'photos/kettle.jpg';
+    expect(validateBrewery(content)).toEqual([
+      `A photo at ${room.src} needs alt text describing what it shows.`,
+      'The photo “A copper brew kettle, close up” needs a secure https address or a file in public/.',
+    ]);
+    content.taproom.photos = [];
+    content.story.process.steps = [];
+    expect(validateBrewery(content)).toEqual(
+      expect.arrayContaining(['The taproom gallery needs at least one photo.', 'The process strip needs at least one step.']),
+    );
+  });
+
   it('needs at least one beer on tap', () => {
     const content = clone();
     for (const beer of content.beer.beers) beer.onTap = false;

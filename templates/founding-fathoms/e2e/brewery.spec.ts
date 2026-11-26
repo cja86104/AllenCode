@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 
-const PAGES = ['/', '/beer', '/taproom', '/story', '/find-us', '/contact', '/no-such-page'];
+const PAGES = ['/', '/beer', '/taproom', '/story', '/find-us', '/shop', '/contact', '/no-such-page'];
 
 /** The demonstration's stock photographs live on Unsplash; the tests never depend on reaching it. */
 const STOCK_HOST = 'images.unsplash.com';
@@ -66,13 +66,14 @@ test.describe('accessibility', () => {
 
   test('the contact form’s error state and demonstration result have no violations', async ({ page }) => {
     await page.goto('/contact', { waitUntil: 'networkidle' });
-    await page.getByRole('button', { name: 'Send message' }).click();
-    await expect(page.getByLabel('Name')).toBeFocused();
+    const form = page.getByRole('region', { name: 'Write us' });
+    await form.getByRole('button', { name: 'Send message' }).click();
+    await expect(form.getByLabel('Name')).toBeFocused();
     await expectNoViolations(page);
-    await page.getByLabel('Name').fill('Sam Rivera');
-    await page.getByLabel('Email').fill('sam@example.com');
-    await page.getByLabel('Message').fill('Do you host rehearsal dinners on the mezzanine?');
-    await page.getByRole('button', { name: 'Send message' }).click();
+    await form.getByLabel('Name').fill('Sam Rivera');
+    await form.getByLabel('Email').fill('sam@example.com');
+    await form.getByLabel('Message').fill('Do you host rehearsal dinners on the mezzanine?');
+    await form.getByRole('button', { name: 'Send message' }).click();
     await expect(page.getByRole('heading', { name: 'Nothing was sent.' })).toBeFocused();
     await expectNoViolations(page);
   });
@@ -92,6 +93,54 @@ test.describe('accessibility', () => {
     await page.keyboard.press('ArrowRight');
     await page.keyboard.press('ArrowRight');
     await expect.poll(() => board.evaluate((element) => element.scrollLeft)).toBeGreaterThan(0);
+  });
+});
+
+test.describe('shop and Can Club', () => {
+  test('adding to the cart, the cart panel and a pickup checkout work and stay accessible', async ({ page }) => {
+    await page.goto('/shop', { waitUntil: 'networkidle' });
+    await page.getByRole('button', { name: 'Add to cart: Harbor Lights IPA' }).click();
+    await page.getByRole('button', { name: 'Add to cart: Work Cap' }).click();
+    const cartButton = page.getByRole('button', { name: 'Cart, 2 items' });
+    await expect(cartButton).toBeVisible();
+
+    await page.reload({ waitUntil: 'networkidle' });
+    await expect(cartButton).toBeVisible();
+
+    await cartButton.click();
+    const cart = page.getByRole('dialog', { name: 'Your cart' });
+    await expect(cart).toBeVisible();
+    await expect(cart.getByText('$44.00')).toBeVisible();
+    await expectNoViolations(page);
+    await page.keyboard.press('Escape');
+    await expect(cart).toBeHidden();
+    await expect(cartButton).toBeFocused();
+
+    await cartButton.click();
+    await cart.getByRole('link', { name: 'Check out for pickup' }).click();
+    await expect(cart).toBeHidden();
+    const checkout = page.getByRole('region', { name: 'Checkout' });
+    await checkout.getByRole('button', { name: 'Place pickup order' }).click();
+    await expect(checkout.getByLabel('Name for the order')).toBeFocused();
+    await expectNoViolations(page);
+    await checkout.getByLabel('Name for the order').fill('Sam Rivera');
+    await checkout.getByLabel('Email').fill('sam@example.com');
+    await checkout.getByLabel('Phone').fill('555 010 2233');
+    await checkout.getByRole('checkbox').check();
+    await checkout.getByRole('button', { name: 'Place pickup order' }).click();
+    await expect(checkout.getByRole('heading', { name: 'Nothing was sent.' })).toBeFocused();
+    await expectNoViolations(page);
+  });
+
+  test('the Can Club buttons land on the sign-up, and its error state has no violations', async ({ page }) => {
+    await page.goto('/', { waitUntil: 'networkidle' });
+    await page.getByRole('link', { name: 'Claim a membership' }).click();
+    await expect(page).toHaveURL(/\/contact#can-club$/);
+    const signup = page.getByRole('region', { name: 'Join the Can Club' });
+    await expect(signup).toBeInViewport();
+    await signup.getByRole('button', { name: 'Join the Can Club' }).click();
+    await expect(signup.getByLabel('Name')).toBeFocused();
+    await expectNoViolations(page);
   });
 });
 
@@ -120,6 +169,11 @@ test.describe('without JavaScript', () => {
     }
     await page.goto('/find-us');
     await expect(page.getByLabel('Search shops')).toBeHidden();
+    await page.goto('/shop');
+    await expect(page.getByText('Ordering ahead needs JavaScript turned on.')).toBeVisible();
+    await expect(page.getByText('Enamel Camp Mug')).toBeVisible();
+    await expect(page.getByRole('button', { name: /Add to cart/ }).first()).toBeHidden();
+    await expect(page.getByRole('button', { name: /^Cart,/ })).toHaveCount(0);
   });
 });
 
@@ -128,7 +182,7 @@ test.describe('photographs', () => {
     await page.unroute(`https://${STOCK_HOST}/**`);
     await page.route(`https://${STOCK_HOST}/**`, (route) => route.abort());
     await page.goto('/');
-    const hero = page.getByRole('img', { name: 'Stainless steel brewing tanks in a dim industrial brewhouse' });
+    const hero = page.getByRole('img', { name: 'Rows of stainless steel fermenters down a long, dim brewhouse aisle' });
     await expect(hero).toBeVisible();
     await expect(hero).toHaveJSProperty('tagName', 'DIV');
   });

@@ -1,12 +1,16 @@
 import { CalendarDays, Clock, Truck } from 'lucide-react';
 import { usePageTitle, useBrewery } from '../app/BreweryContext';
 import { HoursList } from '../components/HoursList';
+import { Photo } from '../components/Photo';
 import { Reveal } from '../components/Reveal';
 import { PageHeading } from '../components/ui';
 import { trucksByWeek } from '../lib/content';
 import { dayName } from '../lib/hours';
 
-/** The taproom: hours, the food truck on each open day, and the weekly events. */
+/** Alternating heights give the gallery its stacked, uneven look. */
+const ROOM_HEIGHTS = ['h-72', 'h-56', 'h-80', 'h-60', 'h-72', 'h-56'];
+
+/** The taproom: hours, the food truck on each open day, photos of the room, and the weekly events. */
 export function TaproomPage() {
   const brewery = useBrewery();
   const { taproom, hours } = brewery;
@@ -38,6 +42,22 @@ export function TaproomPage() {
               <p className="mb-2 text-[11px] uppercase tracking-[0.25em] text-brass">{dayName(truck.day)}</p>
               <h3 className="font-display text-2xl tracking-wide text-cream">{truck.name}</h3>
               <p className="mt-2 text-sm text-mist">{truck.fare}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section aria-labelledby="room-title" className="mx-auto max-w-7xl px-4 pb-20 md:px-6">
+        <div className="mb-8 flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
+          <h2 id="room-title" className="font-display text-4xl tracking-wide">
+            The room
+          </h2>
+          <p className="text-sm text-mist">{taproom.roomNote}</p>
+        </div>
+        <ul className="columns-1 gap-4 sm:columns-2 lg:columns-3">
+          {taproom.photos.map((photo, index) => (
+            <li key={photo.src} className="mb-4 break-inside-avoid">
+              <Photo photo={photo} className={`w-full border border-cream/10 ${ROOM_HEIGHTS[index % ROOM_HEIGHTS.length]}`} />
             </li>
           ))}
         </ul>

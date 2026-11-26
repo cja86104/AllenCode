@@ -22,6 +22,7 @@ describe('every page', () => {
     ['/taproom', 'Taproom'],
     ['/story', 'Our Story'],
     ['/find-us', 'Find Us'],
+    ['/shop', 'Shop'],
     ['/contact', 'Contact'],
     ['/nowhere', 'Nothing on this tap.'],
   ])('%s has one top-level heading', (path, heading) => {
@@ -160,9 +161,25 @@ describe('the taproom page', () => {
         .map((heading) => heading.textContent),
     ).toEqual(['Smoke Stack BBQ', 'Salt & Hull', 'Pier Pie Co.', 'Rotating guest', 'Sweet Ballast']);
     expect(within(trucks).getByText('Wednesday')).toBeInTheDocument();
+    const room = screen.getByRole('region', { name: 'The room' });
+    expect(within(room).getAllByRole('img')).toHaveLength(6);
+    expect(within(room).getByRole('img', { name: 'Sailboats on the harbor through a tall warehouse window' })).toBeInTheDocument();
     const events = screen.getByRole('region', { name: 'Events' });
     expect(within(events).getByText('Every Thursday · 7 PM')).toBeInTheDocument();
     expect(within(events).getAllByRole('listitem')).toHaveLength(4);
+  });
+});
+
+describe('the story page', () => {
+  it('shows the head brewer and the five process steps in order', () => {
+    renderSite('/story');
+    expect(screen.getByRole('img', { name: 'A brewer crouched at work beside the fermenters' })).toBeInTheDocument();
+    const process = screen.getByRole('region', { name: 'How it leaves the floor' });
+    expect(
+      within(process)
+        .getAllByRole('listitem')
+        .map((item) => item.textContent),
+    ).toEqual(['01 Brew kettle', '02 Quality lab', '03 Hops', '04 Canning line', '05 Barrel room']);
   });
 });
 

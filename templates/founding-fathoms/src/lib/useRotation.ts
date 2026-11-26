@@ -19,7 +19,7 @@ export function usePrefersReducedMotion(): boolean {
 }
 
 /**
- * Rotates through `count` items every `intervalMs`, the way the quotes on the home and contact pages do.
+ * Rotates through `count` items every `intervalMs`, the way the regulars’ quotes on the home page do.
  * Rotation pauses while the visitor hovers or focuses the carousel, stops for good once they press
  * Pause or pick an item, and never starts for visitors who prefer reduced motion (WCAG 2.2.2).
  */
