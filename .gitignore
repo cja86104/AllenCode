@@ -139,4 +139,6 @@ dist-ssr
 
 # Playwright
 test-results/
+# Baseline captures live outside test-results/ because Playwright clears that folder on every run.
+baseline-captures/
 playwright-report/

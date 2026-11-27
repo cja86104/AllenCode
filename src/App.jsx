@@ -1,6 +1,6 @@
 // @ts-check
 import { lazy, Suspense, useEffect, useState } from 'react';
-import { Outlet, RouterProvider, createBrowserRouter } from 'react-router-dom';
+import { Outlet, RouterProvider, createBrowserRouter, useSearchParams } from 'react-router-dom';
 import { Analytics } from '@vercel/analytics/react';
 import Nav from './components/Nav';
 import Footer from './components/Footer';
@@ -29,6 +29,8 @@ const Home = lazy(() => import('./pages/Home.jsx'));
 // noindex, outside the site's shell, and in its own chunk, so the site never downloads it.
 // The Code World on the home page behind `/?world=1` (Code World W1.3), loaded only when switched on.
 const WorldLayer = lazy(() => import('./world/WorldLayer.jsx'));
+// The frame readout for the world-off site (`?meter=1`), in its own chunk so the entry stays inside its budget.
+const PlainFrameMeter = lazy(() => import('./components/PlainFrameMeter.jsx'));
 
 /**
  * The frame every page shares: the skip link, the code field behind everything (Chris, 2026-11-09:
@@ -37,6 +39,8 @@ const WorldLayer = lazy(() => import('./world/WorldLayer.jsx'));
 function AppShell() {
   const world = useWorldPage();
   const hydrated = useHydrated();
+  const [searchParams] = useSearchParams();
+  const showPlainMeter = !world && hydrated && searchParams.get('meter') === '1';
   // The stretch held before the first paint (index.html) follows whether one is drawn, once the page
   // knows (W6): until hydration the held space stands in for the spacer.
   useEffect(() => {
@@ -61,6 +65,11 @@ function AppShell() {
         </Suspense>
       ) : (
         <FieldLayer />
+      )}
+      {showPlainMeter && (
+        <Suspense fallback={null}>
+          <PlainFrameMeter />
+        </Suspense>
       )}
       {/* The shell is clear so the fixed field behind it shows through, and uses overflow-x: clip,
           because overflow-x: hidden makes the shell a scroll container and breaks position: sticky
