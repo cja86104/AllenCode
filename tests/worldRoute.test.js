@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { roadGlyphs, routeFor } from '../src/world/route.js';
 import { CURSOR } from '../src/world/shapes.js';
 import { familyRoadStops, MEETING_STOPS } from '../src/world/roads.js';
+import { roadStepFor, ROAD_STEP } from '../src/world/roadLayout.js';
 
 describe('routeFor: one journey per door, shared by the canvas and the page (Code World W2.4)', () => {
   it('builds the business road for door a, once', () => {
@@ -11,9 +12,9 @@ describe('routeFor: one journey per door, shared by the canvas and the page (Cod
     expect(route.road?.door).toBe('a');
     // W2's nine stops, and the two services added on 2026-11-16.
     expect(route.road?.stops).toHaveLength(11 + MEETING_STOPS.length);
-    // The opening's 6.8 screens, 4.5 for each of the eleven business stops (three steps apart, 2026-11-16),
-    // and 1.5 for each stop where the roads meet (W4).
-    expect(route.journey.screens).toBeCloseTo(6.8 + 11 * 4.5 + 1.5 * MEETING_STOPS.length, 9);
+    // The opening's 6.8 screens, 1.5 per 14 units of road for each of the eleven business stops (three
+    // steps apart, 2026-11-16; 32 units since 2026-11-26), and 1.5 for each stop where the roads meet (W4).
+    expect(route.journey.screens).toBeCloseTo(6.8 + 11 * 1.5 * (roadStepFor('a') / ROAD_STEP) + 1.5 * MEETING_STOPS.length, 9);
     expect(route.journey.landmarks).toHaveLength(10 + MEETING_STOPS.length);
     for (const stop of route.road?.stops ?? []) if (stop.excerptId) expect(typeof route.road?.sources[stop.excerptId]).toBe('string');
   });

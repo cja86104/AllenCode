@@ -43,7 +43,20 @@ describe('Nav', () => {
     expect(switcher.queryByRole('button', { name: 'Family' })).toBeNull();
     fireEvent.click(switcher.getByRole('button', { name: 'Business' }));
     expect(switcher.getByRole('button', { name: 'Business' })).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByRole('link', { name: 'Start a Project' })).toBeInTheDocument();
+    expect(within(screen.getByRole('navigation', { name: 'Primary' })).getByRole('link', { name: 'Start a Project' })).toBeInTheDocument();
+  });
+
+  it('below the full bar, the primary action sits beside the menu button and follows the door (2026-11-26)', () => {
+    renderNav();
+    const compact = /** @type {HTMLElement} */ (document.querySelector('[data-primary-action-compact]'));
+    expect(compact).not.toBeNull();
+    // Outside the full bar, which only shows from 1280px.
+    expect(screen.getByRole('navigation', { name: 'Primary' }).contains(compact)).toBe(false);
+    expect(compact).toHaveTextContent('Start a Project');
+    expect(compact).toHaveAttribute('href', '/contact');
+    fireEvent.click(within(screen.getByRole('navigation', { name: 'Primary' })).getByRole('button', { name: 'Templates/Custom' }));
+    expect(compact).toHaveTextContent('Browse templates');
+    expect(compact).toHaveAttribute('href', '/templates');
   });
 });
 

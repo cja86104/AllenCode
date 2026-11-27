@@ -7,6 +7,7 @@ import Magnetic from '../components/Magnetic';
 import MediaLoop from '../components/MediaLoop.jsx';
 import { BUTTON, DISPLAY, PANEL } from '../components/PageHeader.jsx';
 import usePageMeta from '../hooks/usePageMeta.js';
+import { breadcrumbs, softwareApplication } from '../seo/structuredData.js';
 
 /**
  * A section of the showcase: a label, a heading and what follows, under a hairline.
@@ -36,6 +37,10 @@ export default function ProductDetail() {
   usePageMeta(
     product ? `${product.name} — Allen Code Co.` : 'Product not found — Allen Code Co.',
     product ? product.summary : 'This product could not be found.',
+    // The product and the way back to it (2026-11-26); nothing for an unknown product.
+    product
+      ? { jsonLd: [softwareApplication(product), breadcrumbs([{ name: 'Products', path: '/products' }, { name: product.name, path: `/products/${product.slug}` }])] }
+      : {},
   );
 
   if (!product) return <Navigate to="/products" replace />;

@@ -93,6 +93,16 @@ describe('Services', () => {
     for (const service of services) expect(text).not.toContain(String(service.startingPrice));
     expect(screen.getAllByRole('link', { name: /Reserve a slot/ })).toHaveLength(services.length);
   });
+
+  it('the headline promises no prices it does not show (Chris, 2026-11-26)', () => {
+    render(
+      <MemoryRouter>
+        <Services />
+      </MemoryRouter>,
+    );
+    expect(screen.getByRole('heading', { level: 1, name: 'Custom work, scoped upfront.' })).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/priced upfront/i);
+  });
 });
 
 describe('About', () => {
@@ -105,6 +115,17 @@ describe('About', () => {
     expect(screen.getByRole('heading', { level: 3, name: 'Fifteen years in professional kitchens' })).toBeInTheDocument();
     expect(screen.getByRole('img', { name: 'Chris Allen, founder of Allen Code Co.' })).toBeInTheDocument();
     expect(container.querySelector('[data-aiwp-slot]')).toBeNull();
+  });
+
+  it('counts the products as products.js does: three live, one in the works (Chris, 2026-11-26)', () => {
+    render(
+      <MemoryRouter>
+        <About />
+      </MemoryRouter>,
+    );
+    expect(screen.getByRole('heading', { level: 3, name: 'Three live products, a fourth in the works, and a growing client roster' })).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/Four live products/);
+    expect(catalog.filter((product) => product.status === 'live')).toHaveLength(3);
   });
 });
 

@@ -4,7 +4,7 @@ import { branchForGesture, buildJourney, commitsAt, handoverAt, typedAt } from '
 import { cameraAt, frameCamera } from '../src/world/camera.js';
 import { landmarkRect } from '../src/world/landmark.js';
 import { businessRoadStops } from '../src/world/roads.js';
-import { roadSizes } from '../src/world/roadLayout.js';
+import { roadSizes, roadStepFor, ROAD_STEP } from '../src/world/roadLayout.js';
 import { getExcerpt } from '../src/content/excerpts/index.js';
 import { transformPoint, viewProjectionFor } from '../src/world/matrix.js';
 
@@ -105,9 +105,9 @@ describe('the business road (Code World W2.2)', () => {
     expect(buildJourney('b')).toEqual(buildJourney('b', [], {}));
   });
 
-  it('runs a stop of 1.5 screens per road stop after the turn, three times that on the business road (its stops three steps apart, 2026-11-16), named in order', () => {
+  it('runs a stop of 1.5 screens per 14 units of road after the turn (the business road’s stops 32 units apart since 2026-11-26), named in order', () => {
     // W2's nine road stops, and the two services added on 2026-11-16.
-    expect(journey.screens).toBeCloseTo(6.8 + 11 * 1.5 * 3, 9);
+    expect(journey.screens).toBeCloseTo(6.8 + 11 * 1.5 * (roadStepFor('a') / ROAD_STEP), 9);
     expect(journey.stops.map((s) => s.name)).toEqual([
       'Empty file',
       'Into the code',

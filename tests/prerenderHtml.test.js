@@ -71,6 +71,21 @@ describe('applyHead', () => {
     expect(applyHead(template, { ...HOME, noindex: true })).toContain('<meta name="robots" content="noindex, nofollow" />');
   });
 
+  it('writes the page’s own structured data before </head>, beside the site-wide Organization (2026-11-26)', () => {
+    const nodes = [{ '@type': 'Person', name: 'Chris </script> Allen' }];
+    const html = applyHead(template, { ...HOME, path: '/about', jsonLd: nodes });
+    const blocks = [...html.matchAll(/<script type="application\/ld\+json"( data-page-ld)?>([\s\S]*?)<\/script>/g)];
+    expect(blocks).toHaveLength(2);
+    const page = blocks.find((block) => block[1]);
+    expect(JSON.parse(page?.[2] ?? '')).toEqual({ '@context': 'https://schema.org', '@graph': nodes });
+    expect(html.indexOf('data-page-ld')).toBeLessThan(html.indexOf('</head>'));
+  });
+
+  it('writes no page block when the page has none (the home page)', () => {
+    expect(applyHead(template, HOME)).not.toContain('data-page-ld');
+    expect(applyHead(template, { ...HOME, jsonLd: [] })).not.toContain('data-page-ld');
+  });
+
   it('throws when the template lacks a tag it must set', () => {
     const noCanonical = template.replace(/<link rel="canonical"[^>]*>/, '');
     expect(() => applyHead(noCanonical, HOME)).toThrow(/canonical/);

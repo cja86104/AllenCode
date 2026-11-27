@@ -220,11 +220,14 @@ describe('the road bends and meets a shared road (Code World W4.1)', () => {
     });
   }
 
-  it('door b’s fork is door a’s mirrored in x; with the same stops at the same spacing, both meet the shared road as far along (2026-11-17)', () => {
+  it('door b’s fork is door a’s mirrored in x; each road meets the shared road as far past its last stop (2026-11-17; the business road shorter since 2026-11-26)', () => {
     const a = layoutRoad(all, 'a', both);
     const b = layoutRoad(all, 'b', both);
-    // Both roads' stops stand three steps apart (2026-11-17), so the same stops reach the shared road equally far along.
-    expect(a.junction).toBe(b.junction);
+    const last = stops.length - 1;
+    // Each road bends the same distance past its last stop; the business road, its stops 32 apart for
+    // the family road's 42 (2026-11-26), reaches the bend sooner by 10 for each of the stretches between.
+    expect(a.junction - a.along[last]).toBe(b.junction - b.along[last]);
+    expect(b.along[last] - a.along[last]).toBe((roadStepFor('b') - roadStepFor('a')) * last);
     a.path.slice(0, 3).forEach((p, i) => expect(near(b.path[i], [-p[0], p[1]], 1e-9)).toBe(true));
   });
 
@@ -274,11 +277,15 @@ describe('the "our work/" sign between the services and the products (Chris, 202
 });
 
 describe('each road’s stop spacing (Chris, 2026-11-16: "the business side road needs to be longer … spread out")', () => {
-  it('both roads’ stops stand three steps apart (Chris, 2026-11-17: "extend the family side as well")', () => {
-    expect(roadStepFor('a')).toBe(42);
+  it('the family road’s stops stand three steps apart (Chris, 2026-11-17), the business road’s about a quarter less (Chris, 2026-11-26: "SHORTEN THE BUSINESS ROAD BY ONE QUARTER")', () => {
     expect(roadStepFor('b')).toBe(BUSINESS_STEP);
     expect(BUSINESS_STEP).toBe(3 * ROAD_STEP);
     expect(ROAD_STEP).toBe(14);
+    expect(roadStepFor('b')).toBe(42);
+    // A whole number, so every stop stands on a piece's end of the 1-unit road (31.5 put half of them mid-piece).
+    expect(roadStepFor('a')).toBe(32);
+    expect(Number.isInteger(roadStepFor('a'))).toBe(true);
+    expect(Math.abs(roadStepFor('a') / BUSINESS_STEP - 0.75)).toBeLessThan(0.015);
     for (const door of /** @type {const} */ (['a', 'b'])) {
       const road = layoutRoad(stops, door, sizes);
       road.along.forEach((distance, k) => expect(distance).toBe(7 + roadStepFor(door) * k));

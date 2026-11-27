@@ -7,6 +7,7 @@ import JourneyRail from '../src/world/JourneyRail.jsx';
 import { railStops } from '../src/world/rail.js';
 import { routeFor } from '../src/world/route.js';
 import { fieldBus } from '../src/field/fieldBus.js';
+import { roadStepFor, ROAD_STEP } from '../src/world/roadLayout.js';
 
 beforeEach(() => {
   vi.stubGlobal(
@@ -100,9 +101,14 @@ describe('the journey rail (Code World W4.4)', () => {
   });
 });
 
-describe('the page between stops (Chris, 2026-11-16: the business road three times as long)', () => {
-  for (const [door, height] of /** @type {const} */ ([['a', '240vh'], ['b', '240vh']])) {
-    it(`door ${door}: ${height} of road before each of its road's chapters`, () => {
+describe('the page between stops (Chris, 2026-11-16: the business road three times as long; 2026-11-26: a quarter shorter)', () => {
+  it('each road’s page between stops keeps the camera’s pace: 80vh of page for every 14 units of road', () => {
+    expect(80 * (roadStepFor('a') / ROAD_STEP)).toBeCloseTo(182.857, 3);
+    expect(80 * (roadStepFor('b') / ROAD_STEP)).toBe(240);
+  });
+
+  for (const [door, height] of /** @type {const} */ ([['a', (80 * roadStepFor('a')) / ROAD_STEP], ['b', 240]])) {
+    it(`door ${door}: ${height.toFixed(3)}vh of road before each of its road's chapters`, () => {
       fieldBus.set({ mode: 'webgl' });
       render(
         <MemoryRouter>
@@ -114,7 +120,9 @@ describe('the page between stops (Chris, 2026-11-16: the business road three tim
       for (const rest of rests) {
         const before = /** @type {HTMLElement} */ (rest.previousElementSibling);
         expect(before.getAttribute('aria-hidden')).toBe('true');
-        expect(before.style.height, String(rest.getAttribute('data-world-stop'))).toBe(height);
+        // jsdom keeps three decimals of a length; the page itself holds the exact 80 × 32 / 14.
+        expect(before.style.height.endsWith('vh'), String(rest.getAttribute('data-world-stop'))).toBe(true);
+        expect(parseFloat(before.style.height), String(rest.getAttribute('data-world-stop'))).toBeCloseTo(height, 3);
       }
     });
   }

@@ -25,14 +25,25 @@ export const ROAD_STEP = 14;
  * `ROAD_STEP`.
  */
 export const BUSINESS_STEP = 3 * ROAD_STEP;
+/**
+ * The business road's step since Chris shortened it by about a quarter (2026-11-26: "SHORTEN THE
+ * BUSINESS ROAD BY ONE QUARTER. I HAD EXTENDED IT … BECAUSE THEY WERE REALLY CLOSE TO EACH OTHER BEFORE
+ * AND NEEDED MORE ROAD. SO SHORTEN A LITTLE."): 32, not 31.5. The road is laid in 1-unit pieces from the
+ * first stop, and a half-unit step put every other stop halfway along a piece, where the road's heading
+ * and ground are the piece's, not the stop's: those stops stood 0.8° off the road's heading and 6 mm out
+ * of their hollows. 32 keeps every stop on a piece's end, as 42 did. The family road keeps
+ * `BUSINESS_STEP`, the name kept from the road it was first made for. The page's road before each
+ * business stop is shortened to match (`ROAD_BEFORE` in WorldRoadChapters.jsx), so the camera keeps its
+ * pace.
+ */
+export const SHORTER_BUSINESS_STEP = 32;
 
 /**
  * The distance between a door's road stops.
  * @param {'a' | 'b'} door
  */
 export function roadStepFor(door) {
-  void door;
-  return BUSINESS_STEP;
+  return door === 'a' ? SHORTER_BUSINESS_STEP : BUSINESS_STEP;
 }
 /** How far beside the road's centre line each landmark stands. */
 export const LATERAL = 4.2;

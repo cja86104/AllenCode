@@ -5,7 +5,11 @@ import { services } from '../data/services';
 import Reveal from '../components/Reveal';
 import Magnetic from '../components/Magnetic';
 import usePageMeta from '../hooks/usePageMeta.js';
+import { breadcrumbs, serviceList } from '../seo/structuredData.js';
 import PageHeader, { BUTTON, BUTTON_QUIET, DISPLAY, PANEL, PANEL_HOVER } from '../components/PageHeader.jsx';
+
+/** The page's own structured data (2026-11-26): every service, no prices, and the way back home. */
+const PAGE_LD = Object.freeze([serviceList(services), breadcrumbs([{ name: 'Services', path: '/services' }])]);
 
 /**
  * The services, each leading to the brief. No prices: the deposit checkout this page once kept
@@ -15,7 +19,8 @@ import PageHeader, { BUTTON, BUTTON_QUIET, DISPLAY, PANEL, PANEL_HOVER } from '.
 export default function Services() {
   usePageMeta(
     'Services — Allen Code Co.',
-    'Custom SaaS builds, MVP sprints, AI integration, technical audits, and acquisition-readiness consulting from Allen Code Co.'
+    'Custom SaaS builds, MVP sprints, AI integration, technical audits, and acquisition-readiness consulting from Allen Code Co.',
+    { jsonLd: PAGE_LD },
   );
   return (
     <div className="px-6 pb-24 lg:px-10">
@@ -23,7 +28,7 @@ export default function Services() {
         <PageHeader
           path="services"
           eyebrow="Services"
-          title="Custom work, scoped and priced upfront."
+          title="Custom work, scoped upfront."
           lede="No hourly retainers, no scope creep. Every engagement below is fixed-scope, deposit-gated, and delivered by me — the person who'll actually write the code."
         />
 

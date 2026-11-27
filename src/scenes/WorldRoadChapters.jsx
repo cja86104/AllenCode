@@ -14,10 +14,12 @@ import { businessRoadStops, familyRoadStops } from '../world/roads.js';
 
 /**
  * Scroll of road before each of a door's road chapters, while the camera travels to its landmark: both
- * roads' stops stand three times as far apart as they did (business 2026-11-16, family 2026-11-17), so
- * three times the scroll, at the same pace.
+ * roads' stops stood three times as far apart as they did (business 2026-11-16, family 2026-11-17), so
+ * three times the scroll, at the same pace; the business road then about a quarter shorter (Chris,
+ * 2026-11-26; 32 units for 42), so as much less scroll: 80vh for every 14 units of road (`roadStepFor`
+ * in roadLayout.js), 80 × 32 / 14 for the business road.
  */
-const ROAD_BEFORE = Object.freeze({ a: '240vh', b: '240vh' });
+const ROAD_BEFORE = Object.freeze({ a: `${(80 * 32) / 14}vh`, b: '240vh' });
 /** The road before your idea, on the shared road (the same for both doors). */
 const MEETING_BEFORE = '80vh';
 /** The road before the workshop: the bend where the roads meet is about three ordinary stretches (W4). */

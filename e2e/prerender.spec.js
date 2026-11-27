@@ -11,7 +11,7 @@ const PAGES = [
   { path: '/products/underfire-ai', title: 'UnderFire AI — Allen Code Co.', text: 'UnderFire AI' },
   { path: '/products/founders-helm', title: 'Founders Helm — Allen Code Co.', text: 'Founders Helm' },
   { path: '/products/crew-advisors', title: 'Crew Advisors — Allen Code Co.', text: 'Crew Advisors' },
-  { path: '/services', title: 'Services — Allen Code Co.', text: 'Custom work, scoped and priced upfront.' },
+  { path: '/services', title: 'Services — Allen Code Co.', text: 'Custom work, scoped upfront.' },
   { path: '/templates', title: 'Templates — Allen Code Co.', text: 'Evergreen' },
   { path: '/about', title: 'About — Allen Code Co.', text: 'Chris Allen' },
   { path: '/contact', title: 'Contact — Allen Code Co.', text: "Tell me what you're building." },
@@ -34,8 +34,22 @@ test.describe('with JavaScript off, every page is its own prebuilt HTML', () => 
       await expect(page.locator('meta[property="og:title"]')).toHaveAttribute('content', title);
       await expect(page.locator('meta[property="og:image"]')).toHaveAttribute('content', `${SITE}/og-image.png`);
       await expect(page.locator('meta[name="robots"]')).toHaveCount(0);
-      const jsonLd = JSON.parse((await page.locator('script[type="application/ld+json"]').textContent()) ?? '{}');
+      // The site-wide Organization, once; the page's own data (2026-11-26) in its own block.
+      const jsonLd = JSON.parse((await page.locator('script[type="application/ld+json"]:not([data-page-ld])').textContent()) ?? '{}');
       expect(jsonLd['@type']).toBe('Organization');
+      const own = page.locator('script[type="application/ld+json"][data-page-ld]');
+      if (path === '/') {
+        await expect(own).toHaveCount(0);
+      } else {
+        const graph = JSON.parse((await own.textContent()) ?? '{}')['@graph'];
+        const kinds = graph.map((/** @type {{ '@type': string }} */ node) => node['@type']);
+        expect(kinds).toContain('BreadcrumbList');
+        expect(kinds).not.toContain('Organization');
+        if (path === '/services') expect(kinds).toContain('ItemList');
+        if (path === '/about') expect(kinds).toContain('Person');
+        if (path.startsWith('/products/')) expect(kinds).toContain('SoftwareApplication');
+        expect(JSON.stringify(graph)).not.toMatch(/"(price|offers|aggregateRating)"/);
+      }
       await expect(page.locator('main h1')).toHaveCount(1);
       await expect(page.locator('main')).toContainText(text);
       await expect(page.locator('noscript main')).toHaveCount(0);
@@ -60,6 +74,20 @@ test.describe('with JavaScript on, the browser takes over without a mismatch', (
       expect(errors.filter((text) => HYDRATION_ERROR.test(text))).toEqual([]);
     });
   }
+});
+
+test('moving between pages keeps one page block, the current page’s (2026-11-26)', async ({ page }) => {
+  await page.goto('/services');
+  await page.waitForLoadState('networkidle');
+  const own = page.locator('head script[data-page-ld]');
+  await expect(own).toHaveCount(1);
+  await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'About', exact: true }).click();
+  await expect(page).toHaveURL(/\/about$/);
+  await expect(own).toHaveCount(1);
+  await expect.poll(async () => JSON.parse((await own.textContent()) ?? '{}')['@graph'].map((/** @type {{ '@type': string }} */ n) => n['@type'])).toEqual(['Person', 'BreadcrumbList']);
+  await page.locator('header').getByRole('link', { name: /Allen\s*Code\s*Co\./ }).click();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(own).toHaveCount(0);
 });
 
 test('an address with no page gets the shell, never the prebuilt home, and shows the 404 page', async ({ page, request }) => {

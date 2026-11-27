@@ -106,15 +106,22 @@ export default function Nav({ overlay = false }) {
           </Magnetic>
         </nav>
 
-        <button
-          type="button"
-          aria-label="Toggle menu"
-          aria-expanded={open}
-          onClick={() => setOpen((o) => !o)}
-          className="text-white xl:hidden"
-        >
-          {open ? <X size={24} /> : <Menu size={24} />}
-        </button>
+        <div className="flex items-center gap-4 xl:hidden">
+          {/* Below the full bar, the primary action beside the menu button from 640px (2026-11-26: it was
+              one tap down on every screen under 1280px); on phones it stays in the menu. Only one copy
+              of it is shown at any width: this one is hidden from 1280px, where the full bar has it. */}
+          <Link
+            to={action.to}
+            viewTransition
+            data-primary-action-compact
+            className="hidden whitespace-nowrap rounded-full border border-orange-500 px-4 py-2 mono text-xs uppercase tracking-widest text-orange-500 transition-colors hover:bg-orange-500 hover:text-black sm:inline-block"
+          >
+            {action.label}
+          </Link>
+          <button type="button" aria-label="Toggle menu" aria-expanded={open} onClick={() => setOpen((o) => !o)} className="text-white">
+            {open ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
       </div>
 
       <AnimatePresence>

@@ -6,6 +6,10 @@ import Magnetic from '../components/Magnetic';
 import { BUTTON, DISPLAY, PANEL } from '../components/PageHeader.jsx';
 import { BUILDER } from '../content/builderStory.js';
 import usePageMeta from '../hooks/usePageMeta.js';
+import { breadcrumbs, person } from '../seo/structuredData.js';
+
+/** The page's own structured data (2026-11-26): Chris, and the way back home. */
+const PAGE_LD = Object.freeze([person(), breadcrumbs([{ name: 'About', path: '/about' }])]);
 
 const TIMELINE = [
   {
@@ -30,7 +34,7 @@ const TIMELINE = [
   },
   {
     year: '2024–Now',
-    title: 'Four live products, growing client roster',
+    title: 'Three live products, a fourth in the works, and a growing client roster',
     body: 'My Teachers Toolbox, UnderFire AI, Founders Helm, and a private beta — plus a template store and client work running in parallel.',
   },
 ];
@@ -54,6 +58,7 @@ export default function About() {
   usePageMeta(
     'About — Allen Code Co.',
     'Chris Allen spent fifteen years in hospitality before teaching himself to code and building Allen Code Co., a solo build-to-sell software studio.',
+    { jsonLd: PAGE_LD },
   );
   const { photo } = BUILDER;
 

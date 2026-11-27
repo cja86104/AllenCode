@@ -5,13 +5,18 @@ import Reveal from '../components/Reveal';
 import ContactForm from '../components/ContactForm.jsx';
 import PageHeader, { DISPLAY, PANEL } from '../components/PageHeader.jsx';
 import usePageMeta from '../hooks/usePageMeta.js';
+import { breadcrumbs } from '../seo/structuredData.js';
 import { briefPrefill } from '../components/briefPrefill.js';
 import { useHydrated } from '../ssr/useHydrated.js';
+
+/** The page's own structured data (2026-11-26). */
+const PAGE_LD = Object.freeze([breadcrumbs([{ name: 'Contact', path: '/contact' }])]);
 
 export default function Contact() {
   usePageMeta(
     'Contact — Allen Code Co.',
     'Get in touch with Chris Allen at Allen Code Co. to start a custom software project, book a technical audit, or ask a question.',
+    { jsonLd: PAGE_LD },
   );
 
   // The prebuilt page has no query (Phase 9), so `?template=` and `?idea=` start the brief once the

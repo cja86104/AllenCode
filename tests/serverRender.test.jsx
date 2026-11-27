@@ -61,6 +61,29 @@ describe('server render', () => {
     }
   });
 
+  it('reports each page’s own structured data: none on the home page, the right kinds on the rest (2026-11-26)', async () => {
+    /** @type {Record<string, string[]>} */
+    const KINDS = {
+      '/': [],
+      '/products': ['BreadcrumbList'],
+      '/products/my-teachers-toolbox': ['SoftwareApplication', 'BreadcrumbList'],
+      '/products/underfire-ai': ['SoftwareApplication', 'BreadcrumbList'],
+      '/products/founders-helm': ['SoftwareApplication', 'BreadcrumbList'],
+      '/products/crew-advisors': ['SoftwareApplication', 'BreadcrumbList'],
+      '/services': ['ItemList', 'BreadcrumbList'],
+      '/templates': ['BreadcrumbList'],
+      '/about': ['Person', 'BreadcrumbList'],
+      '/contact': ['BreadcrumbList'],
+    };
+    expect(Object.keys(KINDS)).toEqual(SITEMAP_PATHS);
+    for (const [path, kinds] of Object.entries(KINDS)) {
+      const { meta } = await render(path);
+      expect(meta.jsonLd.map((node) => /** @type {{ '@type': string }} */ (node)['@type']), path).toEqual(kinds);
+      // The site-wide Organization is index.html's, once per page: no page adds another.
+      expect(meta.jsonLd.some((node) => /** @type {{ '@type': string }} */ (node)['@type'] === 'Organization'), path).toBe(false);
+    }
+  });
+
   it('renders an unknown path as the 404 page', async () => {
     const { html, meta, status } = await render('/nope');
     expect(status).toBe(404);

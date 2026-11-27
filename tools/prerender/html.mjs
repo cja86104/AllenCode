@@ -1,8 +1,9 @@
 // @ts-check
+import { jsonLdText } from '../../src/seo/structuredData.js';
 
 const SITE_URL = 'https://www.allencodeco.com';
 
-/** @typedef {{ path: string, title: string, description: string, noindex: boolean }} PageHead */
+/** @typedef {{ path: string, title: string, description: string, noindex: boolean, jsonLd?: ReadonlyArray<object> }} PageHead */
 
 /**
  * Escapes text for an HTML text node or a double-quoted attribute.
@@ -30,8 +31,9 @@ function replaceOnce(html, pattern, replacement, what) {
 
 /**
  * Writes a page's own head into the template: title, description, canonical, Open Graph and Twitter
- * title, description and address, and `robots` noindex when the page asks for it. These are the tags
- * `usePageMeta` keeps in sync in the browser (src/hooks/usePageMeta.js).
+ * title, description and address, `robots` noindex when the page asks for it, and the page's own
+ * structured data when it has any (2026-11-26). These are the tags `usePageMeta` keeps in sync in the
+ * browser (src/hooks/usePageMeta.js).
  * @param {string} template
  * @param {PageHead} page
  * @returns {string}
@@ -53,6 +55,9 @@ export function applyHead(template, page) {
   html = meta(html, 'name', 'twitter:title', title);
   html = meta(html, 'name', 'twitter:description', description);
   if (page.noindex) html = replaceOnce(html, /<\/head>/, '    <meta name="robots" content="noindex, nofollow" />\n  </head>', '</head>');
+  if (page.jsonLd && page.jsonLd.length > 0) {
+    html = replaceOnce(html, /<\/head>/, `    <script type="application/ld+json" data-page-ld>${jsonLdText(page.jsonLd)}</script>\n  </head>`, '</head>');
+  }
   return html;
 }
 

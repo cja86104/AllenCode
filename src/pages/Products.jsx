@@ -3,11 +3,16 @@ import ProductCard from '../components/ProductCard.jsx';
 import PageHeader from '../components/PageHeader.jsx';
 import usePageMeta from '../hooks/usePageMeta.js';
 import { catalog } from '../data/catalog.js';
+import { breadcrumbs } from '../seo/structuredData.js';
+
+/** The page's own structured data (2026-11-26). */
+const PAGE_LD = Object.freeze([breadcrumbs([{ name: 'Products', path: '/products' }])]);
 
 export default function Products() {
   usePageMeta(
     'Products — Allen Code Co.',
     'Live products built and shipped by Allen Code Co.: My Teachers Toolbox, UnderFire AI, Founders Helm, and Crew Advisors.',
+    { jsonLd: PAGE_LD },
   );
 
   return (

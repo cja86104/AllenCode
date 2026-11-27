@@ -28,10 +28,13 @@ export const WINDOW_RADIUS = FOG_FAR + RECUT_AFTER;
  * needs more code on the road itself"), by as much as keeps the landmarks' glyphs while the road between
  * stops runs at the desktop's share of the opening's density; the busiest cut still holds about 7,200
  * of the phone's 12,000. With Copper Thistle as a seventh house on the family road (2026-11-25), the
- * family road is built larger again by as much as keeps those landmark glyphs.
+ * family road is built larger again by as much as keeps those landmark glyphs. With the business road
+ * about a quarter shorter (Chris, 2026-11-26: 32 units between stops for 42), its road holds as many
+ * glyphs a unit as before in less road, so it is built smaller by as much as keeps each of its
+ * landmarks the glyphs it had (347 / 560 / 886 by tier; now 346 / 557 / 885): it was 1.985 / 1.7 / 1.75.
  */
 export const WORLD_SCALE = Object.freeze({
-  a: Object.freeze({ low: 1.985, mid: 1.7, high: 1.75 }),
+  a: Object.freeze({ low: 1.8, mid: 1.535, high: 1.565 }),
   b: Object.freeze({ low: 1.58, mid: 1.39, high: 1.43 }),
 });
 

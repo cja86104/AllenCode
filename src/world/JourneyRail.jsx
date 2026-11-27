@@ -1,6 +1,20 @@
 // @ts-check
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
+/** The rail's two ends: the journey's first stop and, once it reaches the brief, its last. */
+const TOP_END = 'empty file';
+const BOTTOM_END = 'shipped';
+
+/**
+ * Whether a stop is one the rail's ends already name (2026-11-26: at the empty file the rail read
+ * EMPTY FILE twice, the end's label and the current stop's).
+ * @param {string} name
+ */
+const namedByEnd = (name) => {
+  const lower = name.toLowerCase();
+  return lower === TOP_END || lower === BOTTOM_END;
+};
+
 /**
  * The journey rail (Code World P3, on the home page since W4): where the visitor is, from the empty
  * file to shipped. Each stop sits at the share of the journey it starts at; the current one is named
@@ -49,9 +63,13 @@ export default function JourneyRail({ stops, getProgress }) {
     return () => cancelAnimationFrame(frame);
   }, [stops, getProgress]);
 
+  const here = current.toLowerCase();
+  /** An end's label, lit while it is the current stop. @param {string} name */
+  const endClass = (name) => `mono text-[10px] uppercase tracking-[0.25em] [writing-mode:vertical-rl] ${here === name ? 'text-ember' : 'text-white/60'}`;
+
   return (
     <nav data-rail aria-label="Journey" className="fixed bottom-24 right-4 top-28 z-10 flex flex-col items-center sm:right-8">
-      <span className="mono text-[10px] uppercase tracking-[0.25em] text-white/60 [writing-mode:vertical-rl]">empty file</span>
+      <span className={endClass(TOP_END)}>{TOP_END}</span>
       <div ref={lineRef} className="relative my-3 w-px flex-1 bg-white/15">
         <span
           ref={markerRef}
@@ -62,21 +80,23 @@ export default function JourneyRail({ stops, getProgress }) {
         <ol className="absolute inset-0">
           {stops.map((stop) => {
             const active = stop.name === current;
+            // The current stop is named down the line, unless an end already names it (it is lit instead).
+            const shown = active && !namedByEnd(stop.name);
             return (
               <li
                 key={stop.name}
-                ref={active ? labelRef : undefined}
+                ref={shown ? labelRef : undefined}
                 aria-current={active ? 'step' : undefined}
-                style={active ? undefined : { top: `${stop.from * 100}%` }}
-                className={active ? 'absolute right-3 top-0 max-h-full [writing-mode:vertical-rl]' : 'absolute right-3 whitespace-nowrap'}
+                style={shown ? undefined : { top: `${stop.from * 100}%` }}
+                className={shown ? 'absolute right-3 top-0 max-h-full [writing-mode:vertical-rl]' : 'absolute right-3 whitespace-nowrap'}
               >
-                <span className={active ? 'mono text-[10px] uppercase tracking-[0.2em] text-ember' : 'sr-only'}>{stop.name}</span>
+                <span className={shown ? 'mono text-[10px] uppercase tracking-[0.2em] text-ember' : 'sr-only'}>{stop.name}</span>
               </li>
             );
           })}
         </ol>
       </div>
-      <span className="mono text-[10px] uppercase tracking-[0.25em] text-white/60 [writing-mode:vertical-rl]">shipped</span>
+      <span className={endClass(BOTTOM_END)}>{BOTTOM_END}</span>
     </nav>
   );
 }

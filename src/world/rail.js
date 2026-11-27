@@ -1,11 +1,11 @@
 // @ts-check
 import { buildJourney } from './journey.js';
+// Each road taken is named as the world names it, the signposts' labels (2026-11-26: the rail had kept
+// "family/" after the 2026-11-25 rename of road B to "templates/custom/").
+import { ROAD_NAMES } from './roadNames.js';
 
 /** @typedef {import('./worldTrack.js').TrackSection} TrackSection */
 /** @typedef {import('./route.js').Route} Route */
-
-/** The words for each road once taken: the signposts' own labels. */
-const ROAD_NAMES = Object.freeze({ a: 'business/', b: 'family/' });
 
 /**
  * The home page's stops for the journey rail (Code World W4), each at the share of the journey it

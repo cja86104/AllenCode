@@ -8,6 +8,10 @@ import Reveal from '../components/Reveal';
 import MediaLoop from '../components/MediaLoop.jsx';
 import PageHeader, { DISPLAY, PANEL_HOVER } from '../components/PageHeader.jsx';
 import usePageMeta from '../hooks/usePageMeta.js';
+import { breadcrumbs } from '../seo/structuredData.js';
+
+/** The page's own structured data (2026-11-26). */
+const PAGE_LD = Object.freeze([breadcrumbs([{ name: 'Templates', path: '/templates' }])]);
 
 /**
  * One template as a file: its loop plays on its own whenever the card is on screen (Chris,
@@ -75,6 +79,7 @@ export default function Templates() {
   usePageMeta(
     'Templates — Allen Code Co.',
     'Website templates for products, portfolios, families and events. Pick a starting point and I build it out with your words, photos and dates.',
+    { jsonLd: PAGE_LD },
   );
   const [activeCategory, setActiveCategory] = useState('All');
 

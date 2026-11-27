@@ -1,6 +1,6 @@
 # Allen Code Co.
 
-> Solo build-to-sell software studio run by Chris Allen. Custom SaaS builds, MVP sprints, AI integration, technical audits, and acquisition-readiness consulting — plus four in-house SaaS products and a library of Next.js/Tailwind starter templates.
+> Solo build-to-sell software studio run by Chris Allen. Custom SaaS builds, MVP sprints, AI integration, technical audits, acquisition-readiness consulting, custom web development and UI/UX design — plus four in-house SaaS products (three live, one coming soon) and a library of website templates.
 
 ## Products
 - [My Teachers Toolbox](https://www.allencodeco.com/products/my-teachers-toolbox): AI tools for K-5 teachers, built in real classrooms. Live at myteacherstoolbox.com.
@@ -18,7 +18,7 @@
 - [UI/UX Design](https://www.allencodeco.com/services): User flow mapping, high-fidelity mockups, and handoff-ready specs. Typical timeline 1–2 weeks.
 
 ## Templates
-- [Templates store](https://www.allencodeco.com/templates): SaaS landing pages, dev portfolios, dashboard starters, and agency sites, built with Next.js and Tailwind.
+- [Templates](https://www.allencodeco.com/templates): Website templates, asked about through the project brief. Ready to build, each built with Vite and React and with a live demo: Copper Thistle, a restaurant site (https://copper-thistle.vercel.app/), and Evergreen, a memorial and tribute site (https://evergreen-bay-eight.vercel.app/). Concept previews: a family home page, baby and milestones, a wedding, reunions and events, a portfolio, SaaS landing pages, developer portfolios, dashboard starters and agency sites.
 
 ## About
 - [About](https://www.allencodeco.com/about): Chris Allen — solo developer, 15 years in professional kitchens before teaching himself to code. Writes every line himself; no subcontracted work.
