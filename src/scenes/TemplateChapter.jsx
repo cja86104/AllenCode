@@ -128,7 +128,7 @@ function TemplateSegment({ template, excerpt, local, active, visible, viewport, 
 
   return (
     <div data-door-b-template={template.id}>
-      <div style={{ left: text.x, top: text.y, width: text.w }} className="absolute">
+      <div data-world-words style={{ left: text.x, top: text.y, width: text.w }} className="absolute">
         <ChapterHeading />
         <div className={compact ? 'mt-4' : 'mt-10'}>
           <TemplateText template={template} compact={compact} />

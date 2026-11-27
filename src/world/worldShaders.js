@@ -107,6 +107,8 @@ void main() {
  * colour change, with the start and landing places on a plane in the world. The field's sway and lift
  * (in CSS pixels) run along the plane's right and up directions, scaled to a pixel; the arc also lifts
  * the characters out of the plane toward the camera, through the scene, before they land.
+ * Behind a stop's words (2026-11-26, `wordsRect.js`) a flying character is drawn at `uWordsDim` of its
+ * alpha: `uWordsRect` is the words' box in clip space (x0, y0, x1, y1), off screen when there are none.
  */
 // In the shader: As in the world's glyphs: the atlas draws a glyph at two thirds of its cell.
 export const FLIGHT_VERTEX_SHADER = `#version 300 es
@@ -129,6 +131,8 @@ uniform vec3 uNormal;
 uniform vec3 uRight;
 uniform vec3 uUp;
 uniform float uLift;
+uniform vec4 uWordsRect;
+uniform float uWordsDim;
 
 out float vGlyph;
 out float vAlpha;
@@ -160,6 +164,9 @@ void main() {
   gl_PointSize = min(size * uPixelRatio, 256.0);
   vGlyph = glyph;
   vAlpha = (original > 0.5 ? 1.0 : smoothstep(0.04, 0.35, t)) * step(0.0, clip.w);
+  vec2 onScreen = clip.xy / depth;
+  float behindWords = step(uWordsRect.x, onScreen.x) * step(onScreen.x, uWordsRect.z) * step(uWordsRect.y, onScreen.y) * step(onScreen.y, uWordsRect.w);
+  vAlpha *= mix(1.0, uWordsDim, behindWords);
   vColor = mix(aSrcColor, aDstColor, landed);
 }
 `;

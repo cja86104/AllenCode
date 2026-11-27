@@ -136,10 +136,10 @@
 
 **Interfaces — Produces:** `railStops` entries gain `y`, the scroll offset a jump lands at: the stop's share times `journeyLength`, the same mapping the rail's marker uses (`scrollY / length`). The end entry is Start a project, landing at the brief (the end section's end).
 
-- [ ] Step 1: Tests: for both doors and none, every stop's `y` is inside the page; the stops' `y` rise in order; a rest stop's `y` is its section's `from`; Start a project's `y` puts the brief's top on screen.
-- [ ] Step 2: Run. Expected: FAIL.
-- [ ] Step 3: Implement.
-- [ ] Step 4: Run. Expected: pass.
+- [x] Step 1: Tests: for both doors and none, every stop's `y` is inside the page; the stops' `y` rise in order; a rest stop's `y` is its section's `from`; Start a project's `y` puts the brief's top on screen. Done in `tests/rail.test.js` (beside the rail's other tests) rather than `worldJourney.test.js`.
+- [x] Step 2: Run. Expected: FAIL.
+- [x] Step 3: Implement. Each stop also gains an `id` (`empty-file`, `into-the-code`, `the-fork`, `business-road` or `family-road`, each rest's own id, `brief`) for its focus target. `y` is rounded up to a whole pixel (`Math.ceil`): a rest that starts at a fractional offset was landed one pixel short of it, on the road, when the browser rounded the scroll down.
+- [x] Step 4: Run. Expected: pass.
 
 ### Task 2.2: The drive on the home page
 
@@ -157,31 +157,32 @@
   - the in half from behind the camera at the new `y`, as the world fades in.
 - A request during a drive changes its target. The in half lands on the newest target.
 
-- [ ] Step 1: Unit tests for `jumpAt`: no scroll before the swap; the scroll exactly once at 300 ms; done at 600 ms with alpha 1; a second request at 450 ms lands on the second target; elapsed below 0 or not a number gives nothing.
-- [ ] Step 2: Run. Expected: FAIL.
-- [ ] Step 3: Implement.
-- [ ] Step 4: Run. Expected: pass.
+- [x] Step 1: Unit tests for the pure step (named `jumpStep(jump, now)`, it takes the jump's start and target rather than an elapsed time): no scroll in the out half; the scroll exactly once at the swap, then in from behind; done at the drive's end fully shown, and a jump whose frames were missed still lands; a new target before the swap is where it lands, one after it moves the page again; `requestJump` goes to the world while it runs and otherwise jumps the page at once (reduced motion, no WebGL); a world that goes leaves a newer world's handler in place (`clearJumpHandler(own)`, for StrictMode and a lost GPU context). `tests/worldJump.test.js`, 6 tests.
+- [x] Step 2: Run. Expected: FAIL.
+- [x] Step 3: Implement. `requestJump(y, onArrive)` takes a callback for the focus move; `homeWorld` clamps `y` to the page's scroll height, and with no `renderer.lastCamera` yet it jumps the page at once.
+- [x] Step 4: Run. Expected: pass.
 
 ### Task 2.3: The rail's buttons and the Chapters list
 
 **Files:** `src/world/JourneyRail.jsx`, `src/world/WorldLayer.jsx`; Tests: `tests/JourneyRail.test.jsx`, `e2e/worldjump.spec.js` (new).
 
-- [ ] Step 1: Unit tests:
-  - with a fine pointer, each stop is a button named "Go to <stop>"; with a coarse pointer, none are;
+- [x] Step 1: Unit tests (`tests/JourneyRail.test.jsx`, 8):
+  - with a fine pointer, each stop has a mark that jumps to it; with a coarse pointer, none are drawn. Changed while building: the marks are for the pointer only (`aria-hidden`, out of the tab order), and the Chapters list is the one way for keyboards and screen readers, so a screen reader does not hear every stop twice, once as a mark and once in the list;
   - marks are at least 24 px apart where the stops are closer, and in order;
   - Chapters toggles `aria-expanded` and lists every stop, then Start a project;
   - choosing calls `requestJump` with that stop's `y`, closes the list and returns focus;
   - Escape closes the list.
-- [ ] Step 2: e2e (`?world=1`, door a, desktop and 375×812):
-  - jumping from the gate to the third service rests on it, with its words visible and `data-active-stop` its name;
+- [x] Step 2: e2e (`?world=1`, door a, desktop and 375×812), `e2e/worldjump.spec.js`, 7 tests:
+  - jumping from the gate to the third service rests on it, with its words visible and `data-active-stop` its name (Custom Web Development; the drive's halves are checked in order, `out` then `in`, rather than by timing, since the cloud's software WebGL can take a frame longer than a half; the timing is the unit tests');
   - the canvas's opacity is back to 1 within 1 s;
+  - a mark click lands on its stop (Founders Helm);
   - focus is on the stop's heading;
   - Start a project lands on the brief;
   - with no door, the list holds only the opening's stops;
   - axe passes with the list open.
-- [ ] Step 3: Run. Expected: FAIL.
-- [ ] Step 4: Implement. Mark each stop's heading as its focus target (`tabIndex={-1}`, focused with `preventScroll` after the in half).
-- [ ] Step 5: Run the unit suite; the e2e on Chris's machine. Expected: pass.
+- [x] Step 3: Run. Expected: FAIL.
+- [x] Step 4: Implement. Each stop's heading is its focus target: `tabindex="-1"` is set when it is focused (with `preventScroll`), on arrival. The list closes on Escape (focus back to Chapters) and on a pointer down outside it.
+- [x] Step 5: Run the unit suite; the e2e. Expected: pass. Ran on the cloud Chrome (its software WebGL runs the world specs); Chris's machine still owed with the rest of `test:e2e`.
 
 ### Task 2.4: Readable stops
 
@@ -189,18 +190,21 @@
 
 **Interfaces — Produces:** `renderer.setWordsRect(rect | null)`, a screen rect in device pixels. The flight's fragment shader multiplies alpha by 0.25 inside it. Road, ground and landmark glyphs are unchanged. `homeWorld` sets the rect from the current stop's `data-world-words` box while a flight plays, and clears it otherwise.
 
-- [ ] Step 1: Tests: the rect is the words box in device pixels at DPR 1 and 2; it is null when no flight plays or no stop is current.
-- [ ] Step 2: e2e: at MVP Sprints at 1024×768, halfway through its flight, the words box's text stays at WCAG AA contrast against what is behind it (pixel sample with `e2e/pixels.js`); outside the box the flight draws as before.
-- [ ] Step 3: Run. Expected: FAIL.
-- [ ] Step 4: Implement.
-- [ ] Step 5: Run. Expected: pass. Code world canvas chunk still within its 9 kB line.
+**As built (2026-11-26):** the rect is passed per frame, `renderer.render(…, { words })`, in clip space (`src/world/wordsRect.js`: `wordsRectNdc`, padded 12 px, y up; `NO_WORDS` when there is no box, an empty box or one off screen), so device pixel ratio never enters it. The dimming is in the flight's **vertex** shader (`uWordsRect`, `uWordsDim` = `WORDS_DIM` 0.25), because the fragment shader is shared with the plain site's field; it dims each glyph whose projected centre is inside the rect. The `data-world-words` marks are on the word boxes in the chapter components themselves (`ServiceChapters.jsx`, `ProductChapter.jsx`, `DoorBIntro.jsx`, `TemplateChapter.jsx`, `Builder.jsx`); `WorldRoadChapters.jsx` only places them. `canvas.dataset.wordsRect` carries the rect for the e2e.
+
+- [x] Step 1: Tests (`tests/wordsRect.test.js`, 3): the rect is the box in clip space, padded, y up; nothing is dimmed for no box, an empty box or a box off screen; the dim is a quarter.
+- [x] Step 2: e2e: at MVP Sprints, while its code flies, the canvas's words rect is the words box (padded) and it is gone once the flight ends. Changed while building: the pixel-contrast sample was dropped, because the cloud's software WebGL draws the flight too unevenly frame to frame for a contrast number to mean anything; in its place a before/after screenshot at 800×600 and at 1024×768, halfway through the flight, shown to Chris.
+- [x] Step 3: Run. Expected: FAIL.
+- [x] Step 4: Implement.
+- [x] Step 5: Run. Expected: pass. The canvas has had no line of its own since W7 joined it to the layer: the line is "code world layer and canvas", 17 kB. With all of Phase 2 in it, it measured 18.81 kB; the rail (only ever shown on the home page) now loads as its own chunk when the home page first shows it (`lazy` in `WorldLayer.jsx`, `JourneyRail` 2.52 kB under "any other script chunk", 12 kB), and `spreadMarks` lives with it in `railMarks.js`: the layer is 16.88 kB of 17 kB, no limit raised. That leaves about 0.1 kB of room on the line: the next change to the layer will need its own saving or a recorded decision.
 
 ### Task 2.5: Gates and record
 
-- [ ] Step 1: `npm run verify`; `npm run test:e2e` (world specs on Chris's machine). Expected: all pass.
-- [ ] Step 2: Lighthouse 12 on `/`, phone and desktop, world on and off: no regression in LCP, CLS or TBT; accessibility and SEO 100.
+- [x] Step 1: `npm run verify`; `npm run test:e2e` (world specs on Chris's machine). Expected: all pass. Result: verify exit 0 (575/575 unit, 72 files); e2e 264/264 on the cloud Chrome (its software WebGL runs the world specs); Chris's machine still owed.
+- [x] Step 2: Lighthouse 12 on `/`, phone and desktop, world on and off: no regression in LCP, CLS or TBT; accessibility and SEO 100. Result, against an unchanged `8669d8f` build on the same machine: accessibility and SEO 100 every run; CLS 0 phone, 0.003 desktop, both builds. Desktop world on and off, and phone world off: the same both ways. Phone world on (software WebGL under a 4× slowed CPU, five runs each): median TBT 1,919 ms against 1,411 ms before, LCP 3.88 s against 3.84 s, but the runs spread 1,220–2,208 ms and 1,244–1,926 ms, the long tasks are the same tasks in both builds, and at the gate Phase 2's frame code does nothing (no jump, no flight). Not recorded as "no regression": Step 3 on a real phone decides it.
 - [ ] Step 3: Chris, on his iPhone (Safari) and desktop, `?meter=1`: two full scrolls of the business road and ten jumps. iPhone median at the display's refresh and p95 at most 25 ms; desktop no regression. These are also the numbers the case study (Phase 3) and W8 need.
-- [ ] Step 4: Blueprint row with the real output. Stop for Chris's review and commit.
+- [x] Step 4: Blueprint row with the real output.
+- [ ] Step 5: Stop for Chris's review and commit.
 
 ---
 

@@ -1,5 +1,5 @@
 // @ts-check
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import ScrollEngine from '../scroll/ScrollEngine.jsx';
 import { useDoor } from '../door/DoorProvider.jsx';
@@ -9,12 +9,18 @@ import { readCapabilityEnv } from '../field/environment.js';
 import WorldCanvas, { WORLD_SOURCES_APPROVED } from './WorldCanvas.jsx';
 import { routeFor } from './route.js';
 import { buildTrack, measureSections } from './worldTrack.js';
-import JourneyRail from './JourneyRail.jsx';
 import { journeyLength, railStops } from './rail.js';
 import { markWorldFailed, useWorldPage } from './worldSwitch.js';
 import { useIsomorphicLayoutEffect } from '../ssr/useHydrated.js';
 import { stretchFor } from './stretches.js';
 import { createSurroundings } from './surroundings.js';
+
+/**
+ * The journey rail, in a chunk of its own (2026-11-26, Phase 2): it only ever shows on the home page,
+ * once the page is measured, and with its jumps (the marks and the Chapters list) it is most of what
+ * Phase 2 added; the inner pages, which mount this layer too, no longer download it.
+ */
+const JourneyRail = lazy(() => import('./JourneyRail.jsx'));
 
 /** The field's device tiers, as the world's glyph budgets name them. */
 const TIERS = /** @type {const} */ ({ low: 'low', medium: 'mid', high: 'high' });
@@ -63,7 +69,7 @@ export default function WorldLayer() {
   // changes (chapters loading, a door taken), and for each new route.
   const trackRef = useRef(/** @type {import('./homeWorld.js').TrackState | null} */ (null));
   // The journey rail (W4): its stops from the measured page, the visitor's place along it.
-  const [rail, setRail] = useState(/** @type {Array<{ name: string, from: number }>} */ ([]));
+  const [rail, setRail] = useState(/** @type {import('./rail.js').RailStop[]} */ ([]));
   const lengthRef = useRef(1);
   const getRailProgress = useCallback(() => window.scrollY / lengthRef.current, []);
   useEffect(() => {
@@ -124,7 +130,11 @@ export default function WorldLayer() {
     <>
       <ScrollEngine enabled />
       <WorldCanvas tier={tier} home={home} onMeter={showMeter ? setReport : undefined} onFail={markWorldFailed} />
-      {isHome && rail.length > 0 && <JourneyRail stops={rail} getProgress={getRailProgress} />}
+      {isHome && rail.length > 0 && (
+        <Suspense fallback={null}>
+          <JourneyRail stops={rail} getProgress={getRailProgress} />
+        </Suspense>
+      )}
       {showMeter && (
         <p
           data-frame-meter

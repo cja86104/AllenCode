@@ -1,6 +1,7 @@
 // @ts-check
 import { GLYPH_FRAGMENT_SHADER } from '../field/shaders.js';
 import { FLIGHT_VERTEX_SHADER, WORLD_VERTEX_SHADER } from './worldShaders.js';
+import { NO_WORDS, WORDS_DIM } from './wordsRect.js';
 import { viewProjectionFor } from './matrix.js';
 
 /** @typedef {import('./shapes.js').Shape} Shape */
@@ -115,6 +116,7 @@ export function createWorldRenderer(canvas, atlas) {
     up: flightUniform('uUp'),
     lift: flightUniform('uLift'),
     fade: flightUniform('uFade'),
+    wordsRect: flightUniform('uWordsRect'),
   };
   const u = {
     viewProjection: uniform('uViewProjection'),
@@ -174,6 +176,7 @@ export function createWorldRenderer(canvas, atlas) {
   gl.useProgram(flightProgram);
   gl.uniform1i(flightUniform('uAtlas'), 0);
   gl.uniform2f(flightUniform('uGrid'), atlas.columns, atlas.rows);
+  gl.uniform1f(flightUniform('uWordsDim'), WORDS_DIM);
 
   // The flight: start xyz, end xyz, meta (glyph, original, seed, row), source and landing colours.
   const flightVao = gl.createVertexArray();
@@ -246,14 +249,17 @@ export function createWorldRenderer(canvas, atlas) {
      *   passed?: number,
      *   underlay?: (frame: { viewProjection: Float32Array, fogNear: number, fogFar: number, camera: Camera, time: number, width: number, height: number }) => void,
      *   haze?: { color: [number, number, number], tint: number },
+     *   words?: readonly [number, number, number, number],
      * }} [options] Ranges of glyphs drawn at `amount` of their alpha (at most `MAX_FADES`); one glyph (by
      *   its place in the buffer) drawn at `position`, shown or hidden (an unfinished file's cursor); and
      *   the flight set by `setFlight`, at its progress and fade; and how many road landmarks the visitor
      *   has passed (each shows its picture instead of its code); a layer drawn beneath the glyphs,
      *   after the canvas is cleared (the ground, 2026-11-16); and the colour far code sinks into as it
-     *   fades, with how far it goes (the hollow mist, 2026-11-17; none, the code just fades).
+     *   fades, with how far it goes (the hollow mist, 2026-11-17; none, the code just fades); and the
+     *   box, in clip space, behind which the flight is dimmed (a stop's words, 2026-11-26, `wordsRect.js`;
+     *   none by default).
      */
-    render(camera, time, { fades = [], cursor, flight: flying, passed = 0, underlay, haze } = {}) {
+    render(camera, time, { fades = [], cursor, flight: flying, passed = 0, underlay, haze, words = NO_WORDS } = {}) {
       this.lastCamera = camera;
       const viewProjection = viewProjectionFor(camera, width / height);
       const projScale = 1 / Math.tan((camera.fov * Math.PI) / 360);
@@ -305,6 +311,7 @@ export function createWorldRenderer(canvas, atlas) {
         gl.uniform3fv(f.up, flight.up);
         gl.uniform1f(f.lift, FLIGHT_LIFT);
         gl.uniform1f(f.fade, flying.fade);
+        gl.uniform4f(f.wordsRect, words[0], words[1], words[2], words[3]);
         gl.bindVertexArray(flightVao);
         gl.drawArrays(gl.POINTS, 0, flight.count);
       }

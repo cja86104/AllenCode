@@ -63,7 +63,7 @@ describe('the journey rail (Code World W4.4)', () => {
     const brief = (11 + 3 * (route.road?.stops.length ?? 0)) * h;
     sections.push({ kind: 'end', from: brief - h, to: brief });
     const stops = railStops(route, sections);
-    expect(stops[0]).toEqual({ name: 'Empty file', from: 0 });
+    expect(stops[0]).toMatchObject({ name: 'Empty file', from: 0 });
     expect(stops.map((s) => s.name)).toEqual([
       'Empty file',
       'Into the code',
@@ -85,9 +85,9 @@ describe('the journey rail (Code World W4.4)', () => {
     vi.stubGlobal('requestAnimationFrame', (/** @type {FrameRequestCallback} */ cb) => frames.push(cb));
     vi.stubGlobal('cancelAnimationFrame', () => {});
     const stops = [
-      { name: 'Empty file', from: 0 },
-      { name: 'The workshop', from: 0.5 },
-      { name: 'Shipped', from: 1 },
+      { id: 'empty-file', name: 'Empty file', from: 0, y: 0 },
+      { id: 'workshop', name: 'The workshop', from: 0.5, y: 5000 },
+      { id: 'brief', name: 'Shipped', from: 1, y: 10000 },
     ];
     render(<JourneyRail stops={stops} getProgress={() => progress} />);
     act(() => frames.shift()?.(0));

@@ -87,7 +87,7 @@ export default function Builder() {
   return (
     <section ref={sectionRef} data-chapter="builder" className="relative h-[220vh]">
       <div className="pin-frame sticky top-0 overflow-hidden">
-        <div style={{ left: text.x, top: text.y, width: text.w }} className="absolute">
+        <div data-world-words style={{ left: text.x, top: text.y, width: text.w }} className="absolute">
           <BuilderText compact={viewport.w < DESKTOP_MIN_WIDTH} />
         </div>
         <FlightEditor

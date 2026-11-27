@@ -11,12 +11,17 @@ import { stopForFlight } from './roads.js';
 import { landmarkRect } from './landmark.js';
 import { flightBudgetFor, toWorldFlight } from './worldFlight.js';
 import { readPicture, screenOf } from './screens.js';
+import { driveCamera } from './drive.js';
+import { clearJumpHandler, jumpStep, setJumpHandler } from './jump.js';
+import { glideTo } from '../scroll/glide.js';
+import { NO_WORDS, wordsRectNdc } from './wordsRect.js';
 
 /** @typedef {[number, number, number]} Vec3 */
 /** @typedef {import('./route.js').Route} Route */
 /** @typedef {import('./worldTrack.js').TrackSection} TrackSection */
 /** @typedef {{ track: ReturnType<typeof import('./worldTrack.js').buildTrack>, sections: TrackSection[], version: number }} TrackState */
 /** @typedef {{ data: Uint8ClampedArray, width: number, height: number }} Pixels */
+/** @typedef {{ eye: Vec3, target: Vec3, fov: number }} Camera */
 
 /** The unfinished file's cursor blinks on and off this often, as an editor's does. */
 const BLINK_MS = 530;
@@ -84,6 +89,39 @@ export function createHomeWorld({ renderer, atlas, tier, canvas, scrim, surround
   let resolved = null;
   let placedFor = -1;
   let flightKey = '';
+
+  /**
+   * A jump along the rail while it plays (2026-11-26, Phase 2, `jump.js`): where it is going, when it
+   * started, whether the page has moved yet, the camera it left from, how much of the world showed then,
+   * and who to tell once the page is there.
+   * @type {(import('./jump.js').Jump & { from: Camera, shown: number, onArrive?: () => void }) | null}
+   */
+  let jumping = null;
+  /** How much the ground showed on the last frame (it waits for the world's editor, after the gate). */
+  let groundShown = 0;
+  /** The page's furthest scroll, so a jump never asks for more. @param {number} y */
+  const reachable = (y) => Math.min(Math.max(0, document.documentElement.scrollHeight - window.innerHeight), Math.max(0, y));
+  /** @type {import('./jump.js').JumpHandler} */
+  const jump = (y, onArrive) => {
+    const from = renderer.lastCamera;
+    // Nothing drawn yet to drive out of: the page simply moves.
+    if (!from) {
+      glideTo(reachable(y), { instant: true });
+      onArrive?.();
+      return;
+    }
+    // A new target during a jump is where it lands: before the swap the page has not moved yet; after
+    // it, the page moves again and the camera goes on coming in.
+    if (jumping) {
+      jumping.y = y;
+      jumping.scrolled = false;
+      jumping.onArrive = onArrive;
+      return;
+    }
+    const shown = parseFloat(canvas.style.opacity);
+    jumping = { start: performance.now(), y, scrolled: false, from, shown: Number.isFinite(shown) ? shown : 1, onArrive };
+  };
+  setJumpHandler(jump);
 
   /**
    * Draws a road's world (whole, or as cut around the camera), and finds in the buffer the parts each
@@ -173,6 +211,7 @@ export function createHomeWorld({ renderer, atlas, tier, canvas, scrim, surround
      */
     /** Lets go of the surroundings: the cursor's listener and the ground's layer. */
     destroy() {
+      clearJumpHandler(jump);
       surroundings?.destroy();
     },
 
@@ -186,6 +225,8 @@ export function createHomeWorld({ renderer, atlas, tier, canvas, scrim, surround
       placedFor = -1;
       flightKey = '';
       renderer.setFlight(null);
+      jumping = null;
+      delete canvas.dataset.jump;
     },
 
     /**
@@ -196,8 +237,39 @@ export function createHomeWorld({ renderer, atlas, tier, canvas, scrim, surround
       const road = route.road;
       if (road !== builtFor || (road && Object.keys(read).length !== picturesBuilt)) build(road);
       const viewport = { width: window.innerWidth, height: window.innerHeight };
+      // A jump along the rail (2026-11-26): on ahead out of the world it left as that fades, the page
+      // moved to the stop at the swap, then in from behind the stop as it fades in.
+      /** @type {ReturnType<typeof jumpStep>['drive']} */
+      let coming = null;
+      if (jumping) {
+        const step = jumpStep(jumping, now);
+        if (step.scrollTo !== null) {
+          glideTo(reachable(step.scrollTo), { instant: true });
+          jumping.scrolled = true;
+          const arrive = jumping.onArrive;
+          jumping.onArrive = undefined;
+          arrive?.();
+        }
+        if (step.done || !step.drive) {
+          jumping = null;
+          delete canvas.dataset.jump;
+        } else if (step.drive.half === 'out') {
+          canvas.dataset.jump = 'out';
+          const opacity = jumping.shown * step.drive.alpha;
+          canvas.style.opacity = opacity.toFixed(3);
+          const away = driveCamera(jumping.from, step.drive.travel);
+          surroundings?.frame({ camera: away, now, aspect: viewport.width / viewport.height, shown: groundShown });
+          if (opacity > 0) renderer.render(away, now, { underlay: surroundings?.underlay, haze: surroundings?.haze });
+          else renderer.lastCamera = away;
+          return away;
+        } else {
+          canvas.dataset.jump = 'in';
+          coming = step.drive;
+        }
+      }
       const y = window.scrollY;
-      const camera = state ? state.track.cameraAt(y) : { eye: /** @type {Vec3} */ ([0, 1.6, 7]), target: /** @type {Vec3} */ ([0, 1.6, 0]), fov: 45 };
+      const onTrack = state ? state.track.cameraAt(y) : { eye: /** @type {Vec3} */ ([0, 1.6, 7]), target: /** @type {Vec3} */ ([0, 1.6, 0]), fov: 45 };
+      const camera = coming ? driveCamera(onTrack, coming.travel) : onTrack;
       // The road cut around the camera, and cut again once it has travelled far enough.
       if (surroundings && whole && road && (!cutAt || Math.hypot(camera.eye[0] - cutAt[0], camera.eye[2] - cutAt[1]) > surroundings.recutAfter)) {
         cutAt = [camera.eye[0], camera.eye[2]];
@@ -270,11 +342,15 @@ export function createHomeWorld({ renderer, atlas, tier, canvas, scrim, surround
       });
 
       // The world fades out over the screen before the brief (W4); faded out, it is not drawn at all.
-      const shown = state ? state.track.fadeAt(y) : 1;
+      const shown = (state ? state.track.fadeAt(y) : 1) * (coming ? coming.alpha : 1);
       canvas.style.opacity = shown.toFixed(3);
+      groundShown = editorShown;
       // The ground and the cursor's ripples beneath it all, shown as the world's editor is (2026-11-16).
       surroundings?.frame({ camera, now, aspect: viewport.width / viewport.height, shown: editorShown });
-      if (shown > 0) renderer.render(camera, now, { fades, cursor, flight, passed, underlay: surroundings?.underlay, haze: surroundings?.haze });
+      // While a flight plays at a stop, it is dimmed behind the stop's words (2026-11-26, `wordsRect.js`).
+      const wordsBox = flight && section?.kind === 'rest' && section.stopId ? document.querySelector(`[data-world-stop="${CSS.escape(section.stopId)}"] [data-world-words]`) : null;
+      const words = wordsBox ? wordsRectNdc(wordsBox.getBoundingClientRect(), viewport) : NO_WORDS;
+      if (shown > 0) renderer.render(camera, now, { fades, cursor, flight, passed, underlay: surroundings?.underlay, haze: surroundings?.haze, words });
 
       const data = canvas.dataset;
       data.page = 'home';
@@ -296,6 +372,8 @@ export function createHomeWorld({ renderer, atlas, tier, canvas, scrim, surround
         delete data.restRect;
       }
       data.landed = landed.join(',');
+      if (words !== NO_WORDS) data.wordsRect = words.map((v) => v.toFixed(3)).join(',');
+      else delete data.wordsRect;
       data.editor = editorShown.toFixed(2);
       data.progress = state ? state.track.progressAt(y).toFixed(3) : '0.000';
       if (scrim) scrim.style.opacity = section?.kind === 'rest' ? shown.toFixed(3) : '0';
