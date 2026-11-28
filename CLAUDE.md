@@ -26,6 +26,12 @@ the 3D world's: spec `docs/superpowers/specs/2026-11-27-living-source-2d-design.
 `docs/superpowers/plans/2026-11-27-living-source-phase-*.md`, baseline `docs/living-source/baseline.md`.
 Put no 3D detail in those files and no 2D detail in the 3D world's.
 
+The path bar (Phase 3, `src/pathbar/`) is the world-off site's second row under the nav (from 768 px; a chip in the
+header row below that). It is in every prebuilt page; `index.html`'s pre-paint script marks `html[data-likely-world]`
+where the world will likely run, and CSS keeps the bar hidden there until the world mounts and it unmounts. The home's
+order lists live in `src/data/homeOrder.js`, so the bar reads them without the scenes. Pinned chapters keep their words
+below the header with `useWordsFloor` (`src/pathbar/pathBarStore.js`); a new pinned chapter should too.
+
 ## Validation
 
 This repo uses npm. The scripts that exist in `package.json`:

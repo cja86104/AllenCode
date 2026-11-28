@@ -156,14 +156,14 @@ worldjump 85/85. Ruling: the move re-cut the chunks (roads.js imported the two s
 - Produces: `PATH_BAR_FLOOR_PX = 112` and `wordsRise(text, h, floor = NAV_FLOOR_PX)` in `ServiceChapters.jsx`;
   the chapter passes `PATH_BAR_FLOOR_PX` when the bar shows and the viewport is at least 768 px wide.
 
-- [ ] **Step 1: Write the failing unit tests** in `tests/PathBar.test.jsx` (MemoryRouter + DoorProvider):
+- [x] **Step 1: Write the failing unit tests** in `tests/PathBar.test.jsx` (MemoryRouter + DoorProvider):
   `names the place` (nav named "Where you are", an `ol`, `allencode` and `00_origin` at `/`);
   `inner page` (`/services` shows `pages` and `services`, `services` has `aria-current="location"`);
   `current file` (`currentId="02_our-work/underfire-ai"` shows `02_our-work` and the chip `underfire-ai`);
   `phone chip text` (`02 / underfire-ai`); `segments are disclosures` (each non-root segment is a button with
   `aria-expanded="false"`). Extend `tests/ServiceChapters.test.jsx`: `wordsRise` with floor 112 never rises
   above 112 px.
-- [ ] **Step 2: Write the failing e2e tests** in `e2e/pathbar.spec.js`:
+- [x] **Step 2: Write the failing e2e tests** in `e2e/pathbar.spec.js`:
   - `on every page`: for `/`, `/services`, `/products`, `/products/underfire-ai`, `/templates`, `/about`,
     `/contact`, `[data-path-bar] nav[aria-label="Where you are"]` is visible at 1280 × 720.
   - `prebuilt`: against `npm run preview`, the raw HTML of `/` and `/services` contains `data-path-bar` and
@@ -173,12 +173,12 @@ worldjump 85/85. Ruling: the move re-cut the chunks (roads.js imported the two s
     after load the bar is not in the DOM and the journey rail is.
   - `phone header fits at 360`: at 360 × 740 the chip is visible, the bar row is hidden, the header is one
     row (height under 72 px), `document.documentElement.scrollWidth <= 360`.
-- [ ] **Step 3: Extend `e2e/chaptertext.spec.js`:** the existing `words stay below the fixed navigation`
+- [x] **Step 3: Extend `e2e/chaptertext.spec.js`:** the existing `words stay below the fixed navigation`
   check already measures `header`'s bottom; add the plain fixture at 1280 × 720 and 768 × 1024 so it runs
   with the bar, for every service chapter, and add the gate (static, reduced motion) and the door B intro.
-- [ ] **Step 4: Run** `npx vitest run tests/PathBar.test.jsx` and
+- [x] **Step 4: Run** `npx vitest run tests/PathBar.test.jsx` and
   `npx playwright test e2e/pathbar.spec.js e2e/chaptertext.spec.js` — expect FAIL.
-- [ ] **Step 5: Implement.**
+- [x] **Step 5: Implement.**
   - `PathBar.jsx` as above: bar row `hidden md:flex h-10 border-t border-white/10`, segments `mono text-[11px]
     uppercase tracking-widest`, separators `/` `aria-hidden`; buttons at least 44 px tall by padding, not by
     the row (the row is 40 px; the hit area extends with `py-3 -my-1`).
@@ -189,9 +189,25 @@ worldjump 85/85. Ruling: the move re-cut the chunks (roads.js imported the two s
   - `index.css`: `html[data-world-ahead] [data-path-bar], html[data-world-ahead] [data-path-chip] { display: none; }`.
   - Floor in `ServiceChapters.jsx`; Gate static section `pt-24` → `pt-32`. Any other chapter that fails
     Step 3 takes the same floor parameter in its words placement.
-- [ ] **Step 6: Run** the Step 4 commands — expect PASS; then `npm run verify` — expect clean, and note the
+- [x] **Step 6: Run** the Step 4 commands — expect PASS; then `npm run verify` — expect clean, and note the
   entry script size it reports.
-- [ ] **Step 7: Stop for Chris.**
+- [x] **Step 7: Stop for Chris.**
+
+**Done 2026-11-28.** Unit 640/640 (`tests/PathBar.test.jsx` 8, `tests/pathBarStore.test.js` 1, three new in
+`tests/ServiceChapters.test.jsx`, each red first); `npm run verify` exit 0, entry script 150.50 kB (was 148.45), CSS 8.24,
+Home 13.38; e2e 288/288. Rulings (each with its cost in the ledger):
+- The pre-paint mark is `data-likely-world`: `e2e/worldhome.spec.js` holds that the prebuilt HTML has no `data-world`.
+- `src/pathbar/pathBarStore.js` tells a pinned chapter the bar is shown (`ServiceChapters` renders outside the router
+  in its tests); `useWordsFloor(width)` gives every pinned chapter's words the header's bottom as their highest place
+  (services, products, door B's opening, templates, the builder; the pinned audit pads its frame). The plan named
+  services only; at 768 px the phone layout put words at 102 px, under the bar.
+- With the bar, seven scope items need 40 px more frame: Immersive takes the compact form at 1024 x 768 and
+  1280 x 720; the full list is checked at 1024 x 808 and 1280 x 740.
+- The bar row is 44 px; the header is 112 px from 768 to 1279 px. Gate static padding `pt-24 md:pt-32`.
+- The phone chip: below 400 px it shows the file alone (its parent stays for screen readers), so `underfire-ai`
+  reads whole at 360 px; the header row's gap before the menu button is 12 px (was 16).
+- `e2e/nav.spec.js` measures the logo's row as `header > div:not([data-path-bar])`.
+- Budget: 1.50 kB left for Tasks 3–5. Task 3 loads the menus and the sheet on first press.
 
 ### Task 3: The menus and the phone sheet
 
@@ -211,22 +227,34 @@ worldjump 85/85. Ruling: the move re-cut the chunks (roads.js imported the two s
   and the phone sheet: `<div data-path-sheet>` under the header, full width, `max-h-[70vh] overflow-y-auto`,
   every home branch with its files nested, then the pages.
 
-- [ ] **Step 1: Write the failing unit tests:** `branch menu lists branches` (clicking `02_our-work` sets
+- [x] **Step 1: Write the failing unit tests:** `branch menu lists branches` (clicking `02_our-work` sets
   `aria-expanded="true"`, `aria-controls` names a list of 8 rows); `file menu lists the branch's files`
   (chip `underfire-ai` opens 4 rows, `underfire-ai` row current); `Escape closes and returns focus`;
   `outside click closes`; `route change closes` (navigate in the MemoryRouter while open); `choosing calls
   onGo with the id and closes`; `phone sheet lists everything` (chip opens a sheet with 8 branches, 9 + 4 +
   8 files across them (counts read from the data, not written in), 5 pages).
-- [ ] **Step 2: Extend e2e:** in `e2e/pathbar.spec.js`, `keyboard`: Tab to `02_our-work`, Enter opens, the
+- [x] **Step 2: Extend e2e:** in `e2e/pathbar.spec.js`, `keyboard`: Tab to `02_our-work`, Enter opens, the
   first row takes focus on ArrowDown, Escape returns focus; `browser back closes the sheet` at 390 × 844.
   In `e2e/a11y.spec.js`, run axe with a branch menu open (1280 × 720) and with the sheet open (390 × 844),
   plain fixture; no violations.
-- [ ] **Step 3: Run** both suites — expect FAIL.
-- [ ] **Step 4: Implement.** Menus open below their segment, `bg-[#0a0a0a] border border-white/10`, opacity and
+- [x] **Step 3: Run** both suites — expect FAIL.
+- [x] **Step 4: Implement.** Menus open below their segment, `bg-[#0a0a0a] border border-white/10`, opacity and
   4 px rise over 500 ms on the one ease, none under reduced motion. Arrow keys move between rows; Home/End
   to the ends; Tab leaves and closes.
-- [ ] **Step 5: Run** both suites and `npm run verify` — expect PASS and clean.
-- [ ] **Step 6: Stop for Chris.**
+- [x] **Step 5: Run** both suites and `npm run verify` — expect PASS and clean.
+- [x] **Step 6: Stop for Chris.**
+
+**Done 2026-11-28.** Unit 649/649 (nine new in `tests/PathBar.test.jsx`, each red first); `npm run verify` exit 0,
+entry script 151.01 kB, the menus' own chunk 1.58 kB (loaded on the first press), CSS 8.42 kB; e2e 292/292 (keyboard,
+a page reached from its menu, the sheet closed by Back, axe with a menu and the sheet open). Rulings:
+- The menus, the sheet, their rows and their key and outside-press handling (`usePanelKeys`) live in `PathMenu.jsx`,
+  loaded on first press; the entry keeps only `useDisclosure` (open for the address it opened at, so a route change
+  closes it). With rows built in the entry it reached 151.52 kB, leaving too little for Tasks 4 and 5.
+- `PathMenu` takes the segment and where the visitor is and builds its own rows (the plan passed `items`).
+- The keyboard check runs on `/services` (`pages`): the home's path stays at `00_origin` until Task 5.
+- The sheet's group labels are white at 60 % (axe: 45 % and 35 % failed contrast at 11 px).
+- Budget for Tasks 4 and 5: 0.99 kB. Task 4 loads `go.js` on the first choice; Task 5 measures in the home chunk
+  and tells the bar through `pathBarStore.js`.
 
 ### Task 4: Going to a file
 

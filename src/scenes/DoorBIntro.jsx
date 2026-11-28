@@ -10,6 +10,7 @@ import { chapterTimeline } from './chapterTimeline.js';
 import { CHAPTER_BODY, CHAPTER_GRID, CHAPTER_LABEL, CHAPTER_TITLE } from './chapterType.js';
 import { useSectionProgress } from './useSectionProgress.js';
 import { DESKTOP_MIN_WIDTH, EditorPanel, FlightEditor, flightGeometry, useImageFlight } from './flight.jsx';
+import { useWordsFloor } from '../pathbar/pathBarStore.js';
 
 /** @typedef {import('../content/excerpts/index.js').Excerpt} Excerpt */
 /** @typedef {{ src: string, poster: string, alt: string }} Loop */
@@ -46,6 +47,8 @@ function FlightIntro({ excerpt, loop }) {
   const sectionRef = useRef(/** @type {HTMLElement | null} */ (null));
   const { mode } = useField();
   const { progress, visible, viewport } = useSectionProgress(sectionRef, true);
+  // Below the path bar while it shows (Living Source Phase 3).
+  const wordsFloor = useWordsFloor(viewport.w);
   const screen = { src: loop.poster, alt: loop.alt, ...LOOP_SIZE };
   const { text, sourceBox, codeScale, targetBox } = flightGeometry(excerpt.code, screen, viewport.w, viewport.h);
   const timeline = chapterTimeline(progress);
@@ -57,7 +60,7 @@ function FlightIntro({ excerpt, loop }) {
   return (
     <section ref={sectionRef} data-door-b-intro className="relative h-[220vh]">
       <div className="pin-frame sticky top-0 overflow-hidden">
-        <div data-world-words style={{ left: text.x, top: text.y, width: text.w }} className="absolute">
+        <div data-world-words style={{ left: text.x, top: Math.max(text.y, wordsFloor), width: text.w }} className="absolute">
           <IntroText compact={viewport.w < DESKTOP_MIN_WIDTH} />
         </div>
         <FlightEditor

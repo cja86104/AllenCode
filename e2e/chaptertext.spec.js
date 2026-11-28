@@ -30,8 +30,12 @@ const CHAPTERS = [
     door: 'a',
     section: '[data-chapter="immersive-web-experiences"]',
     screens: [
-      { width: 1024, height: 768 },
-      { width: 1280, height: 720 },
+      // With the path bar under the nav (Living Source Phase 3) the full list needs 40 px more frame: 808 px
+      // at 1024 px wide, 740 px from 1152 px; the two screens that showed it all before take the compact form.
+      { width: 1024, height: 808 },
+      { width: 1280, height: 740 },
+      { width: 1024, height: 768, compact: true },
+      { width: 1280, height: 720, compact: true },
       { width: 1024, height: 700, compact: true },
       { width: 1024, height: 640, compact: true },
       { width: 1024, height: 600, compact: true },
@@ -116,3 +120,63 @@ for (const screen of [
     }
   });
 }
+
+/**
+ * With the path bar under the nav (Living Source Phase 3, from 768 px wide), every service chapter's words,
+ * door B's opening and the gate stay below the header's real bottom, pinned and, for the gate, static.
+ */
+for (const screen of [
+  { width: 1280, height: 720 },
+  { width: 768, height: 1024 },
+]) {
+  test(`with the path bar at ${screen.width} x ${screen.height}: every chapter's words stay below it`, async ({ page }) => {
+    await page.setViewportSize(screen);
+    for (const door of /** @type {const} */ (['a', 'b'])) {
+      await openWithDoor(page, door);
+      await page.locator('[data-chapter="brief"]').waitFor({ state: 'attached' });
+      await page.waitForLoadState('networkidle');
+      // Every pinned chapter of the door (a pinned frame is its section's own child); static sections scroll
+      // past the header and are left out.
+      const sections = '[data-chapter]:not([data-chapter="gate"]):has(> .pin-frame), [data-product]:has(> .pin-frame), [data-door-b-intro]:has(> .pin-frame), [data-template-chapter]:has(> .pin-frame)';
+      const count = await page.locator(sections).count();
+      expect(count, `door ${door}: chapters to check`).toBeGreaterThan(0);
+      for (let i = 0; i < count; i += 1) {
+        const section = page.locator(sections).nth(i);
+        await expect
+          .poll(() =>
+            section.evaluate((el) => {
+              const top = el.getBoundingClientRect().top;
+              if (Math.abs(top) > 2) window.scrollTo({ top: top + window.scrollY, behavior: 'instant' });
+              return Math.abs(el.getBoundingClientRect().top) <= 2;
+            }),
+          )
+          .toBe(true);
+        const m = await section.evaluate((el) => {
+          const words = el.querySelector('[data-world-words]') ?? el.querySelector('h2')?.parentElement;
+          const header = /** @type {HTMLElement} */ (document.querySelector('header')).getBoundingClientRect().bottom;
+          const name = el.getAttribute('data-chapter') ?? el.getAttribute('data-product') ?? (el.hasAttribute('data-door-b-intro') ? 'door-b-intro' : 'templates');
+          return { name, top: words?.getBoundingClientRect().top ?? -1, header };
+        });
+        expect(m.top, `${m.name}: below the header`).toBeGreaterThanOrEqual(m.header);
+      }
+    }
+  });
+}
+
+test('with the path bar and reduced motion, the gate’s words start below the header', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  for (const screen of [
+    { width: 1280, height: 720 },
+    { width: 768, height: 1024 },
+  ]) {
+    await page.setViewportSize(screen);
+    await page.goto('/');
+    const gate = page.locator('[data-chapter="gate"]');
+    await gate.waitFor({ state: 'attached' });
+    const m = await gate.evaluate((el) => ({
+      top: (el.querySelector('p') ?? el).getBoundingClientRect().top,
+      header: /** @type {HTMLElement} */ (document.querySelector('header')).getBoundingClientRect().bottom,
+    }));
+    expect(m.top, `${screen.width} x ${screen.height}`).toBeGreaterThanOrEqual(m.header);
+  }
+});

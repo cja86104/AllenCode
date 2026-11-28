@@ -28,3 +28,18 @@ for (const door of /** @type {const} */ (['a', 'b'])) {
     expect(await seriousViolations(page)).toEqual([]);
   });
 }
+
+test('no serious or critical accessibility violations with a path bar menu open, or the phone’s sheet (Living Source Phase 3)', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.goto('/services');
+  await page.getByRole('navigation', { name: 'Where you are' }).getByRole('button', { name: 'pages' }).click();
+  await expect(page.locator('[data-path-row]').first()).toBeVisible();
+  await page.waitForTimeout(600);
+  expect(await seriousViolations(page)).toEqual([]);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/services');
+  await page.locator('[data-path-chip]').click();
+  await expect(page.locator('[data-path-sheet]')).toBeVisible();
+  await page.waitForTimeout(600);
+  expect(await seriousViolations(page)).toEqual([]);
+});

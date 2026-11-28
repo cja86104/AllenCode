@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Magnetic from './Magnetic';
 import { useDoor } from '../door/DoorProvider.jsx';
 import PlainViewToggle from './PlainViewToggle.jsx';
+import PathBar, { PathChip } from '../pathbar/PathBar.jsx';
 
 const LINKS = Object.freeze([
   { to: '/products', label: 'Products' },
@@ -74,7 +75,7 @@ export default function Nav({ overlay = false }) {
     <header
       className={`${overlay ? 'fixed inset-x-0' : 'sticky'} top-0 z-50 border-b border-white/10 bg-[#0a0a0a]/80 backdrop-blur-md`}
     >
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-10">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-6 py-4 lg:px-10">
         <Link to="/" viewTransition onClick={() => setOpen(false)} className="mono shrink-0 whitespace-nowrap text-sm font-bold uppercase tracking-[0.2em] text-white">
           Allen<span className="text-orange-500">Code</span> Co.
         </Link>
@@ -106,7 +107,9 @@ export default function Nav({ overlay = false }) {
           </Magnetic>
         </nav>
 
-        <div className="flex items-center gap-4 xl:hidden">
+        <div className="flex min-w-0 items-center gap-3 xl:hidden">
+          {/* The path on a phone (Living Source Phase 3): one chip, below 768 px; from there the bar's row. */}
+          <PathChip />
           {/* Below the full bar, the primary action beside the menu button from 640px (2026-11-26: it was
               one tap down on every screen under 1280px); on phones it stays in the menu. Only one copy
               of it is shown at any width: this one is hidden from 1280px, where the full bar has it. */}
@@ -123,6 +126,9 @@ export default function Nav({ overlay = false }) {
           </button>
         </div>
       </div>
+
+      {/* The path bar (Living Source Phase 3): the world-off site's second row, from 768 px. */}
+      <PathBar />
 
       <AnimatePresence>
         {open && (

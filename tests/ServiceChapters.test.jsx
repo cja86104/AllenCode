@@ -1,8 +1,9 @@
 // @ts-check
 import { describe, expect, it } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
-import ServiceChapters, { chapterShows, NAV_FLOOR_PX, SERVICE_CHAPTERS, ServiceChapterFor, ServiceText, wordsCompact, wordsRise } from '../src/scenes/ServiceChapters.jsx';
+import ServiceChapters, { chapterShows, NAV_FLOOR_PX, PATH_BAR_FLOOR_PX, SERVICE_CHAPTERS, ServiceChapterFor, ServiceText, wordsCompact, wordsRise, wordsTop } from '../src/scenes/ServiceChapters.jsx';
 import { chapterLayout } from '../src/scenes/flight.jsx';
+import { setPathBarShown } from '../src/pathbar/pathBarStore.js';
 import { services } from '../src/data/services.js';
 import { serviceScreens } from '../src/data/serviceScreens.js';
 import { excerpts, getExcerpt } from '../src/content/excerpts/index.js';
@@ -153,6 +154,29 @@ describe('ServiceChapters', () => {
     }
   });
 
+  it('with the path bar under the nav, the words never sit or rise above its bottom (Living Source Phase 3)', () => {
+    expect(PATH_BAR_FLOOR_PX).toBe(112);
+    for (const [w, h] of [[1024, 700], [1024, 640], [1024, 600], [1280, 600], [1280, 590], [1280, 720]]) {
+      const { text } = chapterLayout(w, h);
+      const top = wordsTop(text, PATH_BAR_FLOOR_PX);
+      expect(top, `${w} x ${h}: placed below the bar`).toBeGreaterThanOrEqual(PATH_BAR_FLOOR_PX);
+      expect(top, `${w} x ${h}: never lower than the layout puts them`).toBeGreaterThanOrEqual(text.y);
+      const highest = Number(/clamp\((-?[\d.]+)px/.exec(wordsRise({ y: top }, h, PATH_BAR_FLOOR_PX))?.[1]);
+      expect(top + highest, `${w} x ${h}: risen, still below the bar`).toBeGreaterThanOrEqual(PATH_BAR_FLOOR_PX - 0.05);
+    }
+    // Without the bar the words keep the layout's place.
+    expect(wordsTop({ y: 102.4 }, NAV_FLOOR_PX)).toBe(102.4);
+  });
+
+  it('with the path bar, a long scope takes the compact form 40 px of frame sooner', () => {
+    // Seven items at 1024 px wide need a 768 px frame under the nav alone, not under the bar too.
+    expect(wordsCompact(7, 1024, 768)).toBe(false);
+    expect(wordsCompact(7, 1024, 768, PATH_BAR_FLOOR_PX)).toBe(true);
+    expect(wordsCompact(7, 1024, 808, PATH_BAR_FLOOR_PX)).toBe(false);
+    expect(wordsCompact(7, 1024, 807, PATH_BAR_FLOOR_PX)).toBe(true);
+    expect(wordsCompact(4, 1024, 600, PATH_BAR_FLOOR_PX)).toBe(false);
+  });
+
   it('a long scope takes the compact form on a short desktop frame; four items never do; phones always do (final review, 2026-11-27)', () => {
     const immersive = serviceFor('immersive-web-experiences').scope.length;
     expect(immersive).toBe(7);
@@ -229,6 +253,25 @@ describe('ServiceChapters', () => {
     render(<ServiceChapters includeDrafts />);
     const audit = /** @type {HTMLElement} */ (document.querySelector('[data-chapter="technical-audits"]'));
     expect(audit.querySelectorAll('[data-audit-line]')).toHaveLength(23);
+  });
+
+  it('with the path bar, the pinned audit pads its frame by the header, so its stacked words start below it (Living Source Phase 3)', () => {
+    const width = window.innerWidth;
+    try {
+      window.innerWidth = 768;
+      setPathBarShown(true);
+      const { unmount } = render(<ServiceChapterFor slug="technical-audits" excerptId="service-audit" includeDrafts={false} />);
+      const frame = /** @type {HTMLElement} */ (document.querySelector('[data-chapter="technical-audits"] .pin-frame'));
+      expect(frame.style.paddingTop).toBe(`${PATH_BAR_FLOOR_PX}px`);
+      unmount();
+      setPathBarShown(false);
+      render(<ServiceChapterFor slug="technical-audits" excerptId="service-audit" includeDrafts={false} />);
+      const plain = /** @type {HTMLElement} */ (document.querySelector('[data-chapter="technical-audits"] .pin-frame'));
+      expect(plain.style.paddingTop).toBe('');
+    } finally {
+      window.innerWidth = width;
+      setPathBarShown(false);
+    }
   });
 
   it('with drafts off, the approved code still shows in all seven chapters', () => {

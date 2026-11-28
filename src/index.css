@@ -184,6 +184,25 @@ html.lenis {
   }
 }
 
+/* Living Source Phase 3: the path bar is the world-off site's. Where the world is likely to run (index.html's
+   script, then App.jsx), it never shows, so it cannot flash before the world arrives. */
+html[data-likely-world] [data-path-bar],
+html[data-likely-world] [data-path-chip] {
+  display: none;
+}
+
+/* The path bar's menus rise in over 500 ms on the one ease (PathMenu.jsx; none with reduced motion). */
+@keyframes path-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* Code World W6: an inner page's stretch of road, held before the first paint (index.html's script),
    until the world's own spacer (App.jsx) takes its place in the same frame. */
 html[data-stretch-ahead] #main:not(:has(> [data-world-stretch]))::before {

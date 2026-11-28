@@ -11,6 +11,7 @@ import MediaLoop from '../components/MediaLoop.jsx';
 import { useSectionProgress } from './useSectionProgress.js';
 import { DESKTOP_MIN_WIDTH, EditorPanel, FlightEditor, flightGeometry, useImageFlight } from './flight.jsx';
 import { CHAPTER_BODY, CHAPTER_GRID, CHAPTER_LABEL, CHAPTER_TITLE } from './chapterType.js';
+import { useWordsFloor } from '../pathbar/pathBarStore.js';
 
 /** @typedef {import('../content/excerpts/index.js').Excerpt} Excerpt */
 /** @typedef {(typeof import('../data/templates.js').templates)[number]} Template */
@@ -107,6 +108,8 @@ function AllTemplatesLink() {
  * @param {{ template: Template, excerpt: Excerpt, local: number, active: boolean, visible: boolean, viewport: { w: number, h: number }, mode: string, index: number, count: number }} props
  */
 function TemplateSegment({ template, excerpt, local, active, visible, viewport, mode, index, count }) {
+  // Below the path bar while it shows (Living Source Phase 3).
+  const wordsFloor = useWordsFloor(viewport.w);
   const loop = loopOf(template);
   const screen = { src: loop.poster, alt: loop.alt, ...LOOP_SIZE };
   const { text, sourceBox, codeScale, targetBox } = flightGeometry(excerpt.code, screen, viewport.w, viewport.h);
@@ -120,7 +123,7 @@ function TemplateSegment({ template, excerpt, local, active, visible, viewport, 
 
   return (
     <div data-door-b-template={template.id}>
-      <div data-world-words style={{ left: text.x, top: text.y, width: text.w }} className="absolute">
+      <div data-world-words style={{ left: text.x, top: Math.max(text.y, wordsFloor), width: text.w }} className="absolute">
         <ChapterHeading />
         <div className={compact ? 'mt-4' : 'mt-10'}>
           <TemplateText template={template} compact={compact} />

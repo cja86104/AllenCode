@@ -151,7 +151,7 @@ export default function Gate({ includeDrafts }) {
 
   if (isStatic || !excerpt) {
     return (
-      <section data-chapter="gate" className="relative mx-auto max-w-6xl px-6 pb-16 pt-24 lg:px-10">
+      <section data-chapter="gate" className="relative mx-auto max-w-6xl px-6 pb-16 pt-24 md:pt-32 lg:px-10">
         <p className="mono mb-10 text-xs uppercase tracking-[0.3em] text-ember">{GATE_LINE}</p>
         {excerpt ? (
           <CodeBeside excerpt={excerpt} result={<Headline opacity={1} sized={false} />} />

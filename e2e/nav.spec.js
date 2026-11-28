@@ -21,7 +21,8 @@ for (const { width, inBar } of [
       await expect(shown).toBeVisible();
       await expect(shown).toHaveAttribute('href', '/contact');
       // It fits: the bar holds the logo, the action and the menu button on one line.
-      const box = await header.locator(':scope > div').boundingBox();
+      // The logo's row, not the path bar's row under it (Living Source Phase 3).
+      const box = await header.locator(':scope > div:not([data-path-bar])').boundingBox();
       expect(box?.height ?? 0).toBeLessThan(80);
     } else {
       await header.getByRole('button', { name: 'Toggle menu' }).click();

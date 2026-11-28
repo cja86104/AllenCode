@@ -2,6 +2,7 @@
 import { useRef } from 'react';
 import { services } from '../data/services.js';
 import { SERVICE_CHAPTERS } from '../data/homeOrder.js';
+import { PATH_BAR_FLOOR_PX, useWordsFloor } from '../pathbar/pathBarStore.js';
 import { serviceScreens } from '../data/serviceScreens.js';
 import MediaLoop from '../components/MediaLoop.jsx';
 import { getExcerpt } from '../content/excerpts/index.js';
@@ -52,15 +53,29 @@ const WORDS_BOTTOM_LIMIT = 0.99;
  */
 export const NAV_FLOOR_PX = 72;
 
+/** The same floor with the path bar under the navigation (Living Source Phase 3; pathBarStore.js). */
+export { PATH_BAR_FLOOR_PX };
+
+/**
+ * Where the words sit, in px from the frame's top: the layout's place, or the header's bottom where that
+ * is lower (Living Source Phase 3: at 1024 x 640 the layout's 16 % is 102 px, under the path bar's 112).
+ * @param {{ y: number }} text @param {number} floor
+ * @returns {number}
+ */
+export function wordsTop(text, floor) {
+  return Math.max(text.y, floor);
+}
+
 /**
  * The words' rise, as a CSS translate: none while they fit, else up by what overflows, no further
  * than the top limit (a tenth of the frame, and never under the navigation). Percentages in a
  * translate are of the words' own height, so it needs no measuring.
  * @param {{ y: number }} text The words' place @param {number} h The frame's height
+ * @param {number} [floor] The highest they may rise, in px from the frame's top: the header's bottom.
  * @returns {string}
  */
-export function wordsRise(text, h) {
-  const highest = Math.min(0, Math.max(NAV_FLOOR_PX, WORDS_TOP_LIMIT * h) - text.y).toFixed(1);
+export function wordsRise(text, h, floor = NAV_FLOOR_PX) {
+  const highest = Math.min(0, Math.max(floor, WORDS_TOP_LIMIT * h) - text.y).toFixed(1);
   const room = (WORDS_BOTTOM_LIMIT * h - text.y).toFixed(1);
   return `translateY(clamp(${highest}px, calc(${room}px - 100%), 0px))`;
 }
@@ -84,11 +99,12 @@ const LONG_SCOPE_MIN_HEIGHT = Object.freeze([
  * @param {number} scopeItems @param {number} w The frame's width @param {number} h Its height
  * @returns {boolean}
  */
-export function wordsCompact(scopeItems, w, h) {
+export function wordsCompact(scopeItems, w, h, floor = NAV_FLOOR_PX) {
   if (w < DESKTOP_MIN_WIDTH) return true;
   if (scopeItems <= 4) return false;
   const band = LONG_SCOPE_MIN_HEIGHT.find(({ fromWidth }) => w >= fromWidth);
-  return band ? h < band.height : true;
+  // The heights were measured from the navigation's floor; a lower floor (the path bar) takes its room.
+  return band ? h - (floor - NAV_FLOOR_PX) < band.height : true;
 }
 
 /**
@@ -145,12 +161,13 @@ function FlightChapter({ service, excerpt, screen }) {
 
   const codeOpacity = mode === 'webgl' && timeline.flight > 0 ? 0 : 1;
   const frameOpacity = 1 - Math.min(1, timeline.flight * 4);
+  const floor = useWordsFloor(viewport.w) || NAV_FLOOR_PX;
 
   return (
     <section ref={sectionRef} data-chapter={service.slug} className="relative h-[220vh]">
       <div className="pin-frame sticky top-0 overflow-hidden">
-        <div data-world-words style={{ left: text.x, top: text.y, width: text.w, transform: wordsRise(text, viewport.h) }} className="absolute">
-          <ServiceText service={service} compact={wordsCompact(service.scope.length, viewport.w, viewport.h)} />
+        <div data-world-words style={{ left: text.x, top: wordsTop(text, floor), width: text.w, transform: wordsRise({ y: wordsTop(text, floor) }, viewport.h, floor) }} className="absolute">
+          <ServiceText service={service} compact={wordsCompact(service.scope.length, viewport.w, viewport.h, floor)} />
         </div>
         <FlightEditor
           file={excerpt.file}
@@ -270,6 +287,9 @@ function AuditChapter({ service, excerpt, animate }) {
   const longest = Math.max(1, ...lines.map((line) => line.length));
   const panelWidth = viewport.w >= DESKTOP_MIN_WIDTH ? viewport.w * 0.5 : viewport.w - 48;
   const fontSize = Math.min(CODE_FONT_SIZE, (panelWidth - 2 * EDITOR_PADDING - 24) / (longest * 0.6));
+  // With the path bar (Living Source Phase 3) the frame centres its words and code below the header, not
+  // behind it: stacked under 1024 px, they start 74 px down at 768 x 1024, under the bar's 112.
+  const pad = useWordsFloor(viewport.w);
 
   const panel = excerpt && <AuditPanel excerpt={excerpt} checked={checked} current={live ? checked - 1 : -1} fontSize={fontSize} />;
 
@@ -287,7 +307,7 @@ function AuditChapter({ service, excerpt, animate }) {
 
   return (
     <section ref={sectionRef} data-chapter={service.slug} className="relative h-[180vh]">
-      <div className="pin-frame sticky top-0 flex items-center">
+      <div className="pin-frame sticky top-0 flex items-center" style={pad ? { paddingTop: pad } : undefined}>
         <div className={`relative z-10 mx-auto grid w-full max-w-6xl gap-10 px-6 ${CHAPTER_GRID} lg:items-center lg:px-10`}>
           <ServiceText service={service} />
           <div data-world-target className="min-w-0">

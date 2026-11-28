@@ -9,6 +9,7 @@ import { CHAPTER_BODY, CHAPTER_GRID, CHAPTER_LABEL, CHAPTER_TITLE } from './chap
 import { useSectionProgress } from './useSectionProgress.js';
 import { DESKTOP_MIN_WIDTH, EditorPanel, FlightEditor, flightGeometry, useImageFlight } from './flight.jsx';
 import { BUILDER } from '../content/builderStory.js';
+import { useWordsFloor } from '../pathbar/pathBarStore.js';
 
 export { BUILDER };
 
@@ -60,6 +61,8 @@ export default function Builder() {
   const flies = Boolean(excerpt) && !reducedMotion && mode === 'webgl';
   const sectionRef = useRef(/** @type {HTMLElement | null} */ (null));
   const { progress, visible, viewport } = useSectionProgress(sectionRef, flies);
+  // Below the path bar while it shows (Living Source Phase 3).
+  const wordsFloor = useWordsFloor(viewport.w);
   const code = excerpt ? excerpt.code : '';
   const screen = { src: BUILDER.photo.src, alt: BUILDER.photo.alt, width: BUILDER.photo.width, height: BUILDER.photo.height };
   const timeline = chapterTimeline(progress);
@@ -87,7 +90,7 @@ export default function Builder() {
   return (
     <section ref={sectionRef} data-chapter="builder" className="relative h-[220vh]">
       <div className="pin-frame sticky top-0 overflow-hidden">
-        <div data-world-words style={{ left: text.x, top: text.y, width: text.w }} className="absolute">
+        <div data-world-words style={{ left: text.x, top: Math.max(text.y, wordsFloor), width: text.w }} className="absolute">
           <BuilderText compact={viewport.w < DESKTOP_MIN_WIDTH} />
         </div>
         <FlightEditor

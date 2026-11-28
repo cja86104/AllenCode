@@ -44,7 +44,10 @@ function AppShell() {
   // The stretch held before the first paint (index.html) follows whether one is drawn, once the page
   // knows (W6): until hydration the held space stands in for the spacer.
   useEffect(() => {
-    if (hydrated) document.documentElement.toggleAttribute('data-stretch-ahead', world === 'stretch');
+    if (!hydrated) return;
+    document.documentElement.toggleAttribute('data-stretch-ahead', world === 'stretch');
+    // The path bar shows only with the world off (Living Source Phase 3); the mark follows the world too.
+    document.documentElement.toggleAttribute('data-likely-world', world !== null);
   }, [hydrated, world]);
   return (
     <DoorProvider>
