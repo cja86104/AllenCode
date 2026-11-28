@@ -3,13 +3,15 @@ import { describe, expect, it } from 'vitest';
 import { businessRoadStops, familyRoadStops, MEETING_STOPS, stopForFlight } from '../src/world/roads.js';
 import { DOOR_B_TEMPLATES } from '../src/scenes/TemplateChapter.jsx';
 import { excerpts } from '../src/content/excerpts/index.js';
+import { draftExcerpts } from '../src/content/excerpts/drafts.js';
 import { products } from '../src/data/products.js';
 import { services } from '../src/data/services.js';
 
 describe('businessRoadStops (Code World W2.1)', () => {
-  it('runs the services first, then (under the "our work/" sign) the products, then how I work (Chris, 2026-11-16)', () => {
+  it('runs the services first, Immersive Web Experiences leading (2026-11-27), then (under the "our work/" sign) the products, then how I work (Chris, 2026-11-16)', () => {
     const stops = businessRoadStops();
     expect(stops.map((stop) => stop.id)).toEqual([
+      'immersive-web-experiences',
       'mvp-sprints',
       'custom-saas-builds',
       'custom-web-development',
@@ -23,6 +25,7 @@ describe('businessRoadStops (Code World W2.1)', () => {
       'how-i-work',
     ]);
     expect(stops.map((stop) => stop.kind)).toEqual([
+      'service',
       'service',
       'service',
       'service',
@@ -59,6 +62,7 @@ describe('businessRoadStops (Code World W2.1)', () => {
     const ids = businessRoadStops({ registry }).map((stop) => stop.id);
     expect(ids).not.toContain('founders-helm');
     expect(ids).toEqual([
+      'immersive-web-experiences',
       'mvp-sprints',
       'custom-saas-builds',
       'custom-web-development',
@@ -70,6 +74,19 @@ describe('businessRoadStops (Code World W2.1)', () => {
       'crew-advisors',
       'how-i-work',
     ]);
+  });
+
+  it('has Immersive as the first stop now its screen exists; the AI systems still waits for its approval and screen (Chris, 2026-11-27)', () => {
+    for (const includeDrafts of [false, true]) {
+      const stops = businessRoadStops({ includeDrafts });
+      const ids = stops.map((stop) => stop.id);
+      expect(stops[0]).toEqual({ id: 'immersive-web-experiences', name: 'Immersive Web Experiences', kind: 'service', excerptId: 'service-immersive' });
+      expect(ids).not.toContain('intelligent-ai-systems');
+      expect(ids[1]).toBe('mvp-sprints');
+    }
+    // Even approved, the AI systems stop needs its screen.
+    const registry = Object.freeze({ ...excerpts, 'service-ai-systems': { ...draftExcerpts['service-ai-systems'], approved: { by: /** @type {const} */ ('Chris'), on: '2026-11-27' } } });
+    expect(businessRoadStops({ registry }).map((stop) => stop.id)).not.toContain('intelligent-ai-systems');
   });
 
   it('shows a draft only when drafts are asked for', () => {

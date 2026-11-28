@@ -89,7 +89,7 @@ describe('ContactForm', () => {
     expect(screen.getByText(/Thanks, Jane\./)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /send another/i }));
     expect(screen.getByLabelText('Name')).toHaveValue('');
-    expect(screen.getByLabelText('Project type')).toHaveValue(PROJECT_TYPES[0]);
+    expect(screen.getByLabelText('Project type')).toHaveValue('Custom SaaS Build');
   });
 
   it('shows the existing error states: the server message with field errors, and an unreachable server', async () => {
@@ -148,6 +148,22 @@ describe('the brief starts from the address', () => {
     expect(screen.getByLabelText('Project type')).toHaveValue('Website from a template');
   });
 
+  it('offers the two flagships first, then the seven existing types in order, and defaults to Custom SaaS Build', () => {
+    expect(PROJECT_TYPES).toEqual([
+      'Immersive Web Experience',
+      'Intelligent AI System',
+      'Custom SaaS Build',
+      'MVP Sprint',
+      'AI Integration',
+      'Technical Audit',
+      'Acquisition Readiness',
+      'Website from a template',
+      'Something else',
+    ]);
+    render(<ContactForm />);
+    expect(screen.getByLabelText('Project type')).toHaveValue('Custom SaaS Build');
+  });
+
   it('an idea alone keeps the default project type, and an unknown template adds nothing', () => {
     render(
       <MemoryRouter initialEntries={['/contact?template=nope&idea=%20%20a%20shop%20']}>
@@ -155,7 +171,7 @@ describe('the brief starts from the address', () => {
       </MemoryRouter>,
     );
     expect(screen.getByLabelText('What are you building?')).toHaveValue('a shop');
-    expect(screen.getByLabelText('Project type')).toHaveValue(PROJECT_TYPES[0]);
+    expect(screen.getByLabelText('Project type')).toHaveValue('Custom SaaS Build');
   });
 });
 

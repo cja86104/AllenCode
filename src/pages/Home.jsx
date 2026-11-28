@@ -27,8 +27,8 @@ import { useWorldHome } from '../world/worldSwitch.js';
  */
 export default function Home() {
   usePageMeta(
-    'Allen Code Co. — Custom Software, Web Design & AI for Real Businesses',
-    'Custom development, web design, UI/UX, and AI integration — built around your business. Tailored work for small business owners and founders.',
+    'Allen Code Co. — Built by curiosity. Proven through creation.',
+    'Immersive Web Experiences and Intelligent AI Systems, plus custom development, web design and UI/UX — built around your business. Tailored work for small business owners and founders.',
   );
   const { door } = useDoor();
   // Behind `/?world=1` the Code World follows the gate (Code World W1.3; W2 revised, R4).

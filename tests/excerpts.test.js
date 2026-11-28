@@ -1,6 +1,7 @@
 // @ts-check
 import { describe, expect, it } from 'vitest';
 import { excerpts, getExcerpt, validateExcerpt } from '../src/content/excerpts/index.js';
+import { draftExcerpts } from '../src/content/excerpts/drafts.js';
 
 /** @returns {import('../src/content/excerpts/index.js').Excerpt} */
 const valid = () => ({
@@ -116,6 +117,30 @@ describe('approved excerpts', () => {
     for (const id of ['service-mvp', 'service-custom', 'service-ai', 'service-audit']) {
       expect(excerpts[id].approved, id).toEqual({ by: 'Chris', on: '2026-11-09' });
       expect(getExcerpt(id)?.id, id).toBe(id);
+    }
+  });
+});
+
+describe('drafts stay out of the bundle (final review, 2026-11-27)', () => {
+  it('the registry the site imports holds no draft, so a draft is never bundled', () => {
+    const drafts = Object.values(excerpts).filter((excerpt) => excerpt.approved === null).map((excerpt) => excerpt.id);
+    expect(drafts).toEqual([]);
+  });
+
+  it('the AI systems excerpt waits in drafts.js: valid, unapproved and not in the registry', () => {
+    const draft = draftExcerpts['service-ai-systems'];
+    expect(draft).toMatchObject({ repo: 'cja86104/ai-website-powerhouse', path: 'lib/generation/blocker-notes.ts', lines: [30, 46], approved: null });
+    expect(validateExcerpt(draft)).toEqual([]);
+    expect(Object.hasOwn(excerpts, 'service-ai-systems')).toBe(false);
+    expect(getExcerpt('service-ai-systems', { includeDrafts: true })).toBeNull();
+  });
+
+  it('every draft is valid, keyed by its id, unapproved and absent from the registry', () => {
+    for (const [key, draft] of Object.entries(draftExcerpts)) {
+      expect(draft.id).toBe(key);
+      expect(validateExcerpt(draft), key).toEqual([]);
+      expect(draft.approved, key).toBeNull();
+      expect(Object.hasOwn(excerpts, key), key).toBe(false);
     }
   });
 });

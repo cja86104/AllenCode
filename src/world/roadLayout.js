@@ -102,6 +102,18 @@ function smoothstep(a, b, x) {
 }
 
 /**
+ * The side of the road (−1 or 1, before the family road's mirroring) the `index`th of `count` road stops
+ * stands on. The family road alternates from its first stop. The business road alternates counted from
+ * its last stop (2026-11-27), so a stop added at its front (Immersive Web Experiences) takes a side of its
+ * own and every stop after it keeps the side, and the curve, Chris approved; its last stop is on −1.
+ * @param {'a' | 'b'} door @param {number} index @param {number} count
+ */
+export function roadSide(door, index, count) {
+  const fromStart = door === 'a' ? count - 1 - index : index;
+  return fromStart % 2 === 0 ? -1 : 1;
+}
+
+/**
  * The onward road from the branch's end to `length` along it, in 1-unit pieces, shaped for its door:
  * the business road winds (each stop on the outside of its curve), the family road turns its corners,
  * and both roll over hills with every stop in a hollow. Each point carries the ground's height.
@@ -132,7 +144,8 @@ function shapedRoad(origin, heading, door, length, lastRoad, roadStops) {
   };
   /** @param {number} s */
   const turn = (s) => {
-    if (door === 'a') return ROAD_SHAPE.swing * ease(s) * Math.sin(Math.PI * wave(s));
+    // The swing's sign follows the first stop's side, so each stop stays on the outside of its curve.
+    if (door === 'a') return -roadSide(door, 0, roadStops.length) * ROAD_SHAPE.swing * ease(s) * Math.sin(Math.PI * wave(s));
     let total = 0;
     if (hearthAt >= 0) total += smoothstep(cornerAt(hearthAt) - cornerHalf, cornerAt(hearthAt) + cornerHalf, s);
     if (doneAt > 0) total -= smoothstep(cornerAt(doneAt - 1) - cornerHalf, cornerAt(doneAt - 1) + cornerHalf, s);
@@ -226,8 +239,7 @@ function branchEnd() {
 /**
  * Where everything on a road stands: the road's path (the branch, straight on past the road's stops,
  * and, when there are stops where the roads meet (W4), a bend to straight down −z and the shared road),
- * a landmark per stop set `LATERAL` to the side on alternating sides (the first on the road's outer
- * side), facing back up the road, and, for how I work, three commit points on the road's edge. Laid
+ * a landmark per stop set `LATERAL` to the side on alternating sides (`roadSide`), facing back up the road, and, for how I work, three commit points on the road's edge. Laid
  * out for the business road; the family road is its mirror image in x. Distances along the road
  * (`along`, `junction`, `roadAt`) are measured from the branch's end.
  * @param {ReadonlyArray<RoadStop>} stops
@@ -340,7 +352,7 @@ export function layoutRoad(stops, door, sizes) {
       const distance = FIRST_AT + spacing * roadIndex;
       along.push(distance);
       if (stop.signBefore) signs.push({ label: stop.signBefore, along: distance - spacing / 2 });
-      place(stop, distance, roadIndex % 2 === 0 ? -1 : 1);
+      place(stop, distance, roadSide(door, roadIndex, roadStops.length));
       roadIndex += 1;
     }
   }

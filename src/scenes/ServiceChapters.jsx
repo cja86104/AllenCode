@@ -14,10 +14,16 @@ import { DESKTOP_MIN_WIDTH, EditorPanel, FlightEditor, flightGeometry, useImageF
 import { CHAPTER_BODY, CHAPTER_GRID, CHAPTER_ITEM, CHAPTER_LABEL, CHAPTER_TITLE } from './chapterType.js';
 
 /** @typedef {import('../content/excerpts/index.js').Excerpt} Excerpt */
-/** @typedef {(typeof services)[number]} Service */
+/** @typedef {import('../data/services.js').Service} Service */
+/** @typedef {{ src: string, alt: string, width: number, height: number, video?: string }} Screen */
 
-/** Door A's service chapters, in story order (spec section 4, step 4). */
+/**
+ * Door A's service chapters, in story order (spec section 4, step 4). The two flagships lead
+ * (Chris, 2026-11-27); each shows once its excerpt is approved and its screen exists.
+ */
 export const SERVICE_CHAPTERS = Object.freeze([
+  { slug: 'immersive-web-experiences', excerptId: 'service-immersive' },
+  { slug: 'intelligent-ai-systems', excerptId: 'service-ai-systems' },
   { slug: 'mvp-sprints', excerptId: 'service-mvp' },
   { slug: 'custom-saas-builds', excerptId: 'service-custom' },
   { slug: 'custom-web-development', excerptId: 'service-web' },
@@ -35,17 +41,94 @@ function css(color) {
 }
 
 /**
+ * The scope list; a scope longer than four items sets in two columns on desktop, every item kept, a
+ * little closer to the summary above it (2026-11-27: seven items at 1024 × 768 need the room).
+ */
+const SCOPE_LIST = 'mt-6 space-y-2 border-t border-white/10 pt-6';
+const SCOPE_COLUMNS = 'lg:mt-4 lg:pt-4 lg:grid lg:grid-cols-2 lg:gap-x-8 lg:gap-y-2 lg:space-y-0';
+
+/**
+ * A pinned chapter's words that are taller than the room below their place (a long scope on a short
+ * desktop screen, 2026-11-27) rise until they end inside the frame, never above the navigation's band;
+ * words that fit stay where they are. Shares of the frame's height.
+ */
+const WORDS_TOP_LIMIT = 0.1;
+const WORDS_BOTTOM_LIMIT = 0.99;
+/**
+ * The highest the words may rise, in px from the frame's top, whatever its height: the fixed
+ * navigation's bottom. Measured in Chromium (final review, 2026-11-27), the bar is 67 px tall from
+ * 640 px to 1279 px wide (its 36 px action pill and 32 px of padding, and the 1 px border) and 62 px
+ * from 1280 px (the full bar); 72 px clears both with room to spare, so a risen title never tucks
+ * under it. A tenth of the frame alone was 60 px at 600 px tall. `e2e/chaptertext.spec.js` checks it.
+ */
+export const NAV_FLOOR_PX = 72;
+
+/**
+ * The words' rise, as a CSS translate: none while they fit, else up by what overflows, no further
+ * than the top limit (a tenth of the frame, and never under the navigation). Percentages in a
+ * translate are of the words' own height, so it needs no measuring.
+ * @param {{ y: number }} text The words' place @param {number} h The frame's height
+ * @returns {string}
+ */
+export function wordsRise(text, h) {
+  const highest = Math.min(0, Math.max(NAV_FLOOR_PX, WORDS_TOP_LIMIT * h) - text.y).toFixed(1);
+  const room = (WORDS_BOTTOM_LIMIT * h - text.y).toFixed(1);
+  return `translateY(clamp(${highest}px, calc(${room}px - 100%), 0px))`;
+}
+
+/**
+ * The shortest pinned frame, in px, that holds a scope of more than four items (two columns of up to
+ * four rows) in full, by the frame's width. The words' column is 36 % of the width, so a narrower
+ * screen wraps more: measured at its tallest (Immersive Web Experiences' seven items, final review
+ * 2026-11-27, from the navigation's floor to 99 % of the frame), the words need 765 px of frame at
+ * 1024 px wide, 689 px at 1152 px and at most 664 px from 1280 px.
+ */
+const LONG_SCOPE_MIN_HEIGHT = Object.freeze([
+  { fromWidth: 1152, height: 700 },
+  { fromWidth: DESKTOP_MIN_WIDTH, height: 768 },
+]);
+
+/**
+ * Whether a pinned chapter shows its words in the compact form (tagline, summary and terms, no scope
+ * list; the full list stays on /services): on phones, as before, and on a desktop frame too short for
+ * a scope of more than four items. A scope of four or fewer always shows in full on desktop.
+ * @param {number} scopeItems @param {number} w The frame's width @param {number} h Its height
+ * @returns {boolean}
+ */
+export function wordsCompact(scopeItems, w, h) {
+  if (w < DESKTOP_MIN_WIDTH) return true;
+  if (scopeItems <= 4) return false;
+  const band = LONG_SCOPE_MIN_HEIGHT.find(({ fromWidth }) => w >= fromWidth);
+  return band ? h < band.height : true;
+}
+
+/**
+ * Whether a service's chapter shows: it needs its excerpt and, outside the audit (which checks its
+ * own file), the screen its code lands on.
+ * @param {string} slug
+ * @param {Excerpt | null} excerpt
+ * @param {Screen | null | undefined} screen
+ * @returns {boolean}
+ */
+export function chapterShows(slug, excerpt, screen) {
+  if (!excerpt) return false;
+  return slug === 'technical-audits' || Boolean(screen);
+}
+
+/**
  * The service's own copy from services.js: name, summary, scope and timeline. Never a price.
- * `compact` leaves out the scope list, for a pinned chapter on a phone.
+ * `compact` leaves out the scope list, for a pinned chapter on a phone or a short desktop frame
+ * (`wordsCompact`).
  * @param {{ service: Service, compact?: boolean }} props
  */
 export function ServiceText({ service, compact = false }) {
   return (
     <div>
       <h2 className={CHAPTER_TITLE}>{service.name}</h2>
+      {service.tagline && <p className={`mt-4 tracking-[0.25em] text-ember ${CHAPTER_LABEL}`}>{service.tagline}</p>}
       <p className={`mt-5 max-w-xl lg:max-w-none ${CHAPTER_BODY}`}>{service.summary}</p>
       {!compact && (
-        <ul className="mt-6 space-y-2 border-t border-white/10 pt-6">
+        <ul className={service.scope.length > 4 ? `${SCOPE_LIST} ${SCOPE_COLUMNS}` : SCOPE_LIST}>
           {service.scope.map((item) => (
             <li key={item} className={`flex items-start gap-3 ${CHAPTER_ITEM}`}>
               <span aria-hidden="true" className="mt-[0.7em] h-px w-4 shrink-0 bg-ember/70" />
@@ -54,14 +137,14 @@ export function ServiceText({ service, compact = false }) {
           ))}
         </ul>
       )}
-      <p className={`mt-6 tracking-[0.25em] text-ember ${CHAPTER_LABEL}`}>Timeline: {service.timeline}</p>
+      <p className={`mt-6 tracking-[0.25em] text-ember ${CHAPTER_LABEL}`}>{service.terms ?? `Timeline: ${service.timeline}`}</p>
     </div>
   );
 }
 
 /**
  * A chapter whose code flies onto a real product screen (spec section 4, step 4).
- * @param {{ service: Service, excerpt: Excerpt, screen: { src: string, alt: string, width: number, height: number, video?: string } }} props
+ * @param {{ service: Service, excerpt: Excerpt, screen: Screen }} props
  */
 function FlightChapter({ service, excerpt, screen }) {
   const sectionRef = useRef(/** @type {HTMLElement | null} */ (null));
@@ -77,8 +160,8 @@ function FlightChapter({ service, excerpt, screen }) {
   return (
     <section ref={sectionRef} data-chapter={service.slug} className="relative h-[220vh]">
       <div className="pin-frame sticky top-0 overflow-hidden">
-        <div data-world-words style={{ left: text.x, top: text.y, width: text.w }} className="absolute">
-          <ServiceText service={service} compact={viewport.w < DESKTOP_MIN_WIDTH} />
+        <div data-world-words style={{ left: text.x, top: text.y, width: text.w, transform: wordsRise(text, viewport.h) }} className="absolute">
+          <ServiceText service={service} compact={wordsCompact(service.scope.length, viewport.w, viewport.h)} />
         </div>
         <FlightEditor
           file={excerpt.file}
@@ -112,9 +195,9 @@ function FlightChapter({ service, excerpt, screen }) {
 }
 
 /**
- * A chapter without a flight: the service's copy beside its code (and its screen, when one exists).
- * Used for reduced motion, without WebGL, and until Chris supplies the chapter's screen.
- * @param {{ service: Service, excerpt: Excerpt | null, screen: { src: string, alt: string, video?: string } | null }} props
+ * A chapter without a flight: the service's copy beside its code and its screen.
+ * Used for reduced motion and without WebGL.
+ * @param {{ service: Service, excerpt: Excerpt, screen: Screen }} props
  */
 function StaticChapter({ service, excerpt, screen }) {
   return (
@@ -124,13 +207,12 @@ function StaticChapter({ service, excerpt, screen }) {
     >
       <ServiceText service={service} />
       <div className="min-w-0 space-y-6">
-        {excerpt && <EditorPanel excerpt={excerpt} />}
-        {screen &&
-          (screen.video ? (
-            <MediaLoop src={screen.video} poster={screen.src} alt={screen.alt} className="rounded-lg shadow-2xl" />
-          ) : (
-            <img src={screen.src} alt={screen.alt} className="w-full rounded-lg shadow-2xl" />
-          ))}
+        <EditorPanel excerpt={excerpt} />
+        {screen.video ? (
+          <MediaLoop src={screen.video} poster={screen.src} alt={screen.alt} className="rounded-lg shadow-2xl" />
+        ) : (
+          <img src={screen.src} alt={screen.alt} className="w-full rounded-lg shadow-2xl" />
+        )}
       </div>
     </section>
   );
@@ -246,17 +328,22 @@ export default function ServiceChapters({ includeDrafts }) {
 /**
  * One service's chapter, as door A shows it: the audit checking its file, a flight onto its screen, or
  * its code beside it. The Code World's business road places each on its own (W2 revised, R4).
- * @param {{ slug: string, excerptId: string, includeDrafts: boolean }} props
+ * A chapter without its approved excerpt, or (outside the audit) without its screen, shows nothing.
+ * @param {{ slug: string, excerptId: string, includeDrafts: boolean, screens?: Readonly<Record<string, Screen | null>>, registry?: Readonly<Record<string, Excerpt>> }} props
+ * `screens` is the screen lookup, serviceScreens.js unless a test passes its own; `registry` the
+ * excerpts, the site's approved registry unless a test passes its own (a draft is not in it).
  */
-export function ServiceChapterFor({ slug, excerptId, includeDrafts }) {
+export function ServiceChapterFor({ slug, excerptId, includeDrafts, screens = serviceScreens, registry }) {
   const reducedMotion = usePrefersReducedMotion();
   const { mode } = useField();
   const flights = !reducedMotion && mode === 'webgl';
   const service = services.find((s) => s.slug === slug);
   if (!service) throw new Error(`services.js has no service "${slug}".`);
-  const excerpt = getExcerpt(excerptId, { includeDrafts });
+  const excerpt = getExcerpt(excerptId, registry ? { includeDrafts, registry } : { includeDrafts });
   if (slug === 'technical-audits') return <AuditChapter service={service} excerpt={excerpt} animate={!reducedMotion} />;
-  const screen = serviceScreens[/** @type {keyof typeof serviceScreens} */ (slug)];
-  if (flights && excerpt && screen) return <FlightChapter service={service} excerpt={excerpt} screen={screen} />;
+  const screen = Object.hasOwn(screens, slug) ? screens[slug] : null;
+  // chapterShows decides; the two null checks only narrow the types for the chapters below.
+  if (!chapterShows(slug, excerpt, screen) || !excerpt || !screen) return null;
+  if (flights) return <FlightChapter service={service} excerpt={excerpt} screen={screen} />;
   return <StaticChapter service={service} excerpt={excerpt} screen={screen} />;
 }

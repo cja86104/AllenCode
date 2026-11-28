@@ -3,6 +3,7 @@
 // Usage: EXCERPT_REPOS='{"cja86104/AllenCode":"C:/path/to/AllenCode"}' npm run excerpts:verify
 import { execFileSync } from 'node:child_process';
 import { excerpts } from '../../src/content/excerpts/index.js';
+import { draftExcerpts } from '../../src/content/excerpts/drafts.js';
 
 const raw = process.env.EXCERPT_REPOS;
 if (!raw) {
@@ -13,7 +14,8 @@ if (!raw) {
 const repos = JSON.parse(raw);
 
 let failures = 0;
-for (const excerpt of Object.values(excerpts)) {
+// Drafts are checked too, so an excerpt is already verbatim when Chris approves it.
+for (const excerpt of [...Object.values(excerpts), ...Object.values(draftExcerpts)]) {
   const dir = repos[excerpt.repo];
   if (!dir) {
     console.log(`skipped   ${excerpt.id} (no checkout given for ${excerpt.repo})`);

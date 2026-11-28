@@ -6,7 +6,7 @@ const SITE = 'https://www.allencodeco.com';
 // What a reader without JavaScript gets, page by page, is in e2e/prerender.spec.js (Phase 9).
 
 const PAGES = [
-  { path: '/', title: /Allen Code Co\. — Custom Software/ },
+  { path: '/', title: /^Allen Code Co\. — Built by curiosity\. Proven through creation\.$/ },
   { path: '/products', title: /^Products — Allen Code Co\.$/ },
   { path: '/products/underfire-ai', title: /^UnderFire AI — Allen Code Co\.$/ },
   { path: '/services', title: /^Services — Allen Code Co\.$/ },

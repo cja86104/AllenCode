@@ -9,6 +9,7 @@ import { mkdirSync, readdirSync, rmSync, statSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { chromium } from '@playwright/test';
+import { isMain } from '../shared/isMain.mjs';
 
 const VIEWPORT = { width: 1280, height: 800 };
 const FPS = 30;
@@ -100,4 +101,4 @@ export async function recordPreviews(srcDir = 'tools/previews/src', framesDir = 
   }
 }
 
-if (import.meta.url === new URL(process.argv[1], 'file:').href) await recordPreviews();
+if (isMain(import.meta.url, process.argv[1])) await recordPreviews();

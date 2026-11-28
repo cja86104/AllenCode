@@ -5,7 +5,7 @@ const SITE = 'https://www.allencodeco.com';
 
 /** Every sitemap page, its own title and words from its own content (Phase 9). */
 const PAGES = [
-  { path: '/', title: 'Allen Code Co. — Custom Software, Web Design & AI for Real Businesses', text: 'Welcome to Allen Code Co.' },
+  { path: '/', title: 'Allen Code Co. — Built by curiosity. Proven through creation.', text: 'Welcome to Allen Code Co.' },
   { path: '/products', title: 'Products — Allen Code Co.', text: 'Live in the market, built to survive scrutiny.' },
   { path: '/products/my-teachers-toolbox', title: 'My Teachers Toolbox — Allen Code Co.', text: 'My Teachers Toolbox' },
   { path: '/products/underfire-ai', title: 'UnderFire AI — Allen Code Co.', text: 'UnderFire AI' },
@@ -32,7 +32,7 @@ test.describe('with JavaScript off, every page is its own prebuilt HTML', () => 
       await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', url);
       await expect(page.locator('meta[property="og:url"]')).toHaveAttribute('content', url);
       await expect(page.locator('meta[property="og:title"]')).toHaveAttribute('content', title);
-      await expect(page.locator('meta[property="og:image"]')).toHaveAttribute('content', `${SITE}/og-image.png`);
+      await expect(page.locator('meta[property="og:image"]')).toHaveAttribute('content', `${SITE}/og-allencodeco.png`);
       await expect(page.locator('meta[name="robots"]')).toHaveCount(0);
       // The site-wide Organization, once; the page's own data (2026-11-26) in its own block.
       const jsonLd = JSON.parse((await page.locator('script[type="application/ld+json"]:not([data-page-ld])').textContent()) ?? '{}');

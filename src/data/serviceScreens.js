@@ -7,9 +7,24 @@
  * A screen may also loop a video (`video`, an mp4 over its `src` poster, which the code lands on):
  * the two services added on 2026-11-16 loop recordings of this site's own Code World build.
  *
- * @type {Readonly<Record<'mvp-sprints' | 'custom-saas-builds' | 'custom-web-development' | 'ui-ux-design' | 'ai-integration', { src: string, alt: string, width: number, height: number, video?: string } | null>>}
+ * The two flagships (Chris, 2026-11-27) are `null` until their screens land: a chapter without its
+ * screen does not show, on either side. Immersive Web Experiences loops a slower recording of the same
+ * build (2026-11-27).
+ *
+ * @type {Readonly<Record<'immersive-web-experiences' | 'intelligent-ai-systems' | 'mvp-sprints' | 'custom-saas-builds' | 'custom-web-development' | 'ui-ux-design' | 'ai-integration', { src: string, alt: string, width: number, height: number, video?: string } | null>>}
  */
 export const serviceScreens = Object.freeze({
+  // This site's own Code World, recorded from the build (2026-11-27, `tools/media/record-immersive.mjs`),
+  // slower than the 2026-11-16 loops: up to the fork's two signs and under business/, then the drive
+  // from the home page to Services.
+  'immersive-web-experiences': {
+    src: '/media/services/immersive-web-experiences.jpg',
+    video: '/media/services/immersive-web-experiences.mp4',
+    alt: 'This site’s Code World: the camera comes up to the fork’s business/ and templates/custom/ signs and takes business/, then drives on from the home page to the Services page, whose road spells SERVICES in code.',
+    width: 1280,
+    height: 800,
+  },
+  'intelligent-ai-systems': null,
   'mvp-sprints': {
     src: '/media/services/underfire-landing.jpg',
     alt: 'The UnderFire AI landing page: "Master Your Interviews. We put you under fire first."',

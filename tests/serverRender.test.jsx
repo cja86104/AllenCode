@@ -11,7 +11,7 @@ const SITEMAP_PATHS = [...readFileSync('public/sitemap.xml', 'utf8').matchAll(/<
 
 /** Each page's own title, as its page passes it to usePageMeta. */
 const TITLES = /** @type {Record<string, string>} */ ({
-  '/': 'Allen Code Co. — Custom Software, Web Design & AI for Real Businesses',
+  '/': 'Allen Code Co. — Built by curiosity. Proven through creation.',
   '/products': 'Products — Allen Code Co.',
   '/products/my-teachers-toolbox': 'My Teachers Toolbox — Allen Code Co.',
   '/products/underfire-ai': 'UnderFire AI — Allen Code Co.',

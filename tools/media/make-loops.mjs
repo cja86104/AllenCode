@@ -5,6 +5,7 @@
 // Usage: npm run media:loops   (needs ffmpeg on PATH)
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, readdirSync, statSync } from 'node:fs';
+import { isMain } from '../shared/isMain.mjs';
 
 const WIDTH = 1280;
 const HEIGHT = 800;
@@ -69,4 +70,4 @@ export function makeLoops(framesDir = 'tools/media/out', outDir = 'public/media/
   }
 }
 
-if (import.meta.url === new URL(process.argv[1], 'file:').href) makeLoops();
+if (isMain(import.meta.url, process.argv[1])) makeLoops();

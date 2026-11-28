@@ -7,6 +7,7 @@ import serviceAi from './service-ai.js';
 import serviceAudit from './service-audit.js';
 import serviceWeb from './service-web.js';
 import serviceUiux from './service-uiux.js';
+import serviceImmersive from './service-immersive.js';
 import productMyTeachersToolbox from './product-my-teachers-toolbox.js';
 import productUnderfireAi from './product-underfire-ai.js';
 import productFoundersHelm from './product-founders-helm.js';
@@ -55,7 +56,11 @@ const SECRET_PATTERNS = [
   /\b[A-Z0-9_]*(?:KEY|SECRET|TOKEN)\s*=/,
 ];
 
-/** @type {Readonly<Record<string, Excerpt>>} */
+/**
+ * Every excerpt the site may show. Only approved excerpts are listed here: whatever this module
+ * imports is bundled, so a draft waiting on Chris (`drafts.js`) is kept out until he approves it.
+ * @type {Readonly<Record<string, Excerpt>>}
+ */
 export const excerpts = Object.freeze({
   [ambient.id]: ambient,
   [gate.id]: gate,
@@ -65,6 +70,7 @@ export const excerpts = Object.freeze({
   [serviceAudit.id]: serviceAudit,
   [serviceWeb.id]: serviceWeb,
   [serviceUiux.id]: serviceUiux,
+  [serviceImmersive.id]: serviceImmersive,
   [productMyTeachersToolbox.id]: productMyTeachersToolbox,
   [productUnderfireAi.id]: productUnderfireAi,
   [productFoundersHelm.id]: productFoundersHelm,

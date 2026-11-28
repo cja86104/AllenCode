@@ -3,8 +3,10 @@ import { useEffect, useState } from 'react';
 import { ArrowUpRight, CheckCircle2 } from 'lucide-react';
 import Magnetic from './Magnetic';
 
-/** The project types offered, unchanged from the Contact page. */
+/** The project types the form offers: the two flagships first, then the other services and a catch-all. */
 export const PROJECT_TYPES = Object.freeze([
+  'Immersive Web Experience',
+  'Intelligent AI System',
   'Custom SaaS Build',
   'MVP Sprint',
   'AI Integration',
@@ -14,19 +16,22 @@ export const PROJECT_TYPES = Object.freeze([
   'Something else',
 ]);
 
+/** The type chosen when a visitor arrives with no choice; named, not found by position. */
+const DEFAULT_PROJECT_TYPE = 'Custom SaaS Build';
+
 /** @typedef {{ name: string, email: string, projectType: string, message: string }} ContactFields */
 /** @typedef {Partial<Record<keyof ContactFields, string>>} FieldErrors */
 /** @typedef {{ projectType?: string, message?: string }} Prefill */
 
 /** @returns {ContactFields} */
-const emptyForm = () => ({ name: '', email: '', projectType: PROJECT_TYPES[0], message: '' });
+const emptyForm = () => ({ name: '', email: '', projectType: DEFAULT_PROJECT_TYPE, message: '' });
 
 /**
  * @param {Prefill} prefill
  * @returns {ContactFields}
  */
 function formFrom(prefill) {
-  const projectType = prefill.projectType && PROJECT_TYPES.includes(prefill.projectType) ? prefill.projectType : PROJECT_TYPES[0];
+  const projectType = prefill.projectType && PROJECT_TYPES.includes(prefill.projectType) ? prefill.projectType : DEFAULT_PROJECT_TYPE;
   return { ...emptyForm(), projectType, message: prefill.message ?? '' };
 }
 

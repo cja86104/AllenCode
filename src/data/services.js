@@ -1,5 +1,57 @@
 // @ts-check
+/**
+ * One service. The seven with a timeline and deposit carry `timeline` and `deposit`; the two flagships
+ * carry `tagline` and `terms` instead (Chris, 2026-11-27): their terms are set per project, so they have
+ * no price, timeline or deposit of their own.
+ * @typedef {{
+ *   slug: string,
+ *   name: string,
+ *   tagline?: string,
+ *   summary: string,
+ *   scope: string[],
+ *   terms?: string,
+ *   timeline?: string,
+ *   deposit?: string,
+ *   startingPrice?: number,
+ *   priceNote?: string,
+ * }} Service
+ */
+
+/** @type {Service[]} */
 export const services = [
+  {
+    slug: 'immersive-web-experiences',
+    name: 'Immersive Web Experiences',
+    tagline: 'Beyond websites. Into experiences.',
+    summary: 'Interactive 3D websites, digital environments and experiences designed to make the web something people explore.',
+    scope: [
+      'Interactive 3D websites and environments.',
+      'WebGL-powered experiences.',
+      '3D storytelling and navigation.',
+      'Immersive product presentations.',
+      'Interactive brand experiences.',
+      'Custom animated digital environments.',
+      'Performance-optimized 3D experiences across devices.',
+    ],
+    terms: 'Timeline and deposit set per project, after scoping.',
+  },
+  {
+    slug: 'intelligent-ai-systems',
+    name: 'Intelligent AI Systems',
+    tagline: 'Not just AI that answers. AI that works.',
+    summary: 'Purpose-built AI assistants, agent teams and intelligent operational systems that do more than generate responses.',
+    scope: [
+      'AI agents with specialized roles and responsibilities.',
+      'Persistent memory and contextual understanding.',
+      'Multi-agent collaboration and decision support.',
+      'Tool execution and real-world workflows.',
+      'Human approval and authorization systems.',
+      'Business process automation.',
+      'Monitoring, scheduling and proactive operations.',
+      'Custom AI-powered applications and operational platforms.',
+    ],
+    terms: 'Timeline and deposit set per project, after scoping.',
+  },
   {
     slug: 'custom-saas-builds',
     name: 'Custom SaaS Builds',
@@ -112,4 +164,4 @@ export const services = [
     deposit: '50% deposit to begin, balance due on delivery.',
     timeline: '1–2 weeks depending on scope',
   },
-];
+];

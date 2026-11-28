@@ -19,8 +19,8 @@ describe('each inner page’s stretch of road (Code World W5a)', () => {
     expect(stretchFor('/products/crew-advisors')?.lead.kind).toBe('unfinished');
   });
 
-  it('Services: MVP Sprints alone, the lead', () => {
-    expect(ids('/services')).toEqual(['mvp-sprints']);
+  it('Services: the first service alone, the lead (Immersive Web Experiences since 2026-11-27)', () => {
+    expect(ids('/services')).toEqual(['immersive-web-experiences']);
   });
 
   it('Templates: Evergreen alone, the lead', () => {

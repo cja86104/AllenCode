@@ -215,6 +215,8 @@
 - [x] Step 1: Chris answered spec open questions 2 to 5 (2026-11-26): the proposed name, summary and scope, no listed price; any excerpt (chosen: `drive.js` `driveAt`); a new, slower loop; after UI / UX Design, `/work/allen-code-co`, THIS SITE.
 - [ ] Step 2: Chris gives the service's timeline and deposit terms (the other services' cards show both). Task 3.1 waits for them.
 
+> **2026-11-27:** Tasks 3.1–3.4 are superseded by `docs/superpowers/specs/2026-11-27-flagship-services-design.md`: the service is now **Immersive Web Experiences** (with Intelligent AI Systems beside it), both lead as flagships, and their terms read "Timeline and deposit set per project, after scoping." (Chris: "the prices very with service as well as down payment"), which also answers Task 3.0 Step 2. The case study (Tasks 3.5–3.8) stands.
+
 ### Task 3.1: The service in the data
 
 **Files:** `src/data/services.js`, `src/components/ContactForm.jsx` (`PROJECT_TYPES`), `src/pages/Services.jsx` (its meta description), `public/llms.txt`; Tests: `tests/ContactForm.test.jsx`, `tests/InnerPages.test.jsx`, `tests/structuredData.test.js`.

@@ -32,9 +32,12 @@ export const WINDOW_RADIUS = FOG_FAR + RECUT_AFTER;
  * about a quarter shorter (Chris, 2026-11-26: 32 units between stops for 42), its road holds as many
  * glyphs a unit as before in less road, so it is built smaller by as much as keeps each of its
  * landmarks the glyphs it had (347 / 560 / 886 by tier; now 346 / 557 / 885): it was 1.985 / 1.7 / 1.75.
+ * With Immersive Web Experiences as a twelfth business stop (2026-11-27), the business road is built
+ * larger again by as much as keeps those landmark glyphs (345 / 555 / 883; at 1.8 / 1.535 / 1.565 they
+ * fell to 273 / 435 / 673): it was 1.8 / 1.535 / 1.565.
  */
 export const WORLD_SCALE = Object.freeze({
-  a: Object.freeze({ low: 1.8, mid: 1.535, high: 1.565 }),
+  a: Object.freeze({ low: 1.92, mid: 1.635, high: 1.67 }),
   b: Object.freeze({ low: 1.58, mid: 1.39, high: 1.43 }),
 });
 

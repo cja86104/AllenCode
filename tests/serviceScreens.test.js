@@ -23,9 +23,75 @@ function imageSize(bytes) {
   throw new Error('Not a PNG or JPEG file.');
 }
 
+/**
+ * The chroma sampling of each component of a JPEG's frame, as `HxV`. No chroma subsampling (4:4:4) is
+ * every component sampled as its luma is: Pillow's `subsampling=0` writes `1x1` for each, ffmpeg's
+ * `yuvj444p` writes `1x2` for each (2026-11-27, the recorder's poster); both keep full chroma.
+ * @param {Buffer} bytes
+ * @returns {string[]}
+ */
+function jpegSampling(bytes) {
+  let offset = 2;
+  while (offset < bytes.length) {
+    const marker = bytes.readUInt16BE(offset);
+    const length = bytes.readUInt16BE(offset + 2);
+    if (marker >= 0xffc0 && marker <= 0xffc3) {
+      const count = bytes[offset + 9];
+      return Array.from({ length: count }, (_, i) => {
+        const factors = bytes[offset + 11 + i * 3];
+        return `${factors >> 4}x${factors & 15}`;
+      });
+    }
+    offset += 2 + length;
+  }
+  throw new Error('Not a JPEG file.');
+}
+
+/**
+ * The handler type of every track in an MP4 (`vide`, `soun`, ...), read from its `hdlr` boxes.
+ * @param {Buffer} bytes
+ * @returns {string[]}
+ */
+function mp4Handlers(bytes) {
+  const handlers = [];
+  for (let at = bytes.indexOf('hdlr'); at >= 0; at = bytes.indexOf('hdlr', at + 4)) handlers.push(bytes.toString('latin1', at + 12, at + 16));
+  return handlers;
+}
+
 describe('service screens', () => {
-  it('only the five flight services can have a screen; the audit chapter has none', () => {
-    expect(Object.keys(serviceScreens).sort()).toEqual(['ai-integration', 'custom-saas-builds', 'custom-web-development', 'mvp-sprints', 'ui-ux-design']);
+  it('only the seven flight services can have a screen; the audit chapter has none', () => {
+    expect(Object.keys(serviceScreens).sort()).toEqual([
+      'ai-integration',
+      'custom-saas-builds',
+      'custom-web-development',
+      'immersive-web-experiences',
+      'intelligent-ai-systems',
+      'mvp-sprints',
+      'ui-ux-design',
+    ]);
+  });
+
+  it('Intelligent AI Systems has no screen yet, so its chapter does not show (Task 6 supplies it)', () => {
+    expect(serviceScreens['intelligent-ai-systems']).toBeNull();
+  });
+
+  it('Immersive Web Experiences loops a muted recording of this build within the loops’ 700 kB, over a 1280 × 800 poster at full chroma (2026-11-27)', () => {
+    const screen = serviceScreens['immersive-web-experiences'];
+    expect(screen?.video).toBe('/media/services/immersive-web-experiences.mp4');
+    expect(screen?.src).toBe('/media/services/immersive-web-experiences.jpg');
+    const video = readFileSync(new URL(`../public${screen?.video}`, import.meta.url));
+    expect(video.length).toBeLessThanOrEqual(700 * 1024);
+    expect(video.toString('latin1', 4, 8)).toBe('ftyp');
+    expect(mp4Handlers(video)).toContain('vide');
+    expect(mp4Handlers(video), 'muted: no sound track').not.toContain('soun');
+    const poster = readFileSync(new URL(`../public${screen?.src}`, import.meta.url));
+    expect(imageSize(poster)).toEqual({ width: 1280, height: 800 });
+    expect([screen?.width, screen?.height]).toEqual([1280, 800]);
+    const sampling = jpegSampling(poster);
+    expect(sampling, 'three components').toHaveLength(3);
+    expect(new Set(sampling).size, `4:4:4, no chroma subsampling: ${sampling.join(' ')}`).toBe(1);
+    expect(screen?.alt).toMatch(/Code World/);
+    expect(screen?.alt).not.toMatch(/\$\s?\d|price/i);
   });
 
   it('the two new services loop a video of this build, at most 700 kB each, over a 1280 × 800 poster (Chris, 2026-11-16)', () => {

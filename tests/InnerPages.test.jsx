@@ -6,6 +6,9 @@ import ProductDetail from '../src/pages/ProductDetail.jsx';
 import Products from '../src/pages/Products.jsx';
 import Services from '../src/pages/Services.jsx';
 import About from '../src/pages/About.jsx';
+import Footer from '../src/components/Footer.jsx';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import CustomCursor, { CURSOR_DOT, CURSOR_RING } from '../src/components/CustomCursor.jsx';
 import { catalog } from '../src/data/catalog.js';
 import { services } from '../src/data/services.js';
@@ -92,6 +95,82 @@ describe('Services', () => {
     expect(text).not.toMatch(/\$\s?\d/);
     for (const service of services) expect(text).not.toContain(String(service.startingPrice));
     expect(screen.getAllByRole('link', { name: /Reserve a slot/ })).toHaveLength(services.length);
+  });
+
+  it('leads with the two flagships, each with tagline, summary, scope and the terms line, and keeps the other seven as they were', () => {
+    const { container } = render(
+      <MemoryRouter>
+        <Services />
+      </MemoryRouter>,
+    );
+    const terms = 'Timeline and deposit set per project, after scoping.';
+    const cards = Array.from(container.querySelectorAll('article[data-service]'));
+    expect(cards.map((c) => c.getAttribute('data-service')).slice(0, 2)).toEqual(['immersive-web-experiences', 'intelligent-ai-systems']);
+    expect(cards).toHaveLength(9);
+    for (const slug of ['immersive-web-experiences', 'intelligent-ai-systems']) {
+      const service = services.find((s) => s.slug === slug);
+      if (!service || !service.tagline || !service.terms) throw new Error(slug);
+      const card = /** @type {HTMLElement} */ (container.querySelector(`[data-service="${slug}"]`));
+      expect(card.textContent).toContain(service.tagline);
+      expect(card.textContent).toContain(service.summary);
+      for (const item of service.scope) expect(card.textContent).toContain(item);
+      expect(card.textContent).toContain(terms);
+      expect(card.textContent).not.toContain('·');
+      const children = Array.from(/** @type {HTMLElement} */ (card.querySelector('h2')).parentElement?.children ?? []);
+      const order = children.map((c) => c.textContent);
+      expect(order.indexOf(service.tagline)).toBe(order.indexOf(service.name) + 1);
+      expect(order.indexOf(service.summary)).toBe(order.indexOf(service.tagline) + 1);
+    }
+    expect(cards.slice(2).map((c) => c.getAttribute('data-service'))).toEqual([
+      'custom-saas-builds', 'mvp-sprints', 'ai-integration', 'technical-audits', 'acquisition-readiness', 'custom-web-development', 'ui-ux-design',
+    ]);
+    for (const card of cards.slice(2)) {
+      const service = services.find((s) => s.slug === card.getAttribute('data-service'));
+      expect(card.textContent).toContain(`${service?.timeline} · ${service?.deposit}`);
+    }
+    expect(container.textContent).not.toMatch(/\$/);
+  });
+
+  it('the meta description names both flagships, stays under 160 characters and shows no price', () => {
+    render(
+      <MemoryRouter>
+        <Services />
+      </MemoryRouter>,
+    );
+    const description = document.querySelector('meta[name="description"]')?.getAttribute('content') ?? '';
+    expect(description).toMatch(/immersive web experiences/i);
+    expect(description).toMatch(/intelligent ai systems/i);
+    expect(description.length).toBeLessThan(160);
+    expect(description).not.toMatch(/\$/);
+  });
+
+  it('the footer lists the two flagships first', () => {
+    render(
+      <MemoryRouter>
+        <Footer />
+      </MemoryRouter>,
+    );
+    const heading = screen.getByText('Services', { selector: 'p' });
+    const names = Array.from(heading.parentElement?.querySelectorAll('li') ?? []).map((li) => (li.textContent ?? '').trim());
+    expect(names.slice(0, 3)).toEqual(['Immersive Web Experiences', 'Intelligent AI Systems', 'Custom SaaS Builds']);
+    expect(names).toHaveLength(9);
+  });
+
+  it('llms.txt lists both flagships first, with their summaries and the terms line, and no price', () => {
+    const text = readFileSync(join(process.cwd(), 'public/llms.txt'), 'utf8');
+    const lines = text.split(/\r?\n/);
+    const intro = lines.find((l) => l.startsWith('> ')) ?? '';
+    expect(intro).toContain('Immersive web experiences, intelligent AI systems, custom SaaS builds');
+    expect(intro).not.toMatch(/\$/);
+    const start = lines.indexOf('## Services');
+    const [first, second] = lines.slice(start + 1, start + 3);
+    for (const [line, slug] of [[first, 'immersive-web-experiences'], [second, 'intelligent-ai-systems']]) {
+      const service = services.find((s) => s.slug === slug);
+      if (!service) throw new Error(slug);
+      expect(line).toBe(`- [${service.name}](https://www.allencodeco.com/services): ${service.summary} Timeline and deposit set per project, after scoping.`);
+      expect(line).not.toMatch(/\$|Typical timeline/);
+    }
+    expect(lines[start + 3]).toContain('[Custom SaaS Builds]');
   });
 
   it('the headline promises no prices it does not show (Chris, 2026-11-26)', () => {

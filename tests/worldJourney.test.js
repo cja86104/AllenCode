@@ -106,8 +106,8 @@ describe('the business road (Code World W2.2)', () => {
   });
 
   it('runs a stop of 1.5 screens per 14 units of road after the turn (the business road’s stops 32 units apart since 2026-11-26), named in order', () => {
-    // W2's nine road stops, and the two services added on 2026-11-16.
-    expect(journey.screens).toBeCloseTo(6.8 + 11 * 1.5 * (roadStepFor('a') / ROAD_STEP), 9);
+    // W2's nine road stops, the two services added on 2026-11-16, and Immersive Web Experiences (2026-11-27).
+    expect(journey.screens).toBeCloseTo(6.8 + 12 * 1.5 * (roadStepFor('a') / ROAD_STEP), 9);
     expect(journey.stops.map((s) => s.name)).toEqual([
       'Empty file',
       'Into the code',

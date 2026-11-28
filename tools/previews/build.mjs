@@ -5,6 +5,7 @@
 // Usage: node tools/previews/build.mjs
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { PREVIEWS } from './previews.config.js';
+import { isMain } from '../shared/isMain.mjs';
 
 /** @typedef {import('./previews.config.js').PreviewPage} PreviewPage */
 /** @typedef {import('./previews.config.js').Theme} Theme */
@@ -411,4 +412,4 @@ export function buildPreviews(outDir = 'tools/previews/src') {
   }
 }
 
-if (import.meta.url === new URL(process.argv[1], 'file:').href) buildPreviews();
+if (isMain(import.meta.url, process.argv[1])) buildPreviews();

@@ -21,6 +21,20 @@ const stops = businessRoadStops();
 const sources = sourcesOf(stops);
 const sizes = roadSizes(stops, sources);
 
+/**
+ * Which side of its road a stop's landmark stands on: −1 left, 1 right, looking along the road.
+ * @param {ReturnType<typeof layoutRoad>} layout @param {ReadonlyArray<{ id: string }>} laidOut The stops it was laid out for.
+ * @param {string} stopId
+ */
+function sideOf(layout, laidOut, stopId) {
+  const landmark = layout.landmarks.find((l) => l.stopId === stopId);
+  const at = layout.along[laidOut.findIndex((s) => s.id === stopId)];
+  if (!landmark || at === undefined) throw new Error(stopId);
+  const { point } = roadAt(layout, at);
+  const here = roadHeadingAt(layout, at);
+  return Math.sign((landmark.center[0] - point[0]) * -here[1] + (landmark.center[2] - point[1]) * here[0]);
+}
+
 describe('roadSizes (Code World W2.2)', () => {
   it('gives products their loops’ 16:10, services their screens’ shape, and slabs their code’s', () => {
     for (const id of ['my-teachers-toolbox', 'underfire-ai', 'founders-helm']) expect(sizes[id]).toEqual({ width: 6, height: 3.75 });
@@ -79,8 +93,25 @@ describe('layoutRoad (Code World W2.2)', () => {
       expect(landmark.facing[1]).toBe(0);
       expect(landmark.facing[2]).toBeCloseTo(-direction[1], 9);
     }
-    // The first landmark is on the outer side (left, for business/).
-    expect(road.landmarks[0].center[0]).toBeLessThan(-6);
+    // The first stop before 2026-11-27 (MVP Sprints) is still on the outer side (left, for business/);
+    // Immersive Web Experiences, ahead of it since then, stands on the other side.
+    expect(sideOf(road, stops, 'mvp-sprints')).toBe(-1);
+    expect(sideOf(road, stops, 'immersive-web-experiences')).toBe(1);
+  });
+
+  it('keeps every business stop that was on the road before Immersive Web Experiences on the side it had (2026-11-27)', () => {
+    // The road at 17dd157 was today's without Immersive (its screen was still null), and its stops
+    // alternated from the first, left (−1) first: that rule, applied to that list, gives each stop's
+    // side as Chris approved it.
+    const before = stops.filter((s) => s.id !== 'immersive-web-experiences');
+    expect(before).toHaveLength(stops.length - 1);
+    const approved = before.map((s, i) => [s.id, i % 2 === 0 ? -1 : 1, s.kind]).filter(([, , kind]) => kind !== 'commits');
+    const old = layoutRoad(before, 'a', sizes);
+    for (const [id, side] of approved) {
+      expect(sideOf(road, stops, String(id)), String(id)).toBe(side);
+      expect(sideOf(old, before, String(id)), `${id}, on the road without Immersive`).toBe(side);
+    }
+    expect(approved).toHaveLength(10);
   });
 
   it('starts the family road where the family branch ends (the business branch mirrored), and faces each landmark back up its own road (each road its own shape, 2026-11-16)', () => {

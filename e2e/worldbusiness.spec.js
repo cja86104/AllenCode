@@ -9,8 +9,10 @@ import { canvas, inChapter, near, open, restRect, scrollTo, spanOf, takeBusiness
  * its landmark while its code flies into its picture.
  */
 
-// The services first, then "our work/" and the products (Chris, 2026-11-16).
+// The services first, Immersive Web Experiences leading (2026-11-27), then "our work/" and the
+// products (Chris, 2026-11-16).
 const ROAD = [
+  'immersive-web-experiences',
   'mvp-sprints',
   'custom-saas-builds',
   'custom-web-development',
@@ -24,7 +26,7 @@ const ROAD = [
   'how-i-work',
 ];
 const PRODUCTS = ['my-teachers-toolbox', 'underfire-ai', 'founders-helm'];
-const SERVICES = ['mvp-sprints', 'custom-saas-builds', 'custom-web-development', 'ui-ux-design', 'ai-integration'];
+const SERVICES = ['immersive-web-experiences', 'mvp-sprints', 'custom-saas-builds', 'custom-web-development', 'ui-ux-design', 'ai-integration'];
 
 test.describe('the world starts as today does (Code World R4)', () => {
   test('the gate’s empty file types and flies into the headline, drawn by the world; the world’s own file stays hidden until then', async ({ page }) => {

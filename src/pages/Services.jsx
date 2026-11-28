@@ -19,7 +19,7 @@ const PAGE_LD = Object.freeze([serviceList(services), breadcrumbs([{ name: 'Serv
 export default function Services() {
   usePageMeta(
     'Services — Allen Code Co.',
-    'Custom SaaS builds, MVP sprints, AI integration, technical audits, and acquisition-readiness consulting from Allen Code Co.',
+    'Immersive web experiences, intelligent AI systems, custom SaaS builds, MVP sprints, technical audits and more from Allen Code Co.',
     { jsonLd: PAGE_LD },
   );
   return (
@@ -42,6 +42,7 @@ export default function Services() {
                 <div className="grid gap-8 p-8 lg:grid-cols-[1.4fr_auto] lg:items-center lg:gap-10">
                   <div>
                     <h2 className={`${DISPLAY} text-3xl sm:text-4xl`}>{s.name}</h2>
+                    {s.tagline && <p className="mono mt-3 text-[11px] uppercase tracking-widest text-ember/80">{s.tagline}</p>}
                     <p className="mt-3 max-w-xl text-white/70">{s.summary}</p>
                     <ul className="mt-5 grid gap-2 sm:grid-cols-2">
                       {s.scope.map((item) => (
@@ -51,7 +52,7 @@ export default function Services() {
                       ))}
                     </ul>
                     <p className="mono mt-5 text-[11px] uppercase tracking-widest text-ember/80">
-                      {s.timeline} · {s.deposit}
+                      {s.terms ?? `${s.timeline} · ${s.deposit}`}
                     </p>
                   </div>
                   <Magnetic>
@@ -83,4 +84,4 @@ export default function Services() {
       </div>
     </div>
   );
-}
+}

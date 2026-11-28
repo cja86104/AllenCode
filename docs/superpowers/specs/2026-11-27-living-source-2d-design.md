@@ -97,6 +97,85 @@ at every review point. Chris commits; no branches.
 7. Mobile, accessibility and performance.
 8. The 2D awards kit: its own recording, stills and write-up of the interaction design.
 
+## Phase 2: the visual direction (in progress, 2026-11-27)
+
+Three directions, each shown on the same moment (the UnderFire AI chapter, desktop and phone, with
+working Source / Transformation / Result tabs), on a design canvas:
+https://claude.ai/artifact/A3EoY2jcTNLWintjkNoUxj
+
+- **A · Instrument:** the page as a precise instrument: explorer rail, line-numbered panel, hairline
+  provenance strip. Calm; the motion is precision.
+- **B · Annotated:** the page as an annotated listing: huge serif headline, the code read like a
+  manuscript with numbered margin notes, provenance as a footnote, a numbered index for navigation.
+- **C · Layers:** the page as the build, layer by layer: source, glyphs in flight and the real screen as
+  a CSS 3D stack (no WebGL) that pulls apart and settles; a path bar for navigation.
+
+**Chosen: C · Layers** (Chris, 2026-11-27: "wife said version C").
+
+### The rules of C (every later phase follows them)
+
+1. **The layer stack is the signature.** A transformation is shown as stacked planes in CSS 3D
+   (`perspective`, `transform-style: preserve-3d`), never WebGL: the real source, its characters in flight
+   (the glyph renderer's own flight), and the real result. Scroll pulls the stack apart; it settles flat
+   and face-on when the result lands, so the finished screen is read straight, never at an angle.
+2. **Three numbered steps.** `01 Source`, `02 Transformation` (`Flight` on a phone), `03 Result`: the
+   tabs a visitor can use to jump a chapter to a step (Phase 4 builds them).
+3. **Navigation is a path.** `allencode / <branch> / <file>` along the top, the current file in an
+   orange chip; every segment opens its siblings (Phase 3).
+4. **One ease.** `cubic-bezier(.16, 1, .3, 1)` (already `Reveal.jsx`'s), 500–700 ms for layer moves.
+5. **Locked as before:** orange `#f97316` on `#0a0a0a`; JetBrains Mono for code, labels and the path;
+   Instrument Serif italic for display; Space Grotesk for text. No glow, no gradient washes.
+6. **Reduced motion and no WebGL2:** the stack is shown flat and face-on (the result, with its code
+   beside it), no tilt and no movement; every control still works.
+7. **Phone:** a smaller stack (about 320 px wide), the three steps as three full-width buttons, the path
+   as one chip in the header.
+
+## Phase 3 design: the path bar (the Project Explorer in C)
+
+**What it is.** A second bar under the nav, on every page while the world is off (Plain view, no
+WebGL2, reduced motion): `allencode / 02_our-work / underfire-ai`. It says where the visitor is and,
+from any segment, lets them go anywhere else. The world keeps its own rail; the two never show
+together.
+
+**The tree** (services first, as on the road; Chris's answers 1–3):
+- `00_origin` — the gate.
+- `01_services` — every service in `src/data/services.js`, read from the data so a new service appears
+  without touching the bar: those with a home chapter (`SERVICE_CHAPTERS`) in their home order, then any
+  without one (today Acquisition-Readiness Consulting), which open their panel on `/services`. Two
+  services are being added first (Chris, 2026-11-27: "before you start building this the new services
+  have not been added. the 3d websites and the ai personall assistant"): 3D world websites and AI
+  personal assistants. They land in the data and get their home chapters before Phase 3 is built.
+- `02_our-work` — the four products.
+- `03_templates` — Hearth (door B's intro), then each template in door B's order (`DOOR_B_TEMPLATES`),
+  then Done for you.
+- `04_how-i-work`, `05_who-builds-it` (the builder), `06_your-idea`, then the brief as `07_start`.
+- On an inner page the path is that page as a file (`allencode / pages / services`); its segments open
+  the same tree.
+
+**Following the fork.** Services, our work and how I work are door A's; templates are door B's. Choosing
+a file on the other door's branch switches the door (`setDoor`, as the nav's switch does), then goes
+there. Before a door is chosen the home has only the gate and the fork: the path reads
+`allencode / 00_origin`, and the branches still open (choosing one chooses its door).
+
+**Where you are.** The current file follows the scroll (the chapter whose pinned frame fills the
+screen; within the templates chapter, the active template). Going to a file glides to the start of its
+chapter (a template: the start of its segment), instantly under reduced motion, and moves focus to the
+chapter's heading, as the world's rail does. From another page it routes home, then goes there.
+
+**Accessible.** `<nav aria-label="Where you are">` holding an ordered list; the current file is
+`aria-current="location"`. Each segment is a disclosure button (`aria-expanded`) opening a list of
+links; Escape closes it and returns focus; a click outside closes it. 44 px targets. Screen readers
+hear the path once, not on every scroll change (the label updates quietly).
+
+**Phone.** One chip in the header (`02 / underfire-ai ▾`) opening the whole tree as a full-width sheet.
+
+**Out of scope for Phase 3:** the layer stack and the step tabs (Phase 4), product demos (Phase 5),
+transitions (Phase 6).
+
+**Measured against the baseline:** budget (no new dependency; the bar must not push the entry script
+past 152 kB), Lighthouse (accessibility and SEO stay 100, CLS no worse: the bar reserves its height
+in the prebuilt HTML), and the capture tool re-run for before/after.
+
 ## Chris's answers (2026-11-27)
 1. Templates: agreed. The explorer follows the fork, with a TEMPLATES branch beside SERVICES and
    PRODUCTS.

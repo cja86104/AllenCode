@@ -3,15 +3,24 @@ import { expect, test } from './plain.js';
 import { visibleCodePixels } from './pixels.js';
 import { openWithDoor } from './door.js';
 
-const SLUGS = ['mvp-sprints', 'custom-saas-builds', 'custom-web-development', 'ui-ux-design', 'ai-integration', 'technical-audits'];
+// Immersive Web Experiences leads since its loop landed (2026-11-27).
+const SLUGS = ['immersive-web-experiences', 'mvp-sprints', 'custom-saas-builds', 'custom-web-development', 'ui-ux-design', 'ai-integration', 'technical-audits'];
 
-test('door a reaches the six service chapters in order, then the shared close', async ({ page }) => {
+test('door a reaches the seven service chapters in order, then the shared close', async ({ page }) => {
   await openWithDoor(page, 'a');
   const expected = ['gate', ...SLUGS, 'how-i-work', 'builder', 'idea', 'brief'];
   const chapters = page.locator('[data-chapter]');
   await expect(chapters).toHaveCount(expected.length);
   const order = await chapters.evaluateAll((els) => els.map((el) => el.getAttribute('data-chapter')));
   expect(order).toEqual(expected);
+});
+
+test('on door a Immersive Web Experiences shows with its loop; the AI systems chapter waits for its approval and screen', async ({ page }) => {
+  await openWithDoor(page, 'a');
+  const immersive = page.locator('[data-chapter="immersive-web-experiences"]');
+  await expect(immersive).toBeAttached();
+  await expect(immersive.locator('video')).toHaveAttribute('src', '/media/services/immersive-web-experiences.mp4');
+  await expect(page.locator('[data-chapter="intelligent-ai-systems"]')).toHaveCount(0);
 });
 
 test('door b does not show the service chapters', async ({ page }) => {

@@ -5,6 +5,7 @@
 // Needs Playwright's Chromium (`npx playwright install chromium`), or PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH.
 import { mkdirSync } from 'node:fs';
 import { chromium } from '@playwright/test';
+import { isMain } from '../shared/isMain.mjs';
 
 /**
  * Where a frame is taken. `top` scrolls to the top of the page; `heading` scrolls the first element
@@ -138,4 +139,4 @@ export async function captureProducts(outDir = 'tools/media/out') {
   }
 }
 
-if (import.meta.url === new URL(process.argv[1], 'file:').href) await captureProducts();
+if (isMain(import.meta.url, process.argv[1])) await captureProducts();

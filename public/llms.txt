@@ -1,6 +1,6 @@
 # Allen Code Co.
 
-> Solo build-to-sell software studio run by Chris Allen. Custom SaaS builds, MVP sprints, AI integration, technical audits, acquisition-readiness consulting, custom web development and UI/UX design — plus four in-house SaaS products (three live, one coming soon) and a library of website templates.
+> Solo build-to-sell software studio run by Chris Allen. Immersive web experiences, intelligent AI systems, custom SaaS builds, MVP sprints, AI integration, technical audits, acquisition-readiness consulting, custom web development and UI/UX design — plus four in-house SaaS products (three live, one coming soon) and a library of website templates.
 
 ## Products
 - [My Teachers Toolbox](https://www.allencodeco.com/products/my-teachers-toolbox): AI tools for K-5 teachers, built in real classrooms. Live at myteacherstoolbox.com.
@@ -9,6 +9,8 @@
 - [Crew Advisors](https://www.allencodeco.com/products/crew-advisors): Your AI advisory board — expert personas with persistent memory of your business. Coming soon.
 
 ## Services
+- [Immersive Web Experiences](https://www.allencodeco.com/services): Interactive 3D websites, digital environments and experiences designed to make the web something people explore. Timeline and deposit set per project, after scoping.
+- [Intelligent AI Systems](https://www.allencodeco.com/services): Purpose-built AI assistants, agent teams and intelligent operational systems that do more than generate responses. Timeline and deposit set per project, after scoping.
 - [Custom SaaS Builds](https://www.allencodeco.com/services): Full custom application, built and shipped by one senior developer. Typical timeline 6–12 weeks.
 - [MVP Sprints](https://www.allencodeco.com/services): Scope-locked 4–6 week build to get a real product in front of real users. Typical timeline 4–6 weeks.
 - [AI Integration & OpenRouter Routing](https://www.allencodeco.com/services): Model routing, cost controls, and fallbacks. Typical timeline 1–3 weeks.

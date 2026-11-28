@@ -10,12 +10,12 @@ describe('routeFor: one journey per door, shared by the canvas and the page (Cod
     const route = routeFor('a');
     expect(routeFor('a')).toBe(route);
     expect(route.road?.door).toBe('a');
-    // W2's nine stops, and the two services added on 2026-11-16.
-    expect(route.road?.stops).toHaveLength(11 + MEETING_STOPS.length);
-    // The opening's 6.8 screens, 1.5 per 14 units of road for each of the eleven business stops (three
+    // W2's nine stops, the two services added on 2026-11-16, and Immersive Web Experiences (2026-11-27).
+    expect(route.road?.stops).toHaveLength(12 + MEETING_STOPS.length);
+    // The opening's 6.8 screens, 1.5 per 14 units of road for each of the twelve business stops (three
     // steps apart, 2026-11-16; 32 units since 2026-11-26), and 1.5 for each stop where the roads meet (W4).
-    expect(route.journey.screens).toBeCloseTo(6.8 + 11 * 1.5 * (roadStepFor('a') / ROAD_STEP) + 1.5 * MEETING_STOPS.length, 9);
-    expect(route.journey.landmarks).toHaveLength(10 + MEETING_STOPS.length);
+    expect(route.journey.screens).toBeCloseTo(6.8 + 12 * 1.5 * (roadStepFor('a') / ROAD_STEP) + 1.5 * MEETING_STOPS.length, 9);
+    expect(route.journey.landmarks).toHaveLength(11 + MEETING_STOPS.length);
     for (const stop of route.road?.stops ?? []) if (stop.excerptId) expect(typeof route.road?.sources[stop.excerptId]).toBe('string');
   });
 

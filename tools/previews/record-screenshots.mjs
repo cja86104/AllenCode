@@ -9,6 +9,7 @@
 //   node tools/previews/record-screenshots.mjs <id> <first.png> <second.png> ...   (needs ffmpeg on PATH)
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, statSync } from 'node:fs';
+import { isMain } from '../shared/isMain.mjs';
 
 const WIDTH = 1280;
 const HEIGHT = 800;
@@ -98,7 +99,7 @@ export function recordScreenshots(id, shots, outDir = 'public/media/templates') 
   console.log(`${id}: loop ${(loopBytes / 1024).toFixed(0)} KB over ${duration.toFixed(1)} s, poster ${(posterBytes / 1024).toFixed(0)} KB`);
 }
 
-if (import.meta.url === new URL(process.argv[1], 'file:').href) {
+if (isMain(import.meta.url, process.argv[1])) {
   const [id, ...shots] = process.argv.slice(2);
   if (!id || !/^[a-z0-9-]+$/.test(id) || shots.length < 2) {
     console.error('Usage: node tools/previews/record-screenshots.mjs <id> <first.png> <second.png> ...');

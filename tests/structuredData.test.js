@@ -46,6 +46,15 @@ describe('structured data for each page (2026-11-26, Task 1.5)', () => {
     expectNoPrice(list);
   });
 
+  it('Services: nine Services, the two flagships at positions 1 and 2 with their summaries', () => {
+    const list = serviceList(services);
+    expect(list.itemListElement).toHaveLength(9);
+    expect(list.itemListElement.slice(0, 2).map((e) => [e.position, e.item.name, e.item.description])).toEqual([
+      [1, 'Immersive Web Experiences', 'Interactive 3D websites, digital environments and experiences designed to make the web something people explore.'],
+      [2, 'Intelligent AI Systems', 'Purpose-built AI assistants, agent teams and intelligent operational systems that do more than generate responses.'],
+    ]);
+  });
+
   it('a product: a web application by Chris Allen, its live address only when it has one, no offers or ratings', () => {
     for (const product of catalog) {
       const app = softwareApplication(product);
