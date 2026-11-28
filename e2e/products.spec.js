@@ -1,6 +1,5 @@
 // @ts-check
 import { expect, test } from './plain.js';
-import { visibleCodePixels } from './pixels.js';
 import crewExcerpt from '../src/content/excerpts/product-crew-advisors.js';
 import { openWithDoor } from './door.js';
 
@@ -33,26 +32,25 @@ test('door a reaches the four product chapters after the services, in products.j
   expect(productsTop).toBeGreaterThanOrEqual(auditBottom);
 });
 
-test('the code lands on the poster, then the loop plays, and the live link has rel noopener', async ({ page }) => {
+test('the code lands on the poster, then the loop plays, and the live link has rel noopener (C’s stack, Living Source Phase 4)', async ({ page }) => {
   await openDoorA(page);
   const chapter = page.locator('[data-product="my-teachers-toolbox"]');
-  const code = chapter.locator('pre');
+  const source = chapter.locator('[data-plane="source"]');
+  const flight = chapter.locator('[data-plane="flight"]');
+  const result = chapter.locator('[data-plane="result"]');
   const video = chapter.locator('video');
-  const loopFrame = chapter.locator('video >> xpath=../..');
 
   await scrollChapter(page, chapter, 0);
-  await expect(code).toHaveCSS('opacity', '1');
-  await expect(loopFrame).toHaveCSS('opacity', '0');
+  await expect(source).toHaveCSS('opacity', '1');
+  await expect.poll(() => result.evaluate((el) => Number(getComputedStyle(el).opacity))).toBeLessThan(0.5);
 
   await scrollChapter(page, chapter, 0.5);
-  await expect(code).toHaveCSS('opacity', '0');
-  const { width, height } = page.viewportSize() ?? { width: 0, height: 0 };
-  const stage = { x: Math.round(width * 0.45), y: Math.round(height * 0.14), width: Math.round(width * 0.51), height: Math.round(height * 0.74) };
-  await expect.poll(async () => visibleCodePixels(await page.screenshot({ clip: stage }))).toBeGreaterThan(400);
+  await expect(source).toHaveCSS('opacity', '0');
+  await expect(flight).toHaveCSS('opacity', '1');
   expect(await video.evaluate((el) => /** @type {HTMLVideoElement} */ (el).paused)).toBe(true);
 
   await scrollChapter(page, chapter, 1);
-  await expect(loopFrame).toHaveCSS('opacity', '1');
+  await expect(result).toHaveCSS('opacity', '1');
   await expect.poll(() => video.evaluate((el) => !(/** @type {HTMLVideoElement} */ (el).paused) && /** @type {HTMLVideoElement} */ (el).currentTime > 0)).toBe(true);
   expect(await video.evaluate((el) => /** @type {HTMLVideoElement} */ (el).muted)).toBe(true);
 
@@ -97,7 +95,8 @@ test('with reduced motion the product chapters show their code beside the poster
   await openWithDoor(page, 'a');
   const chapter = page.locator('[data-product="founders-helm"]');
   await chapter.scrollIntoViewIfNeeded();
-  await expect(chapter.locator('pre')).toBeVisible();
+  // The code beside the flat stack (the stack's own source plane is the second pre, shown on its step).
+  await expect(chapter.locator('pre').first()).toBeVisible();
   await expect(chapter.getByRole('img', { name: /Founders Helm/ })).toBeVisible();
   await expect(chapter.locator('[data-counter]')).toHaveText(['10', '55+', '40+', '0']);
   await page.waitForTimeout(800);

@@ -191,6 +191,24 @@ html[data-likely-world] [data-path-chip] {
   display: none;
 }
 
+/* Living Source Phase 4: the characters in flight in C's stack (LayerStack.jsx). Each holds its start and end as
+   shares of the plane; the plane's one --t moves them all, each from its own delay --d, so a scroll frame changes
+   one style. */
+[data-plane='flight'] {
+  container-type: size;
+}
+[data-plane='flight'] > span {
+  --k: clamp(0, (var(--t) - var(--d)) / 0.6, 1);
+  position: absolute;
+  left: 0;
+  top: 0;
+  line-height: 1;
+  transform: translate(
+    calc((var(--x0) + (var(--x1) - var(--x0)) * var(--k)) * 100cqw),
+    calc((var(--y0) + (var(--y1) - var(--y0)) * var(--k)) * 100cqh)
+  );
+}
+
 /* The path bar's menus rise in over 500 ms on the one ease (PathMenu.jsx; none with reduced motion). */
 @keyframes path-in {
   from {

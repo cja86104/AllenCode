@@ -90,6 +90,30 @@ test('the empty file is empty before scrolling: no code is drawn in the editor',
   expect(await visibleCodePixels(await page.screenshot({ clip }))).toBe(0);
 });
 
+test('after a lost context is restored mid-flight, the fresh canvas keeps drawing the gate’s flight (moved from services.spec.js, Living Source Phase 4)', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.goto(HOME);
+  await expect(page.locator('canvas[data-field="webgl"]')).toHaveAttribute('data-ready', 'true');
+  const gate = page.locator('[data-chapter="gate"]');
+  const top = await gate.evaluate((el) => el.getBoundingClientRect().top + window.scrollY);
+  const span = await gate.evaluate((el) => el.getBoundingClientRect().height - window.innerHeight);
+  // At 60 % the editor's code and the headline are both hidden: only the field draws the code in flight.
+  await page.evaluate((y) => window.scrollTo(0, y), Math.round(top + span * 0.6));
+  await expect(gate.locator('[data-editor-code]')).toHaveCSS('opacity', '0');
+  await expect(gate.locator('h1')).toHaveCSS('opacity', '0');
+
+  await page.locator('canvas[data-field="webgl"]').evaluate((el) => {
+    el.setAttribute('data-before-loss', '');
+    const ext = /** @type {HTMLCanvasElement} */ (el).getContext('webgl2')?.getExtension('WEBGL_lose_context');
+    ext?.loseContext();
+    setTimeout(() => ext?.restoreContext(), 100);
+  });
+  await expect(page.locator('canvas[data-field="webgl"][data-ready="true"]:not([data-before-loss])')).toHaveCount(1);
+  // Below the header, where nothing but the field draws bright code.
+  const clip = { x: 0, y: 120, width: 1280, height: 600 };
+  await expect.poll(async () => visibleCodePixels(await page.screenshot({ clip }))).toBeGreaterThan(400);
+});
+
 test.describe('on a phone', () => {
   test.use({ viewport: { width: 390, height: 844 } });
 

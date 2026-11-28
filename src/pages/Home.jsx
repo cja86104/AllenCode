@@ -1,5 +1,5 @@
 // @ts-check
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import usePageMeta from '../hooks/usePageMeta.js';
 import Gate from '../scenes/Gate.jsx';
 import Fork from '../door/Fork.jsx';
@@ -18,6 +18,8 @@ import WorldRoadChapters from '../scenes/WorldRoadChapters.jsx';
 // The Code World journey loads only when the switch is on (its own chunk; W2.5).
 const WorldJourney = lazy(() => import('../scenes/WorldJourney.jsx'));
 import { useWorldHome } from '../world/worldSwitch.js';
+import { useTrackCurrentFile } from '../pathbar/current.js';
+import { useHydrated } from '../ssr/useHydrated.js';
 
 /**
  * The home page: the Source to Screen experience (spec section 4). The shared opening and the fork;
@@ -33,6 +35,14 @@ export default function Home() {
   const { door } = useDoor();
   // Behind `/?world=1` the Code World follows the gate (Code World W1.3; W2 revised, R4).
   const world = useWorldHome();
+  // The world-off path bar follows the chapter on screen (Living Source Phase 3).
+  useTrackCurrentFile(!world, door);
+  // C's layer stack is the world-off chapters' (Living Source Phase 4): once the page knows the world is off, its
+  // chunk is asked for ahead of the first chapter, and never with the world on.
+  const hydrated = useHydrated();
+  useEffect(() => {
+    if (hydrated && !world) void import('../scenes/layers/index.js');
+  }, [hydrated, world]);
 
   const opening = (
     <>
@@ -69,8 +79,8 @@ export default function Home() {
           <WorldRoadChapters door="a" includeDrafts={false} />
         ) : (
           <>
-            <ServiceChapters includeDrafts={false} />
-            <ProductChapters includeDrafts={false} />
+            <ServiceChapters includeDrafts={false} layers />
+            <ProductChapters includeDrafts={false} layers />
             <HowIWork />
           </>
         ))}
@@ -80,8 +90,8 @@ export default function Home() {
           <WorldRoadChapters door="b" includeDrafts={false} />
         ) : (
           <>
-            <DoorBIntro includeDrafts={false} />
-            <TemplateChapter includeDrafts={false} />
+            <DoorBIntro includeDrafts={false} layers />
+            <TemplateChapter includeDrafts={false} layers />
             <DoneForYou />
           </>
         ))}
@@ -95,7 +105,7 @@ export default function Home() {
           </div>
         ) : (
           <>
-            <Builder />
+            <Builder layers />
             <IdeaSketch />
             <BriefChapter />
           </>

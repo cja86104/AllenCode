@@ -1,6 +1,5 @@
 // @ts-check
 import { expect, test } from './plain.js';
-import { visibleCodePixels } from './pixels.js';
 import { openWithDoor } from './door.js';
 
 // Immersive Web Experiences leads since its loop landed (2026-11-27).
@@ -58,50 +57,32 @@ test('with reduced motion the audit chapter shows its code without the checking'
   await expect(audit.locator('[data-checked]')).toHaveCount(0);
 });
 
-test('a chapter with a screen flies its code onto that screen as the visitor scrolls', async ({ page }) => {
+test('a chapter with a screen carries its code onto that screen as the visitor scrolls (C’s stack, Living Source Phase 4)', async ({ page }) => {
   await openWithDoor(page, 'a');
   await expect(page.locator('canvas[data-field="webgl"]')).toHaveAttribute('data-ready', 'true');
   const mvp = page.locator('[data-chapter="mvp-sprints"]');
-  const screen = mvp.getByRole('img', { name: /UnderFire AI landing page/ });
-  const code = mvp.locator('pre');
+  await expect(mvp.getByRole('img', { name: /UnderFire AI landing page/ })).toBeAttached();
+  const source = mvp.locator('[data-plane="source"]');
+  const flight = mvp.locator('[data-plane="flight"]');
+  const result = mvp.locator('[data-plane="result"]');
   const top = await mvp.evaluate((el) => el.getBoundingClientRect().top + window.scrollY);
   const span = await mvp.evaluate((el) => el.getBoundingClientRect().height - window.innerHeight);
 
   await page.evaluate((y) => window.scrollTo(0, y), Math.round(top));
-  await expect(code).toHaveCSS('opacity', '1');
-  await expect(screen).toHaveCSS('opacity', '0');
+  await expect(source).toHaveCSS('opacity', '1');
+  await expect(flight).toHaveCSS('opacity', '0');
 
-  // Mid-flight the editor's code is hidden and the field draws it, in the stage on the right.
+  // Mid-flight the source has let its characters go; they are on their way across the middle plane.
   await page.evaluate((y) => window.scrollTo(0, y), Math.round(top + span * 0.5));
-  await expect(code).toHaveCSS('opacity', '0');
-  const { width, height } = page.viewportSize() ?? { width: 0, height: 0 };
-  const stage = { x: Math.round(width * 0.45), y: Math.round(height * 0.14), width: Math.round(width * 0.51), height: Math.round(height * 0.74) };
-  await expect.poll(async () => visibleCodePixels(await page.screenshot({ clip: stage }))).toBeGreaterThan(400);
+  await expect(source).toHaveCSS('opacity', '0');
+  await expect(flight).toHaveCSS('opacity', '1');
+  const travel = Number(await flight.evaluate((el) => el.style.getPropertyValue('--t')));
+  expect(travel).toBeGreaterThan(0.3);
+  expect(travel).toBeLessThan(1);
 
   await page.evaluate((y) => window.scrollTo(0, y), Math.round(top + span));
-  await expect(screen).toHaveCSS('opacity', '1');
-});
-
-test('after a lost context is restored mid-flight, the fresh canvas keeps drawing the flight', async ({ page }) => {
-  await openWithDoor(page, 'a');
-  await expect(page.locator('canvas[data-field="webgl"]')).toHaveAttribute('data-ready', 'true');
-  const mvp = page.locator('[data-chapter="mvp-sprints"]');
-  const top = await mvp.evaluate((el) => el.getBoundingClientRect().top + window.scrollY);
-  const span = await mvp.evaluate((el) => el.getBoundingClientRect().height - window.innerHeight);
-  await page.evaluate((y) => window.scrollTo(0, y), Math.round(top + span * 0.5));
-  await expect(mvp.locator('pre')).toHaveCSS('opacity', '0');
-
-  await page.locator('canvas[data-field="webgl"]').evaluate((el) => {
-    el.setAttribute('data-before-loss', '');
-    const ext = /** @type {HTMLCanvasElement} */ (el).getContext('webgl2')?.getExtension('WEBGL_lose_context');
-    ext?.loseContext();
-    setTimeout(() => ext?.restoreContext(), 100);
-  });
-  await expect(page.locator('canvas[data-field="webgl"][data-ready="true"]:not([data-before-loss])')).toHaveCount(1);
-
-  const { width, height } = page.viewportSize() ?? { width: 0, height: 0 };
-  const stage = { x: Math.round(width * 0.45), y: Math.round(height * 0.14), width: Math.round(width * 0.51), height: Math.round(height * 0.74) };
-  await expect.poll(async () => visibleCodePixels(await page.screenshot({ clip: stage }))).toBeGreaterThan(400);
+  await expect(result).toHaveCSS('opacity', '1');
+  await expect(flight).toHaveCSS('opacity', '0');
 });
 
 test('how I work commits its three rules one at a time as the visitor scrolls', async ({ page }) => {

@@ -130,7 +130,21 @@ https://claude.ai/artifact/A3EoY2jcTNLWintjkNoUxj
 7. **Phone:** a smaller stack (about 320 px wide), the three steps as three full-width buttons, the path
    as one chip in the header.
 
+## Phase 4: built (2026-11-28)
+
+C's stack is on every code-to-screen chapter of the world-off home (services with a screen, products, door B's
+opening, the templates, the builder), with the three steps and the provenance under it. Chris (2026-11-28): the middle
+plane's characters travel inside the stack ("Characters travel in the stack"), so a chapter in the stack claims no
+WebGL flight; every code-to-screen chapter takes it ("All code-to-screen"). The world's roads keep today's flight.
+Plan: `docs/superpowers/plans/2026-11-28-living-source-phase-4-layers.md`. Still open for Chris: which lines of each
+excerpt "matter" (spec D's highlight), and which repositories are public (the provenance's links).
+
 ## Phase 3 design: the path bar (the Project Explorer in C)
+
+**Built 2026-11-28** (plan `docs/superpowers/plans/2026-11-27-living-source-phase-3-path-bar.md`; numbers in
+`docs/living-source/baseline.md`, "After Phase 3"). The plan's rulings record where the build differs from the design
+below: the phone chip shows the file alone below 400 px, the menus load on the first press, and every pinned chapter's
+words keep below the header.
 
 **What it is.** A second bar under the nav, on every page while the world is off (Plain view, no
 WebGL2, reduced motion): `allencode / 02_our-work / underfire-ai`. It says where the visitor is and,

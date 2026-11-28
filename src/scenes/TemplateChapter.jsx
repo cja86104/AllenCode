@@ -1,5 +1,5 @@
 // @ts-check
-import { useRef } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { DOOR_B_TEMPLATES } from '../data/homeOrder.js';
 import { templateLoopAlt, templateStatusLabel } from '../data/templateStatus.js';
@@ -12,6 +12,10 @@ import { useSectionProgress } from './useSectionProgress.js';
 import { DESKTOP_MIN_WIDTH, EditorPanel, FlightEditor, flightGeometry, useImageFlight } from './flight.jsx';
 import { CHAPTER_BODY, CHAPTER_GRID, CHAPTER_LABEL, CHAPTER_TITLE } from './chapterType.js';
 import { useWordsFloor } from '../pathbar/pathBarStore.js';
+import { glideTo } from '../scroll/glide.js';
+import { chapterLayout } from './flight.jsx';
+import { LayerSlot, PHONE_STACK_PX, flatStageWidth, stageFit } from './layerSlot.jsx';
+import { stepAt } from './layers/layerTimeline.js';
 
 /** @typedef {import('../content/excerpts/index.js').Excerpt} Excerpt */
 /** @typedef {(typeof import('../data/templates.js').templates)[number]} Template */
@@ -198,7 +202,14 @@ function FlightTemplateChapter({ items }) {
   const local = Math.min(1, progress * count - active);
 
   return (
-    <section ref={sectionRef} data-template-chapter style={{ height: `${count * SEGMENT_VH + 100}vh` }} className="relative">
+    <section
+      ref={sectionRef}
+      data-template-chapter
+      // Only the segment on screen is drawn, so the chapter names its order for the path bar (Living Source Phase 3).
+      data-template-order={items.map(({ template }) => template.id).join(' ')}
+      style={{ height: `${count * SEGMENT_VH + 100}vh` }}
+      className="relative"
+    >
       <div className="pin-frame sticky top-0 overflow-hidden">
         {items.map(({ template, excerpt }, index) => (
           <TemplateSegment
@@ -222,12 +233,104 @@ function FlightTemplateChapter({ items }) {
   );
 }
 
+/** @param {Template} template A template's loop as C's stack shows it. */
+const stackScreen = (template) => {
+  const loop = loopOf(template);
+  return { src: loop.poster, alt: loop.alt, ...LOOP_SIZE, video: loop.src };
+};
+
+/**
+ * Door B's templates in C (Living Source Phase 4), the world off: one pinned chapter, one segment per template,
+ * each drawing its own layer stack from its own share of the scroll; the steps move within the segment on
+ * screen. The chapter names its order for the path bar (only the segment on screen is drawn).
+ * @param {{ items: { template: Template, excerpt: Excerpt }[] }} props
+ */
+function LayerTemplateChapter({ items }) {
+  const sectionRef = useRef(/** @type {HTMLElement | null} */ (null));
+  const reducedMotion = usePrefersReducedMotion();
+  const { progress, viewport } = useSectionProgress(sectionRef, true);
+  const floor = useWordsFloor(viewport.w);
+  const count = items.length;
+  const active = Math.min(count - 1, Math.floor(progress * count));
+  const local = Math.min(1, progress * count - active);
+  const jump = useCallback(
+    (/** @type {import('./layers/layerTimeline.js').StepId} */ step) => {
+      const section = sectionRef.current;
+      if (!section) return;
+      const rect = section.getBoundingClientRect();
+      const span = Math.max(0, rect.height - window.innerHeight);
+      glideTo(Math.ceil(rect.top + window.scrollY + ((active + stepAt(step)) * span) / count), { instant: reducedMotion });
+    },
+    [active, count, reducedMotion],
+  );
+  const phone = viewport.w < 768;
+  const compact = viewport.w < DESKTOP_MIN_WIDTH;
+  const { text, stage } = chapterLayout(viewport.w, viewport.h);
+  const { template, excerpt } = items[active];
+  const screen = stackScreen(template);
+  const fit = stageFit(stage, screen.width / screen.height, phone ? PHONE_STACK_PX : Number.POSITIVE_INFINITY);
+
+  return (
+    <section
+      ref={sectionRef}
+      data-template-chapter
+      data-layer-chapter
+      // Only the segment on screen is drawn, so the chapter names its order for the path bar (Living Source Phase 3).
+      data-template-order={items.map((item) => item.template.id).join(' ')}
+      style={{ height: `${count * SEGMENT_VH + 100}vh` }}
+      className="relative"
+    >
+      <div className="pin-frame sticky top-0 overflow-hidden">
+        <div data-door-b-template={template.id}>
+          <div data-world-words style={{ left: text.x, top: Math.max(text.y, floor), width: text.w }} className="absolute">
+            <ChapterHeading />
+            <div className={compact ? 'mt-4' : 'mt-10'}>
+              <TemplateText template={template} compact={compact} />
+            </div>
+            <p className={`mt-6 tracking-[0.25em] text-white/60 ${CHAPTER_LABEL}`}>
+              {active + 1} / {count}
+            </p>
+          </div>
+          <div data-world-target style={{ left: fit.x, top: Math.max(fit.y, floor) }} className="absolute">
+            <LayerSlot key={template.id} excerpt={excerpt} screen={screen} progress={local} flat={false} view="result" width={fit.width} phone={phone} onPick={jump} />
+          </div>
+        </div>
+        <div className="absolute bottom-8 left-[6%]">
+          <AllTemplatesLink />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/**
+ * One template flat in C (reduced motion, or no renderer): its words, its code and its stack, the steps
+ * switching the view at once.
+ * @param {{ template: Template, excerpt: Excerpt }} props
+ */
+function FlatTemplate({ template, excerpt }) {
+  const ref = useRef(/** @type {HTMLElement | null} */ (null));
+  const { viewport } = useSectionProgress(ref, false);
+  const [view, setView] = useState(/** @type {import('./layers/layerTimeline.js').StepId} */ ('result'));
+  return (
+    <div data-door-b-template={template.id} className={`grid gap-10 ${CHAPTER_GRID} lg:items-center`}>
+      <TemplateText template={template} />
+      <div className="min-w-0 space-y-6">
+        <EditorPanel excerpt={excerpt} />
+        <LayerSlot excerpt={excerpt} screen={stackScreen(template)} progress={1} flat view={view} width={flatStageWidth(viewport.w)} phone={viewport.w < 768} onPick={setView} />
+      </div>
+    </div>
+  );
+}
+
 /**
  * Door B's template chapter. Without the renderer or with reduced motion, each template's code sits
  * beside its preview.
- * @param {{ includeDrafts: boolean }} props Whether unapproved excerpts may show (the public site passes false).
+ * With `layers` (the world off) the templates take C's layer stack (Living Source Phase 4).
+ * @param {{ includeDrafts: boolean, layers?: boolean }} props Whether unapproved excerpts may show (the public site
+ *   passes false), and whether the templates take the layer stack.
  */
-export default function TemplateChapter({ includeDrafts }) {
+export default function TemplateChapter({ includeDrafts, layers = false }) {
   const reducedMotion = usePrefersReducedMotion();
   const { mode } = useField();
   const items = DOOR_B_TEMPLATES.flatMap((template) => {
@@ -235,6 +338,18 @@ export default function TemplateChapter({ includeDrafts }) {
     return excerpt ? [{ template, excerpt }] : [];
   });
 
+  if (layers && items.length > 0) {
+    if (!reducedMotion && mode === 'webgl') return <LayerTemplateChapter items={items} />;
+    return (
+      <section data-template-chapter data-layer-chapter className="relative z-10 mx-auto max-w-6xl space-y-16 px-6 py-16 lg:px-10">
+        <ChapterHeading />
+        {items.map(({ template, excerpt }) => (
+          <FlatTemplate key={template.id} template={template} excerpt={excerpt} />
+        ))}
+        <AllTemplatesLink />
+      </section>
+    );
+  }
   if (!reducedMotion && mode === 'webgl' && items.length > 0) return <FlightTemplateChapter items={items} />;
 
   return (

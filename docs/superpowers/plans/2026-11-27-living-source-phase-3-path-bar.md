@@ -282,13 +282,13 @@ a page reached from its menu, the sheet closed by Back, axe with a menu and the 
     reducedMotion })`; when `scrollY` is within 2 px of `y` or after 1500 ms, `focusHeading`. No element
     after the wait: go to `fallback` the same way; no fallback: stay and do nothing.
 
-- [ ] **Step 1: Write the failing unit tests:** `landingY` (pinned at its top; static at top − header; never
+- [x] **Step 1: Write the failing unit tests:** `landingY` (pinned at its top; static at top − header; never
   negative); `templateSegmentY` (index 0 → top + 1; index 2 of 5 with span 4500 → top + 1801);
   `waitForElement` (resolves when added later; `null` after the timeout, fake timers);
   `goTo` with stubs: `switches door for a template from door A`, `routes home from /services`,
   `falls back to the services panel when the chapter never appears`, `a shared branch with no door chooses A`,
   `instant under reduced motion`.
-- [ ] **Step 2: Write the failing e2e tests** (plain fixture, 1280 × 720 unless named):
+- [x] **Step 2: Write the failing e2e tests** (plain fixture, 1280 × 720 unless named):
   - `goes to a chapter`: door A, choose `02_our-work` → `underfire-ai`; `[data-product="underfire-ai"] h2` is
     focused and its section's top is within 2 px of the top.
   - `hidden chapter falls back`: for every `01_services` file, after choosing it, either
@@ -300,10 +300,17 @@ a page reached from its menu, the sheet closed by Back, axe with a menu and the 
     focused.
   - `before a door`: fresh visit, `05_who-builds-it`; door A chosen, the builder's heading focused.
   - `reduced motion`: same as the first with `reducedMotion: 'reduce'`; static sections' headings below the header.
-- [ ] **Step 3: Run** both — expect FAIL.
-- [ ] **Step 4: Implement `go.js`** and wire `PathBar`'s default `onGo` with the hooks above.
-- [ ] **Step 5: Run** both and `npm run verify` — expect PASS and clean.
-- [ ] **Step 6: Stop for Chris.**
+- [x] **Step 3: Run** both — expect FAIL.
+- [x] **Step 4: Implement `go.js`** and wire `PathBar`'s default `onGo` with the hooks above.
+- [x] **Step 5: Run** both and `npm run verify` — expect PASS and clean.
+- [x] **Step 6: Stop for Chris.**
+
+**Done 2026-11-28.** `tests/pathGo.test.js` 10/10 (red first); `go.js` loads on the first choice (0.90 kB).
+Rulings: door B's pinned template chapter draws only the segment on screen, so it names its order
+(`data-template-order`) and the jump glides to the segment from it; the menus and the sheet carry
+`data-lenis-prevent` (a wheel over them had scrolled the page, found by a new test); waits poll every 50 ms.
+Deferred minor: a file chosen in the first second after load can lose focus when the code field starts and
+redraws the chapters; the glide still lands.
 
 ### Task 5: Following the scroll
 
@@ -325,19 +332,24 @@ a page reached from its menu, the sheet closed by Back, axe with a menu and the 
   - `useCurrentFile(enabled: boolean): string | null` — on scroll and resize, once per frame, measures and
     picks at `scrollY + innerHeight / 2`; re-renders only on a change.
 
-- [ ] **Step 1: Write the failing unit tests:** `pickCurrent` (inside, between probes, before all, empty);
+- [x] **Step 1: Write the failing unit tests:** `pickCurrent` (inside, between probes, before all, empty);
   `segmentProbes` (5 segments, span 4500, contiguous, last ends at the section's bottom);
   `measureProbes` on a jsdom document with stubbed `getBoundingClientRect` (origin first, a missing chapter
   skipped).
-- [ ] **Step 2: Write the failing e2e tests:** `follows the scroll` (door A, scroll to each product chapter's
+- [x] **Step 2: Write the failing e2e tests:** `follows the scroll` (door A, scroll to each product chapter's
   middle; the chip reads its slug); `follows the templates` (door B, flight mode, scroll into the second
   segment; the chip reads that template's id; same in reduced motion); `reads 00_origin at the top`;
   `no announcement` (the bar contains no `aria-live` and no `role="status"`).
-- [ ] **Step 3: Run** both — expect FAIL.
-- [ ] **Step 4: Implement `current.js`** and pass `useCurrentFile(pathname === '/')` into `homeSegments`.
-- [ ] **Step 5: Run** both, `npm run verify`, `npm run test:e2e` (the full suite: the bar sits in every page's
+- [x] **Step 3: Run** both — expect FAIL.
+- [x] **Step 4: Implement `current.js`** and pass `useCurrentFile(pathname === '/')` into `homeSegments`.
+- [x] **Step 5: Run** both, `npm run verify`, `npm run test:e2e` (the full suite: the bar sits in every page's
   header) — expect PASS and clean.
-- [ ] **Step 6: Stop for Chris.**
+- [x] **Step 6: Stop for Chris.**
+
+**Done 2026-11-28.** `tests/pathCurrent.test.js` 4/4 and one new bar test (red first); `npm run verify` 664/664,
+entry 151.13 kB, Home 13.97 kB; e2e 303/303. Ruling: the home page measures (`current.js`, in its chunk) and tells
+the bar through `pathBarStore.js`, not the bar itself (the entry's budget); the templates' stretches are placed at
+the screen's middle line, where the bar picks.
 
 ### Task 6: Measured against the baseline, and written down
 
@@ -345,15 +357,21 @@ a page reached from its menu, the sheet closed by Back, axe with a menu and the 
 - Modify: `docs/living-source/baseline.md` (a Phase 3 after-section), `CLAUDE.md` (the 2D section),
   the spec's Phase 3 heading (`built, 2026-…`)
 
-- [ ] **Step 1: Run** `npm run verify` — note the entry script size; it must be at or under 152 kB. If it is
+- [x] **Step 1: Run** `npm run verify` — note the entry script size; it must be at or under 152 kB. If it is
   over, `PathMenu` moves to a lazy chunk loaded on a segment's first press (the bar's row itself stays in the
   entry), and Step 1 runs again.
-- [ ] **Step 2: Run** `npm run test:e2e` and `npm run excerpts:verify` — expect PASS.
-- [ ] **Step 3: Run** Lighthouse on all 10 pages as the baseline doc records (mobile and desktop, `?world=0`) —
+- [x] **Step 2: Run** `npm run test:e2e` and `npm run excerpts:verify` — expect PASS.
+- [x] **Step 3: Run** Lighthouse on all 10 pages as the baseline doc records (mobile and desktop, `?world=0`) —
   accessibility and SEO 100, CLS no worse than the baseline; record the table.
-- [ ] **Step 4: Run** `npm run preview -- --port 4173` and `npm run baseline:capture`; note the capture folder
+- [x] **Step 4: Run** `npm run preview -- --port 4173` and `npm run baseline:capture`; note the capture folder
   in the after-section and compare the home's opening and one inner page by eye.
-- [ ] **Step 5: Update `CLAUDE.md`:** the path bar's files (`src/pathbar/`), that the home's order lists live
+- [x] **Step 5: Update `CLAUDE.md`:** the path bar's files (`src/pathbar/`), that the home's order lists live
   in `src/data/homeOrder.js`, and the `data-world-ahead` mark.
 - [ ] **Step 6: Stop for Chris:** the iPhone and desktop frame-meter runs with the bar (`?world=0&meter=1`)
   are his, as in Phase 1.
+
+**Done 2026-11-28.** `npm run verify` 664/664, entry 151.13 kB (fits; no fallback needed beyond Tasks 3 and 4's);
+`npm run test:e2e` 303/303; Lighthouse on all 10 pages three ways, accessibility and SEO 100 everywhere, CLS no worse
+(recorded in the baseline's "After Phase 3"); `npm run baseline:capture` re-run (partial: the container's 10-minute
+limit). `npm run excerpts:verify` not run: it needs the source repos and GitHub; the excerpts did not change in
+this phase. Step 6 (the frame-meter runs) is Chris's.

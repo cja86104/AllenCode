@@ -1,9 +1,11 @@
 // @ts-check
 import { Fragment, Suspense, lazy, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useWorldPage } from '../world/worldSwitch.js';
+import { useDoor } from '../door/DoorProvider.jsx';
+import { usePrefersReducedMotion } from '../field/environment.js';
 import { homeSegments, pageSegments } from './tree.js';
-import { setPathBarShown } from './pathBarStore.js';
+import { setPathBarShown, useCurrentFile } from './pathBarStore.js';
 import { useDisclosure } from './useDisclosure.js';
 
 /** @typedef {import('./tree.js').PathSegment} PathSegment */
@@ -14,8 +16,20 @@ import { useDisclosure } from './useDisclosure.js';
 const PathMenu = lazy(() => import('./PathMenu.jsx'));
 const PathSheet = lazy(() => import('./PathMenu.jsx').then((module) => ({ default: module.PathSheet })));
 
-/** Until Task 4 of the plan, choosing a home file goes nowhere. @type {OnGo} */
-const stay = () => {};
+/**
+ * Going to a home file chosen from a menu: `go.js`, loaded on the first choice (the entry's budget), with
+ * what it needs from the page now.
+ * @returns {OnGo}
+ */
+function useGo() {
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const { door, setDoor } = useDoor();
+  const reducedMotion = usePrefersReducedMotion();
+  return (id) => {
+    void import('./go.js').then(({ goTo }) => goTo(id, { pathname, navigate, door, setDoor, reducedMotion }));
+  };
+}
 
 /**
  * Where the visitor is: the id of the path's last segment, and the home branch it is in.
@@ -40,15 +54,17 @@ const CURRENT = 'border-ember/60 text-ember';
 
 /**
  * The path for this page, or null with the world on (the world keeps its own rail; the two never show
- * together). The home page's path follows the current file; an inner page's is the page.
- * @param {string | null} currentId
+ * together). The home page's path follows the current file, as the home page tells it (`current.js`) unless
+ * one is given; an inner page's is the page.
+ * @param {string | null | undefined} currentId
  * @returns {PathSegment[] | null}
  */
 function usePathSegments(currentId) {
   const world = useWorldPage();
   const { pathname } = useLocation();
+  const tracked = useCurrentFile();
   if (world !== null) return null;
-  return pathname === '/' ? homeSegments(currentId) : pageSegments(pathname);
+  return pathname === '/' ? homeSegments(currentId ?? tracked) : pageSegments(pathname);
 }
 
 /**
@@ -96,8 +112,9 @@ function Segment({ segment, last, here, hereBranch, onGo }) {
  * @param {{ currentId?: string | null, onGo?: OnGo }} props `currentId` is the home page's current file; `onGo`
  *   goes to a home file chosen from a menu.
  */
-export default function PathBar({ currentId = null, onGo = stay }) {
+export default function PathBar({ currentId, onGo }) {
   const segments = usePathSegments(currentId);
+  const go = useGo();
   const shown = segments !== null;
   useEffect(() => {
     setPathBarShown(shown);
@@ -117,7 +134,7 @@ export default function PathBar({ currentId = null, onGo = stay }) {
                 </li>
               )}
               <li className="relative">
-                <Segment segment={segment} last={i === segments.length - 1} here={here} hereBranch={branch} onGo={onGo} />
+                <Segment segment={segment} last={i === segments.length - 1} here={here} hereBranch={branch} onGo={onGo ?? go} />
               </li>
             </Fragment>
           ))}
@@ -146,8 +163,9 @@ export function chipParts(segments) {
  * The path on a phone (below 768 px): one chip in the header row, opening the whole tree as a sheet.
  * @param {{ currentId?: string | null, onGo?: OnGo }} props
  */
-export function PathChip({ currentId = null, onGo = stay }) {
+export function PathChip({ currentId, onGo }) {
   const segments = usePathSegments(currentId);
+  const go = useGo();
   const { open, toggle, close, id, buttonRef, panelRef } = useDisclosure();
   if (!segments) return null;
   const { parent, file } = chipParts(segments);
@@ -155,7 +173,7 @@ export function PathChip({ currentId = null, onGo = stay }) {
   /** @param {string} chosen @param {boolean} page */
   const choose = (chosen, page) => {
     close();
-    if (!page) onGo(chosen);
+    if (!page) (onGo ?? go)(chosen);
   };
   return (
     <nav aria-label="Where you are" className="min-w-0 md:hidden">

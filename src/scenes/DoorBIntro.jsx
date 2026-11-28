@@ -11,6 +11,7 @@ import { CHAPTER_BODY, CHAPTER_GRID, CHAPTER_LABEL, CHAPTER_TITLE } from './chap
 import { useSectionProgress } from './useSectionProgress.js';
 import { DESKTOP_MIN_WIDTH, EditorPanel, FlightEditor, flightGeometry, useImageFlight } from './flight.jsx';
 import { useWordsFloor } from '../pathbar/pathBarStore.js';
+import { LayerChapter } from './layerSlot.jsx';
 
 /** @typedef {import('../content/excerpts/index.js').Excerpt} Excerpt */
 /** @typedef {{ src: string, poster: string, alt: string }} Loop */
@@ -115,12 +116,26 @@ export function DoorBIntroFor({ includeDrafts }) {
  * Door B's first chapter, "What I can make you" (spec section 4, step 4B): plain words beside real
  * code that becomes a family's home page. Without the renderer or with reduced motion, the code sits
  * beside the page it becomes.
- * @param {{ includeDrafts: boolean }} props Whether unapproved excerpts may show (the public site passes false).
+ * With `layers` (the world off) it takes C's layer stack (Living Source Phase 4).
+ * @param {{ includeDrafts: boolean, layers?: boolean }} props Whether unapproved excerpts may show (the public site
+ *   passes false), and whether it takes the layer stack.
  */
-export default function DoorBIntro({ includeDrafts }) {
+export default function DoorBIntro({ includeDrafts, layers = false }) {
   const reducedMotion = usePrefersReducedMotion();
   const { mode } = useField();
   const { excerpt, loop } = hearthChapter(includeDrafts);
+
+  if (layers && excerpt) {
+    return (
+      <LayerChapter
+        attrs={{ 'data-door-b-intro': true }}
+        excerpt={excerpt}
+        screen={{ src: loop.poster, alt: loop.alt, ...LOOP_SIZE, video: loop.src }}
+        motion={!reducedMotion && mode === 'webgl'}
+        words={({ compact }) => <IntroText compact={compact} />}
+      />
+    );
+  }
 
   if (!reducedMotion && mode === 'webgl' && excerpt) return <FlightIntro excerpt={excerpt} loop={loop} />;
 

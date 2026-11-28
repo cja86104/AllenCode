@@ -31,6 +31,17 @@ header row below that). It is in every prebuilt page; `index.html`'s pre-paint s
 where the world will likely run, and CSS keeps the bar hidden there until the world mounts and it unmounts. The home's
 order lists live in `src/data/homeOrder.js`, so the bar reads them without the scenes. Pinned chapters keep their words
 below the header with `useWordsFloor` (`src/pathbar/pathBarStore.js`); a new pinned chapter should too.
+The menus and the phone's sheet (`PathMenu.jsx`) and going to a file (`go.js`) load on demand, and the home page
+measures where the visitor is (`current.js`, in its own chunk) and tells the bar through the store: the entry script
+has 0.87 kB left of its 152 kB, so anything new on every page must pay for itself. Door B's pinned template chapter
+names its order (`data-template-order`) because it draws only the segment on screen. A scroll area inside a pinned
+or fixed panel needs `data-lenis-prevent`, or the smooth scroll takes the wheel for the page.
+
+C's layer stack (Phase 4, `src/scenes/layers/`, its own chunk) is the world-off form of every code-to-screen
+chapter: the home passes `layers` to the chapter components and the world's roads never do, so they keep the WebGL
+flight. `LayerChapter` (`src/scenes/layerSlot.jsx`) wraps a chapter's words around the stack; a new code-to-screen
+chapter should use it. The characters in flight move by CSS (`src/index.css`, one `--t` per plane); keep it that way
+rather than re-rendering spans on scroll.
 
 ## Validation
 

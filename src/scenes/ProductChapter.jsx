@@ -10,6 +10,7 @@ import { useSectionProgress } from './useSectionProgress.js';
 import { DESKTOP_MIN_WIDTH, EditorPanel, FlightEditor, flightGeometry, useImageFlight } from './flight.jsx';
 import { CHAPTER_BODY, CHAPTER_GRID, CHAPTER_LABEL, CHAPTER_TITLE } from './chapterType.js';
 import { useWordsFloor } from '../pathbar/pathBarStore.js';
+import { LayerChapter } from './layerSlot.jsx';
 
 /** @typedef {import('../content/excerpts/index.js').Excerpt} Excerpt */
 /** @typedef {(typeof products)[number]} Product */
@@ -222,13 +223,14 @@ function ComingSoonChapter({ product, excerpt, animate }) {
 
 /**
  * Door A's product chapters, one per product in products.js (spec section 4, step 5).
- * @param {{ includeDrafts: boolean }} props Whether unapproved excerpts may show (the public site passes false).
+ * @param {{ includeDrafts: boolean, layers?: boolean }} props Whether unapproved excerpts may show (the public site
+ *   passes false), and whether the chapters take C's layer stack (the world off; Living Source Phase 4).
  */
-export default function ProductChapters({ includeDrafts }) {
+export default function ProductChapters({ includeDrafts, layers = false }) {
   return (
     <>
       {products.map((product) => (
-        <ProductChapterFor key={product.slug} product={product} includeDrafts={includeDrafts} />
+        <ProductChapterFor key={product.slug} product={product} includeDrafts={includeDrafts} layers={layers} />
       ))}
     </>
   );
@@ -237,9 +239,10 @@ export default function ProductChapters({ includeDrafts }) {
 /**
  * One product's chapter, as door A shows it: still being written, flying onto its loop, or beside it.
  * The Code World's business road places each on its own (W2 revised, R4).
- * @param {{ product: Product, includeDrafts: boolean }} props
+ * With `layers` (the world off), a live product takes C's layer stack (Living Source Phase 4).
+ * @param {{ product: Product, includeDrafts: boolean, layers?: boolean }} props
  */
-export function ProductChapterFor({ product, includeDrafts }) {
+export function ProductChapterFor({ product, includeDrafts, layers = false }) {
   const reducedMotion = usePrefersReducedMotion();
   const { mode } = useField();
   const flights = !reducedMotion && mode === 'webgl';
@@ -247,6 +250,17 @@ export function ProductChapterFor({ product, includeDrafts }) {
   const excerpt = excerptId ? getExcerpt(excerptId, { includeDrafts }) : null;
   if (product.status !== 'live') return <ComingSoonChapter product={product} excerpt={excerpt} animate={!reducedMotion} />;
   const loop = loopOf(product);
+  if (layers && excerpt && loop) {
+    return (
+      <LayerChapter
+        attrs={{ 'data-product': product.slug }}
+        excerpt={excerpt}
+        screen={{ src: loop.poster, alt: loop.alt, ...LOOP_SIZE, video: loop.src }}
+        motion={flights}
+        words={({ progress, pinned, compact }) => <ProductText product={product} countT={pinned ? progress / COUNT_UNTIL : 1} compact={compact} />}
+      />
+    );
+  }
   if (flights && excerpt && loop) return <FlightProductChapter product={product} excerpt={excerpt} loop={loop} />;
   return <StaticProductChapter product={product} excerpt={excerpt} loop={loop} />;
 }

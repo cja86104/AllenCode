@@ -55,3 +55,24 @@ export function usePathBarShown() {
 export function useWordsFloor(width) {
   return usePathBarShown() && width >= PATH_BAR_MIN_WIDTH ? PATH_BAR_FLOOR_PX : 0;
 }
+
+/** The home file the visitor is at, told by the home page (`current.js`); null elsewhere. @type {string | null} */
+let currentFile = null;
+
+/**
+ * Sets the home file the visitor is at; the bar follows it.
+ * @param {string | null} id
+ */
+export function setCurrentFile(id) {
+  if (currentFile === id) return;
+  currentFile = id;
+  listeners.forEach((listener) => listener());
+}
+
+/**
+ * The home file the visitor is at, followed live (null on the server and while hydrating).
+ * @returns {string | null}
+ */
+export function useCurrentFile() {
+  return useSyncExternalStore(subscribe, () => currentFile, () => null);
+}

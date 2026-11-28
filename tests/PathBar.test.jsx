@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 import { MemoryRouter, useNavigate } from 'react-router-dom';
 import DoorProvider from '../src/door/DoorProvider.jsx';
 import PathBar, { PathChip } from '../src/pathbar/PathBar.jsx';
-import { readPathBarShown } from '../src/pathbar/pathBarStore.js';
+import { readPathBarShown, setCurrentFile } from '../src/pathbar/pathBarStore.js';
 
 afterEach(() => {
   cleanup();
@@ -232,5 +232,26 @@ describe('the menus (Living Source Phase 3, Task 3)', () => {
     expect(within(sheet).getAllByRole('link').map((l) => l.getAttribute('href'))).toEqual(['/services', '/products', '/templates', '/about', '/contact']);
     const current = within(sheet).getAllByRole('button').find((b) => b.getAttribute('aria-current') === 'location');
     expect(current).toHaveTextContent('underfire-ai');
+  });
+});
+
+describe('the bar follows the home page (Task 5)', () => {
+  it('shows the file the home page says the visitor is at, in the bar and on the chip', () => {
+    act(() => setCurrentFile('02_our-work/underfire-ai'));
+    try {
+      renderAt(
+        <>
+          <PathBar />
+          <PathChip />
+        </>,
+      );
+      const [bar] = screen.getAllByRole('navigation', { name: 'Where you are' });
+      expect(within(bar).getByRole('button', { name: 'underfire-ai' })).toHaveAttribute('aria-current', 'location');
+      expect(screen.getByRole('button', { name: '02 / underfire-ai' })).toBeInTheDocument();
+      act(() => setCurrentFile('05_who-builds-it'));
+      expect(within(bar).getByRole('button', { name: '05_who-builds-it' })).toHaveAttribute('aria-current', 'location');
+    } finally {
+      act(() => setCurrentFile(null));
+    }
   });
 });

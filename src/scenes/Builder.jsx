@@ -10,6 +10,7 @@ import { useSectionProgress } from './useSectionProgress.js';
 import { DESKTOP_MIN_WIDTH, EditorPanel, FlightEditor, flightGeometry, useImageFlight } from './flight.jsx';
 import { BUILDER } from '../content/builderStory.js';
 import { useWordsFloor } from '../pathbar/pathBarStore.js';
+import { LayerChapter } from './layerSlot.jsx';
 
 export { BUILDER };
 
@@ -54,7 +55,31 @@ function Portrait({ className = '' }) {
  * real photo then resolves through it. Without the renderer or with reduced motion the code sits
  * beside the photo.
  */
-export default function Builder() {
+/**
+ * The builder: with `layers` (the world off) in C's layer stack (Living Source Phase 4), else as below.
+ * @param {{ layers?: boolean }} [props]
+ */
+export default function Builder({ layers = false } = {}) {
+  const excerpt = getExcerpt('builder');
+  const reducedMotion = usePrefersReducedMotion();
+  const { mode } = useField();
+  if (layers && excerpt) {
+    const { src, alt, width, height } = BUILDER.photo;
+    return (
+      <LayerChapter
+        attrs={{ 'data-chapter': 'builder' }}
+        excerpt={excerpt}
+        screen={{ src, alt, width, height }}
+        motion={!reducedMotion && mode === 'webgl'}
+        words={({ compact }) => <BuilderText compact={compact} />}
+      />
+    );
+  }
+  return <FlightBuilder />;
+}
+
+/** The builder as the world's roads and the flight show it. */
+function FlightBuilder() {
   const excerpt = getExcerpt('builder');
   const reducedMotion = usePrefersReducedMotion();
   const { mode } = useField();

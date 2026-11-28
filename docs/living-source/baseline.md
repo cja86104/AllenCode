@@ -359,3 +359,100 @@ here when run: ______ (date, pass or fail).
   Pricing section (`ProductDetail.jsx`, `pricing` in `src/data/products.js`). These are consistent with the
   site's rules: product pages keep their pricing (Chris's standing decision), the no-prices rule covers services
   and templates, and deposit terms are terms, not prices. No amounts are copied here.
+
+## After Phase 3: the path bar (2026-11-28)
+
+Same machine, same method and same Lighthouse (12.8.2) as Step 2, against a fresh `npm run build` of the Phase 3
+code (Tasks 1 to 5), served by `npm run preview -- --port 4173`, every URL with `?world=0`. One run each.
+
+### Lighthouse, phone
+
+| Page | Performance | LCP | CLS | TBT | Accessibility | SEO |
+| --- | --- | --- | --- | --- | --- | --- |
+| `/` | 75 | 2.2 s | 0 | 1010 ms | 100 | 100 |
+| `/products` | 62 | 3.8 s | 0.001 | 1270 ms | 100 | 100 |
+| `/products/my-teachers-toolbox` | 64 | 3.1 s | 0.031 | 1680 ms | 100 | 100 |
+| `/products/underfire-ai` | 67 | 3.1 s | 0 | 1230 ms | 100 | 100 |
+| `/products/founders-helm` | 69 | 2.9 s | 0 | 1270 ms | 100 | 100 |
+| `/products/crew-advisors` | 66 | 3.5 s | 0 | 1150 ms | 100 | 100 |
+| `/services` | 71 | 2.2 s | 0.001 | 1500 ms | 100 | 100 |
+| `/templates` | 61 | 5.1 s | 0.041 | 670 ms | 100 | 100 |
+| `/about` | 69 | 3.0 s | 0.001 | 1180 ms | 100 | 100 |
+| `/contact` | 73 | 2.3 s | 0.001 | 1080 ms | 100 | 100 |
+
+### Lighthouse, phone with WebGL off
+
+| Page | Performance | LCP | CLS | TBT | Accessibility | SEO |
+| --- | --- | --- | --- | --- | --- | --- |
+| `/` | 87 | 2.2 s | 0.199 | 70 ms | 100 | 100 |
+| `/products` | 84 | 4.1 s | 0.001 | 90 ms | 100 | 100 |
+| `/products/my-teachers-toolbox` | 90 | 3.1 s | 0.031 | 120 ms | 100 | 100 |
+| `/products/underfire-ai` | 91 | 3.1 s | 0 | 70 ms | 100 | 100 |
+| `/products/founders-helm` | 91 | 3.0 s | 0 | 130 ms | 100 | 100 |
+| `/products/crew-advisors` | 88 | 3.5 s | 0 | 110 ms | 100 | 100 |
+| `/services` | 97 | 2.2 s | 0.001 | 50 ms | 100 | 100 |
+| `/templates` | 79 | 5.1 s | 0.041 | 50 ms | 100 | 100 |
+| `/about` | 93 | 2.9 s | 0.001 | 40 ms | 100 | 100 |
+| `/contact` | 95 | 2.4 s | 0.001 | 90 ms | 100 | 100 |
+
+### Lighthouse, desktop (`--preset=desktop`)
+
+| Page | Performance | LCP | CLS | TBT | Accessibility | SEO |
+| --- | --- | --- | --- | --- | --- | --- |
+| `/` | 100 | 0.5 s | 0.003 | 0 ms | 100 | 100 |
+| `/products` | 99 | 0.9 s | 0.003 | 0 ms | 100 | 100 |
+| `/products/my-teachers-toolbox` | 99 | 0.7 s | 0.003 | 0 ms | 100 | 100 |
+| `/products/underfire-ai` | 99 | 0.6 s | 0.003 | 0 ms | 100 | 100 |
+| `/products/founders-helm` | 100 | 0.7 s | 0.003 | 0 ms | 100 | 100 |
+| `/products/crew-advisors` | 100 | 0.7 s | 0.003 | 0 ms | 100 | 100 |
+| `/services` | 100 | 0.5 s | 0.003 | 0 ms | 100 | 100 |
+| `/templates` | 99 | 0.9 s | 0.003 | 20 ms | 100 | 100 |
+| `/about` | 100 | 0.6 s | 0.007 | 0 ms | 100 | 100 |
+| `/contact` | 100 | 0.6 s | 0.003 | 0 ms | 100 | 100 |
+
+Against Step 2: accessibility and SEO stay 100 on all 30 runs. CLS is the same on every page in every table but
+desktop `/about` (0.033 before, 0.007 now); the bar sits in the fixed header, so it moves nothing. The home page
+with WebGL off is still 0.199 (the gate's known shift, Phase 7). Performance moved a few points either way (phone
+`/products` 57 → 62, `/products/underfire-ai` 68 → 67; WebGL off `/products/crew-advisors` 94 → 88); one run each,
+so that is run-to-run noise, neither credited to nor blamed on the bar.
+
+### The size budget (`npm run verify`, 2026-11-28)
+
+```
+ok    entry script (every page)             151.13 kB of 152 kB  index-Btm517va.js
+ok    entry CSS (every page)                  8.42 kB of 9 kB  index-_JbTVAE4.css
+ok    home page chunk                        13.97 kB of 16 kB  Home-BzDTUN8n.js
+```
+
+The entry script grew 147.97 → 151.13 kB (limit 152). The menus and the phone's sheet (`PathMenu`, 1.59 kB) load
+on the first press and going to a file (`go`, 0.93 kB) on the first choice; the home page measures where the
+visitor is in its own chunk (13.97 of 16 kB). **0.87 kB is left in the entry**: the next thing to add to every
+page has to pay for itself, or the limit becomes a decision for Chris.
+
+### Pictures
+
+`npm run baseline:capture` was re-run on the same build (cloud container, Playwright pointed at the installed
+Chrome and the system ffmpeg). It recorded every inner page on desktop and phone and the home with door A on both
+before the container's 10-minute limit; door B, reduced motion and the doors on the phone were not reached.
+Compared by eye with Step 3's: the pages are unchanged but for the bar under the nav (from 768 px) or the chip in
+the header row (below it), and the bar follows the chapters (`02_our-work / underfire-ai` on desktop,
+`who-builds-it` on the phone). The captures are git-ignored and stayed in the container: run
+`npm run baseline:capture` on Chris's machine for a full set.
+
+### Still owed by Chris
+
+The iPhone and desktop frame-meter runs (Step 4's table) with the bar: `?world=0&meter=1`, the same steps.
+
+## After Phase 4: the layer stack (2026-11-28)
+
+Lighthouse 12.8.2 on `/` only (the one page Phase 4 changes; its first visit shows no chapters, so the stack is not
+in it), same method: phone 74 (LCP 2.2 s, CLS 0, TBT 1070 ms), phone with WebGL off 86 (LCP 2.2 s, CLS 0.199, TBT
+120 ms), desktop 100 (LCP 0.5 s, CLS 0.003). Accessibility and SEO 100 in all three. The same as after Phase 3 within
+one run's noise.
+
+The budget: entry script 151.13 kB (unchanged), entry CSS 8.59 kB (the characters' transform rule), home chunk
+14.82 kB of 16 (each chapter's layer form), the layers chunk 2.25 kB (the stack, the steps and the provenance, asked
+for once the home page knows the world is off; never with the world on, which `e2e/layers.spec.js` checks).
+
+Not measured: frame times of the stack on a real phone (`?world=0&meter=1`, Step 4's method). The characters move
+by one CSS value per scroll frame, but the planes' 3D transforms are the new cost to watch on an older iPhone.

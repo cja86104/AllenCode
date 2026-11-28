@@ -1,9 +1,10 @@
 // @ts-check
 import { describe, expect, it } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import ServiceChapters, { chapterShows, NAV_FLOOR_PX, PATH_BAR_FLOOR_PX, SERVICE_CHAPTERS, ServiceChapterFor, ServiceText, wordsCompact, wordsRise, wordsTop } from '../src/scenes/ServiceChapters.jsx';
 import { chapterLayout } from '../src/scenes/flight.jsx';
 import { setPathBarShown } from '../src/pathbar/pathBarStore.js';
+import { fieldBus } from '../src/field/fieldBus.js';
 import { services } from '../src/data/services.js';
 import { serviceScreens } from '../src/data/serviceScreens.js';
 import { excerpts, getExcerpt } from '../src/content/excerpts/index.js';
@@ -272,6 +273,40 @@ describe('ServiceChapters', () => {
       window.innerWidth = width;
       setPathBarShown(false);
     }
+  });
+
+  it('with layers (the world off), a service chapter is C’s stack and claims no WebGL flight (Living Source Phase 4)', async () => {
+    fieldBus.set({ mode: 'webgl' });
+    try {
+      render(<ServiceChapterFor slug="mvp-sprints" excerptId="service-mvp" includeDrafts={false} layers />);
+      const chapter = /** @type {HTMLElement} */ (document.querySelector('[data-chapter="mvp-sprints"]'));
+      expect(chapter).toHaveAttribute('data-layer-chapter');
+      expect(chapter.querySelector(':scope > .pin-frame')).not.toBeNull();
+      expect(await within(chapter).findByRole('group', { name: 'Steps' })).toBeInTheDocument();
+      expect(chapter.querySelector('[data-layer-stack]')).not.toBeNull();
+      expect(chapter.querySelector('[data-provenance]')).toHaveTextContent(/commit [0-9a-f]{7}/);
+      expect(fieldBus.get().transform).toBeNull();
+    } finally {
+      fieldBus.set({ mode: 'pending', transform: null });
+    }
+  });
+
+  it('with layers and no renderer: flat, its code beside it, the steps switching the view at once', async () => {
+    render(<ServiceChapterFor slug="mvp-sprints" excerptId="service-mvp" includeDrafts={false} layers />);
+    const chapter = /** @type {HTMLElement} */ (document.querySelector('[data-chapter="mvp-sprints"]'));
+    expect(chapter.querySelector(':scope > .pin-frame')).toBeNull();
+    const steps = await within(chapter).findByRole('group', { name: 'Steps' });
+    const stack = /** @type {HTMLElement} */ (chapter.querySelector('[data-layer-stack]'));
+    expect(stack).toHaveAttribute('data-step', 'result');
+    expect(chapter.querySelector('pre')).not.toBeNull();
+    fireEvent.click(within(steps).getByRole('button', { name: '01 Source' }));
+    expect(stack).toHaveAttribute('data-step', 'source');
+    expect(within(steps).getByRole('button', { name: '01 Source' })).toHaveAttribute('aria-current', 'step');
+  });
+
+  it('without layers (the world’s roads) a chapter keeps today’s form', () => {
+    render(<ServiceChapterFor slug="mvp-sprints" excerptId="service-mvp" includeDrafts={false} />);
+    expect(document.querySelector('[data-layer-chapter]')).toBeNull();
   });
 
   it('with drafts off, the approved code still shows in all seven chapters', () => {

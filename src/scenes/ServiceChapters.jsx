@@ -1,5 +1,5 @@
 // @ts-check
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { services } from '../data/services.js';
 import { SERVICE_CHAPTERS } from '../data/homeOrder.js';
 import { PATH_BAR_FLOOR_PX, useWordsFloor } from '../pathbar/pathBarStore.js';
@@ -12,7 +12,8 @@ import { CODE_FONT_SIZE, EDITOR_PADDING } from '../field/editorMetrics.js';
 import { SYNTAX_COLORS, tokenizeLine } from '../field/syntax.js';
 import { auditTimeline, chapterTimeline } from './chapterTimeline.js';
 import { useSectionProgress } from './useSectionProgress.js';
-import { DESKTOP_MIN_WIDTH, EditorPanel, FlightEditor, flightGeometry, useImageFlight } from './flight.jsx';
+import { DESKTOP_MIN_WIDTH, EditorPanel, FlightEditor, chapterLayout, flightGeometry, useImageFlight } from './flight.jsx';
+import { LayerSlot, PHONE_STACK_PX, flatStageWidth, stageFit, useStepJump } from './layerSlot.jsx';
 import { CHAPTER_BODY, CHAPTER_GRID, CHAPTER_ITEM, CHAPTER_LABEL, CHAPTER_TITLE } from './chapterType.js';
 
 /** @typedef {import('../content/excerpts/index.js').Excerpt} Excerpt */
@@ -320,15 +321,63 @@ function AuditChapter({ service, excerpt, animate }) {
 }
 
 /**
+ * A service in C (Living Source Phase 4), the world off: its words as today and, where its code flew, the layer
+ * stack with its steps and provenance. Pinned while the renderer runs (scroll pulls the stack apart and settles it
+ * flat as the result lands; the steps glide to their points). Without it, or with reduced motion, flat: its code
+ * beside the stack, the steps switching the view at once (rule 6). No WebGL flight is claimed.
+ * @param {{ service: Service, excerpt: Excerpt, screen: Screen, motion: boolean }} props
+ */
+function LayerChapter({ service, excerpt, screen, motion }) {
+  const sectionRef = useRef(/** @type {HTMLElement | null} */ (null));
+  const { progress, viewport } = useSectionProgress(sectionRef, motion);
+  const jump = useStepJump(sectionRef);
+  const [view, setView] = useState(/** @type {import('./layers/layerTimeline.js').StepId} */ ('result'));
+  const floor = useWordsFloor(viewport.w) || NAV_FLOOR_PX;
+  const phone = viewport.w < 768;
+
+  if (!motion) {
+    return (
+      <section
+        data-chapter={service.slug}
+        data-layer-chapter
+        className={`relative z-10 mx-auto grid max-w-6xl gap-10 px-6 py-16 ${CHAPTER_GRID} lg:items-center lg:px-10`}
+      >
+        <ServiceText service={service} />
+        <div className="min-w-0 space-y-6">
+          <EditorPanel excerpt={excerpt} />
+          <LayerSlot excerpt={excerpt} screen={screen} progress={1} flat view={view} width={flatStageWidth(viewport.w)} phone={phone} onPick={setView} />
+        </div>
+      </section>
+    );
+  }
+
+  const { text, stage } = chapterLayout(viewport.w, viewport.h);
+  const fit = stageFit(stage, screen.width / screen.height, phone ? PHONE_STACK_PX : Number.POSITIVE_INFINITY);
+  return (
+    <section ref={sectionRef} data-chapter={service.slug} data-layer-chapter className="relative h-[220vh]">
+      <div className="pin-frame sticky top-0 overflow-hidden">
+        <div data-world-words style={{ left: text.x, top: wordsTop(text, floor), width: text.w, transform: wordsRise({ y: wordsTop(text, floor) }, viewport.h, floor) }} className="absolute">
+          <ServiceText service={service} compact={wordsCompact(service.scope.length, viewport.w, viewport.h, floor)} />
+        </div>
+        <div data-world-target style={{ left: fit.x, top: Math.max(fit.y, floor) }} className="absolute">
+          <LayerSlot excerpt={excerpt} screen={screen} progress={progress} flat={false} view="result" width={fit.width} phone={phone} onPick={jump} />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/**
  * Door A's service chapters. Each shows the service's own copy and real code; a chapter with a
  * screen flies its code onto that screen when the renderer is running.
- * @param {{ includeDrafts: boolean }} props Whether unapproved excerpts may show (the public site passes false).
+ * @param {{ includeDrafts: boolean, layers?: boolean }} props Whether unapproved excerpts may show (the public site
+ *   passes false), and whether the chapters take C's layer stack (the world off; Living Source Phase 4).
  */
-export default function ServiceChapters({ includeDrafts }) {
+export default function ServiceChapters({ includeDrafts, layers = false }) {
   return (
     <>
       {SERVICE_CHAPTERS.map(({ slug, excerptId }) => (
-        <ServiceChapterFor key={slug} slug={slug} excerptId={excerptId} includeDrafts={includeDrafts} />
+        <ServiceChapterFor key={slug} slug={slug} excerptId={excerptId} includeDrafts={includeDrafts} layers={layers} />
       ))}
     </>
   );
@@ -338,11 +387,11 @@ export default function ServiceChapters({ includeDrafts }) {
  * One service's chapter, as door A shows it: the audit checking its file, a flight onto its screen, or
  * its code beside it. The Code World's business road places each on its own (W2 revised, R4).
  * A chapter without its approved excerpt, or (outside the audit) without its screen, shows nothing.
- * @param {{ slug: string, excerptId: string, includeDrafts: boolean, screens?: Readonly<Record<string, Screen | null>>, registry?: Readonly<Record<string, Excerpt>> }} props
+ * @param {{ slug: string, excerptId: string, includeDrafts: boolean, layers?: boolean, screens?: Readonly<Record<string, Screen | null>>, registry?: Readonly<Record<string, Excerpt>> }} props
  * `screens` is the screen lookup, serviceScreens.js unless a test passes its own; `registry` the
  * excerpts, the site's approved registry unless a test passes its own (a draft is not in it).
  */
-export function ServiceChapterFor({ slug, excerptId, includeDrafts, screens = serviceScreens, registry }) {
+export function ServiceChapterFor({ slug, excerptId, includeDrafts, layers = false, screens = serviceScreens, registry }) {
   const reducedMotion = usePrefersReducedMotion();
   const { mode } = useField();
   const flights = !reducedMotion && mode === 'webgl';
@@ -353,6 +402,7 @@ export function ServiceChapterFor({ slug, excerptId, includeDrafts, screens = se
   const screen = Object.hasOwn(screens, slug) ? screens[slug] : null;
   // chapterShows decides; the two null checks only narrow the types for the chapters below.
   if (!chapterShows(slug, excerpt, screen) || !excerpt || !screen) return null;
+  if (layers) return <LayerChapter service={service} excerpt={excerpt} screen={screen} motion={flights} />;
   if (flights) return <FlightChapter service={service} excerpt={excerpt} screen={screen} />;
   return <StaticChapter service={service} excerpt={excerpt} screen={screen} />;
 }

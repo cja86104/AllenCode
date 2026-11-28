@@ -139,6 +139,8 @@ export default function PathMenu({ id, segment, here, hereBranch, onChoose, clos
     <div
       ref={panelRef}
       id={id}
+      // The smooth scroll (Lenis) leaves a wheel over the panel to the panel itself.
+      data-lenis-prevent
       className={`absolute left-0 top-full z-50 mt-1 max-h-[60vh] w-72 overflow-y-auto rounded-xl border border-white/10 bg-[#0a0a0a] p-1.5 shadow-2xl ${RISE}`}
     >
       <ul>
@@ -173,6 +175,7 @@ export function PathSheet({ id, here, onChoose, close, buttonRef, panelRef }) {
       ref={panelRef}
       id={id}
       data-path-sheet
+      data-lenis-prevent
       className={`absolute inset-x-0 top-full z-50 max-h-[70vh] overflow-y-auto border-y border-white/10 bg-[#0a0a0a] px-4 py-3 ${RISE}`}
     >
       <ol>
