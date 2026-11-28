@@ -1,7 +1,7 @@
 // @ts-check
 import { useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { templates } from '../data/templates.js';
+import { DOOR_B_TEMPLATES } from '../data/homeOrder.js';
 import { templateLoopAlt, templateStatusLabel } from '../data/templateStatus.js';
 import { getExcerpt } from '../content/excerpts/index.js';
 import { TEMPLATE_CHAPTER, TEMPLATE_STORIES } from '../content/doorB.js';
@@ -13,18 +13,10 @@ import { DESKTOP_MIN_WIDTH, EditorPanel, FlightEditor, flightGeometry, useImageF
 import { CHAPTER_BODY, CHAPTER_GRID, CHAPTER_LABEL, CHAPTER_TITLE } from './chapterType.js';
 
 /** @typedef {import('../content/excerpts/index.js').Excerpt} Excerpt */
-/** @typedef {(typeof templates)[number]} Template */
+/** @typedef {(typeof import('../data/templates.js').templates)[number]} Template */
 
-const DOOR_B_CATEGORIES = ['Family and Memories', 'Events', 'Personal and Creative'];
-
-/**
- * Door B's templates after Hearth, which the intro already shows: the family, event and personal ones in
- * catalog order, then the restaurant (Chris, 2026-11-25: the last house, after Folio).
- */
-export const DOOR_B_TEMPLATES = Object.freeze([
-  ...templates.filter((t) => DOOR_B_CATEGORIES.includes(t.category) && t.id !== 'hearth'),
-  ...templates.filter((t) => t.category === 'Restaurant'),
-]);
+// The order lives in the data so the path bar can read it without this scene (Living Source Phase 3).
+export { DOOR_B_TEMPLATES } from '../data/homeOrder.js';
 
 /** The template loops are 1280 x 800. */
 const LOOP_SIZE = { width: 1280, height: 800 };

@@ -1,6 +1,7 @@
 // @ts-check
 import { useRef } from 'react';
 import { services } from '../data/services.js';
+import { SERVICE_CHAPTERS } from '../data/homeOrder.js';
 import { serviceScreens } from '../data/serviceScreens.js';
 import MediaLoop from '../components/MediaLoop.jsx';
 import { getExcerpt } from '../content/excerpts/index.js';
@@ -17,20 +18,8 @@ import { CHAPTER_BODY, CHAPTER_GRID, CHAPTER_ITEM, CHAPTER_LABEL, CHAPTER_TITLE 
 /** @typedef {import('../data/services.js').Service} Service */
 /** @typedef {{ src: string, alt: string, width: number, height: number, video?: string }} Screen */
 
-/**
- * Door A's service chapters, in story order (spec section 4, step 4). The two flagships lead
- * (Chris, 2026-11-27); each shows once its excerpt is approved and its screen exists.
- */
-export const SERVICE_CHAPTERS = Object.freeze([
-  { slug: 'immersive-web-experiences', excerptId: 'service-immersive' },
-  { slug: 'intelligent-ai-systems', excerptId: 'service-ai-systems' },
-  { slug: 'mvp-sprints', excerptId: 'service-mvp' },
-  { slug: 'custom-saas-builds', excerptId: 'service-custom' },
-  { slug: 'custom-web-development', excerptId: 'service-web' },
-  { slug: 'ui-ux-design', excerptId: 'service-uiux' },
-  { slug: 'ai-integration', excerptId: 'service-ai' },
-  { slug: 'technical-audits', excerptId: 'service-audit' },
-]);
+// The order lives in the data so the path bar can read it without this scene (Living Source Phase 3).
+export { SERVICE_CHAPTERS } from '../data/homeOrder.js';
 
 /**
  * @param {readonly number[]} color 0..1 RGB

@@ -32,9 +32,12 @@ test('opening a file flares the field, folds the other file away and glides into
   await expect(fork).toHaveAttribute('data-opening', 'true');
   await expect(fork).toContainText('opening business/');
   await expect(page.locator('[data-door-card="b"]')).toHaveCount(0);
-  const chapter = page.locator('[data-chapter="mvp-sprints"]');
+  // The first service chapter the page holds, whichever leads (2026-11-27: this named MVP Sprints, which
+  // the two flagships now lead).
+  const chapter = page.locator('[data-chapter]:not([data-chapter="gate"])').first();
   await expect
-    .poll(async () => chapter.evaluate((el) => Math.round(el.getBoundingClientRect().top)), { timeout: 6000 })
+    // At the top, not merely above it: a page that glides past this chapter leaves its top far above.
+    .poll(async () => chapter.evaluate((el) => Math.abs(Math.round(el.getBoundingClientRect().top))), { timeout: 6000 })
     .toBeLessThanOrEqual(2);
   await expect(page.locator('[data-door-card]')).toHaveCount(2, { timeout: 6000 });
   await expect(page.locator('[data-door-card="a"]')).toHaveAttribute('aria-pressed', 'true');

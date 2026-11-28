@@ -5,6 +5,7 @@ import { useDoor } from './DoorProvider.jsx';
 import { fieldBus } from '../field/fieldBus.js';
 import { usePrefersReducedMotion } from '../field/environment.js';
 import { glideTo } from '../scroll/glide.js';
+import { SERVICE_CHAPTERS } from '../data/homeOrder.js';
 
 /** @typedef {import('./doorStorage.js').Door} Door */
 
@@ -19,7 +20,10 @@ export const DOORS = Object.freeze([
     file: 'business/',
     label: "I'm building a product or business",
     promise: 'products, MVPs and AI tools',
-    firstChapter: '[data-chapter="mvp-sprints"]',
+    // Every service chapter, in story order: the page holds only those shown, and the first of them in
+    // the page is where business/ opens (2026-11-27: this named MVP Sprints, so it glided past the two
+    // flagships once they led).
+    firstChapter: SERVICE_CHAPTERS.map(({ slug }) => `[data-chapter="${slug}"]`).join(', '),
   },
   {
     door: 'b',

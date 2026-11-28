@@ -80,6 +80,43 @@ describe('Fork', () => {
     expect(typeof glider.mock.calls[0][0]).toBe('number');
   });
 
+  it('business/ glides to the first service chapter shown, whichever leads (2026-11-27: the flagships)', () => {
+    const glider = vi.fn();
+    setGlider(glider);
+    render(
+      <DoorProvider>
+        <Fork />
+        <section data-chapter="immersive-web-experiences" />
+        <section data-chapter="mvp-sprints" />
+      </DoorProvider>,
+    );
+    const tops = { 'immersive-web-experiences': 700, 'mvp-sprints': 2400 };
+    for (const [slug, top] of Object.entries(tops)) {
+      const el = /** @type {HTMLElement} */ (document.querySelector(`[data-chapter="${slug}"]`));
+      el.getBoundingClientRect = () => /** @type {DOMRect} */ ({ top, bottom: top + 100, left: 0, right: 0, width: 0, height: 100, x: 0, y: top, toJSON: () => ({}) });
+    }
+    fireEvent.click(screen.getByRole('button', { name: A }));
+    advance(OPEN_MS + 50);
+    expect(glider).toHaveBeenCalledTimes(1);
+    expect(glider.mock.calls[0][0]).toBe(700);
+  });
+
+  it('business/ glides to the next service chapter when a leading one is not shown', () => {
+    const glider = vi.fn();
+    setGlider(glider);
+    render(
+      <DoorProvider>
+        <Fork />
+        <section data-chapter="custom-saas-builds" />
+      </DoorProvider>,
+    );
+    const el = /** @type {HTMLElement} */ (document.querySelector('[data-chapter="custom-saas-builds"]'));
+    el.getBoundingClientRect = () => /** @type {DOMRect} */ ({ top: 1300, bottom: 1400, left: 0, right: 0, width: 0, height: 100, x: 0, y: 1300, toJSON: () => ({}) });
+    fireEvent.click(screen.getByRole('button', { name: A }));
+    advance(OPEN_MS + 50);
+    expect(glider.mock.calls[0][0]).toBe(1300);
+  });
+
   it('after the glide both files are back, the chosen one pressed, so the door can be changed', () => {
     renderFork();
     fireEvent.click(screen.getByRole('button', { name: B }));
